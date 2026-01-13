@@ -53,7 +53,7 @@ void	manageRequests()
 
 int	main(void)
 {
-	//TODO sera défini par le parser
+	//TODO sera défini par la config (parser nécéssaire on verra pour définir sur quel standard partir)
 	int port = 7500;
 	
 	// AF_INET is used to allow ipv4 connection.

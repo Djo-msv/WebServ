@@ -41,6 +41,16 @@ SRC_DIR				:=  srcs
 HEADER_DIR			:=	includes
 BUILD_DIR			:=	.build
 
+#==============================OS================================#
+
+UNAME = $(shell uname)
+
+ifeq ($(UNAME), Linux)
+	OS = 0
+else
+	OS = 1
+endif
+
 #==============================SOURCES===========================#
 
 SRCS_FILES:=	main.cpp
@@ -67,11 +77,11 @@ INC := -I$(HEADER_DIR)
 
 #================================DIR=============================#
 
-DIRS			:=	$(sort $(shell dirname $(OBJS))) #no duplicates
+DIRS			:=	$(sort $(shell dirname $(OBJS))) #no duplicate
 
 #===============================RULES============================#
 
-all: $(NAME)
+all: $(NAME)	
 
 $(DIRS):
 	@mkdir -p $@
@@ -92,6 +102,7 @@ $(NAME): $(OBJS)
 
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(DIRS)
+	@if [ 0 -eq 0 ]; then echo "os : Linux"; else echo "os : Mac/Win"; fi
 	@mkdir -p $(BUILD_DIR)
 	@if [ $(NB_COMP) -eq 1 ]; then echo "\n$(BOLD)Compilation of source files :$(NOC)";fi
 	$(eval PERCENT=$(shell expr $(NB_COMP)00 "/" $(TO_COMP)))

@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdexcept>
+#include <errno.h>
 #include <sys/epoll.h>
 #include <sstream>
 

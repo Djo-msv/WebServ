@@ -7,6 +7,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <sys/epoll.h>
+#include <errno.h>
 
 #define MAX_EVENTS 10
 #include <vector>
@@ -36,25 +37,29 @@ void	manageRequests(ServerSocket *socket, int epollInstance)
 		// nfds is number of file descriptors ready for the requested I/O operation.
 		// Specifying a timeout of -1 causes epoll_wait() to block indefinitely
 		if ((nfds = epoll_wait(epollInstance, events, MAX_EVENTS, -1)) == -1) {
-			std::cerr << "epoll failure" << std::endl;
+			throw std::runtime_error("an error occured when wait connection to the fd : '" + \
+				ft_itoa(socket->getSocketFd()) + \
+				"'. Error code : " + ft_itoa(errno));
 			exit(1);
 		}
 		for (int n = 0; n < nfds; ++n) {
 			//TODO handle multiple listen_stock with map
 			if (events[n].data.fd == socket->getSocketFd()) {
-				// recover the value of client fd
+				// recover the value of client fd, variables that are set to NULL represent the client informations could be useful later...
 				conn_sock = accept(socket->getSocketFd(), NULL, NULL);
 				if (conn_sock == -1) {
-					std::cerr << "an error occure when accept" << std::endl;
-					exit(1);
+					throw std::runtime_error("an error occured when accepting connection to the fd : " + \
+						ft_itoa(socket->getSocketFd()) + \
+						". Error code : " + ft_itoa(errno));
 				}
-//				setnonblocking(conn_sock);
+				setnonblocking(conn_sock);
 				// add client to the list
 				ev.events = EPOLLIN | EPOLLET;
 				ev.data.fd = conn_sock;
 				if (epoll_ctl(epollInstance, EPOLL_CTL_ADD, conn_sock, &ev) == -1) {
-					std::cerr << "An error occure when epoll create" << std::endl;
-					exit(1);
+					throw std::runtime_error("an error occured when allowing connection to the fd : '" + \
+						ft_itoa(socket->getSocketFd()) + \
+						"'. Error code : " + ft_itoa(errno));
 				}
 			}
 			else {

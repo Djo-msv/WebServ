@@ -8,15 +8,13 @@
 #include <cstdlib>
 
 // This will basically correspond to the FD of our server
-int serverSocket = -1;
 
 void	stopServer(int)
 {
-	close(serverSocket);
 	exit(1);
 }
 
-void	manageRequests()
+void	manageRequests(int serverSocket)
 {
 	while (true) {
 		int clientSocket = accept(serverSocket, NULL, NULL);
@@ -61,10 +59,9 @@ int	main(void)
 	// AF_INET is used to allow ipv4 connection.
 	// SOCK_STREAM is to tell the socket to use TCP protocol
 	ServerSocket *socket = new ServerSocket(port, AF_INET);
-	(void)socket;
 	signal(SIGINT, stopServer);
 
-	manageRequests();
+	manageRequests(socket->getSocketFd());
 	return (0);
 }
 

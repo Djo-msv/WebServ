@@ -39,11 +39,6 @@ int	ServerSocket::getSocketFd(void)
 	return (_socketFd);
 }
 
-socklen_t ServerSocket::getSockAdressLength(void)
-{
-	return (_sockaddrLength);
-}
-
 sockaddr_in ServerSocket::setupSocketAddress(ServerConfig config)
 {
 	sockaddr_in serverAddress;
@@ -51,7 +46,6 @@ sockaddr_in ServerSocket::setupSocketAddress(ServerConfig config)
 	serverAddress.sin_family = config.sin_family;
 	serverAddress.sin_port = htons(config.sin_port); /* sin_port is port number. */
 	serverAddress.sin_addr.s_addr = INADDR_ANY; /* INADDR_ANY : accept connection from any IP address */
-	_sockaddrLength = sizeof(serverAddress);
 
 	return (serverAddress);
 }

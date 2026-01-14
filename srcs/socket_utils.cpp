@@ -1,5 +1,4 @@
 #include "socket_utils.hpp"
-#include <errno.h>
 
 int throw_fcntl_error(int fcntl)
 {

@@ -1,66 +1,49 @@
-#include <iostream>
-#include <unistd.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
 #include <signal.h>
-#include <string>
 #include <cstring>
 #include <cstdlib>
-#include <sys/epoll.h>
-#include <errno.h>
-
 #define MAX_EVENTS 10
-#include <vector>
+#define key first
+#define value second
 #include <sys/epoll.h>
 
 #include "ServerSocket.hpp"
 
-std::vector<ServerSocket *> serverSockets;
+std::map<int, ServerSocket *> serverSockets;
 
 void	stopServer(int)
 {
 	for (ServerSocketIterator it = serverSockets.begin(); it != serverSockets.end(); ++it)
-		delete *it;
+		delete it->value;
 	exit(0);
 }
 
-
-
-void	manageRequests(ServerSocket *socket, int epollInstance)
+void	manageRequests(int epollInstance)
 {
-	int	conn_sock;
-	int nfds;
-	struct epoll_event ev;
-	struct epoll_event events[MAX_EVENTS];
+	int	client_socket;
+	int nbfds;
+	epoll_event events[MAX_EVENTS];
 
 	while (true) {
-		// nfds is number of file descriptors ready for the requested I/O operation.
+		// nbfds defines the number of file descriptors ready for the requested I/O operation.
 		// Specifying a timeout of -1 causes epoll_wait() to block indefinitely
-		if ((nfds = epoll_wait(epollInstance, events, MAX_EVENTS, -1)) == -1) {
-			throw std::runtime_error("an error occured when wait connection to the fd : '" + \
-				ft_itoa(socket->getSocketFd()) + \
-				"'. Error code : " + ft_itoa(errno));
+		if ((nbfds = epoll_wait(epollInstance, events, MAX_EVENTS, -1)) == -1) {
+			throw std::runtime_error("An error has occured while waiting for connections. Error code : " + ft_itoa(errno));
 			exit(1);
 		}
-		for (int n = 0; n < nfds; ++n) {
+		for (int n = 0; n < nbfds; ++n) {
 			//TODO handle multiple listen_stock with map
-			if (events[n].data.fd == socket->getSocketFd()) {
+			ServerSocketIterator ssocket = serverSockets.find(events[n].data.fd);
+			if (ssocket != serverSockets.end()) {
 				// recover the value of client fd, variables that are set to NULL represent the client informations could be useful later...
-				conn_sock = accept(socket->getSocketFd(), NULL, NULL);
-				if (conn_sock == -1) {
-					throw std::runtime_error("an error occured when accepting connection to the fd : " + \
-						ft_itoa(socket->getSocketFd()) + \
-						". Error code : " + ft_itoa(errno));
+				client_socket = accept(ssocket->key, NULL, NULL);
+				if (client_socket == -1) {
+					throw std::runtime_error("An error occured while allowing connection to the fd : '" + \
+						ft_itoa(ssocket->key) + "'. Error code : " + ft_itoa(errno));
 				}
-				setnonblocking(conn_sock);
+				setnonblocking(client_socket);
 				// add client to the list
-				ev.events = EPOLLIN | EPOLLET;
-				ev.data.fd = conn_sock;
-				if (epoll_ctl(epollInstance, EPOLL_CTL_ADD, conn_sock, &ev) == -1) {
-					throw std::runtime_error("an error occured when allowing connection to the fd : '" + \
-						ft_itoa(socket->getSocketFd()) + \
-						"'. Error code : " + ft_itoa(errno));
-				}
+				epoll_add(epollInstance, client_socket, EPOLLIN | EPOLLET);
 			}
 			else {
 				// TODO client packet response handling
@@ -84,11 +67,11 @@ int	main(void)
 		ServerSocket *socket = new ServerSocket(config, epollInstance);
 		signal(SIGINT, stopServer);
 
-		manageRequests(socket, epollInstance);
+		manageRequests(epollInstance);
 	} catch (std::runtime_error e)
 	{
 		for (ServerSocketIterator it = serverSockets.begin(); it != serverSockets.end(); ++it)
-			delete *it;
+			delete it->value;
 		std::cout << e.what() << std::endl;
 		return (1);
 	}

@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdexcept>
-#include <vector>
+#include <map>
 #include "socket_utils.hpp"
 
 struct ServerConfig
@@ -23,12 +23,9 @@ class ServerSocket
 		~ServerSocket();
 
 		int getSocketFd();
-		sockaddr_in getServerAddress();
-		socklen_t	getSockAdressLength();
 
 	private :
 		int			_socketFd;
-		socklen_t	_sockaddrLength;
 		
 		sockaddr_in setupSocketAddress(ServerConfig);
 		
@@ -47,4 +44,4 @@ class ServerSocket
 		};
 };
 
-typedef std::vector<ServerSocket *>::iterator ServerSocketIterator;
+typedef std::map<int, ServerSocket *>::iterator ServerSocketIterator;

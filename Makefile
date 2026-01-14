@@ -54,8 +54,9 @@ endif
 #==============================SOURCES===========================#
 
 SRCS_FILES:=	main.cpp \
-				ServerSocket.cpp \
-				socket_utils.cpp
+				Socket/ClientSocket.cpp \
+				Socket/ServerSocket.cpp \
+				Socket/socket_utils.cpp
 
 SRCS:=			$(addprefix $(SRC_DIR)/, $(SRCS_FILES))
 

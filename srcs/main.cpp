@@ -8,12 +8,12 @@
 #include <cstdlib>
 #include <sys/epoll.h>
 #include <errno.h>
-
-#define MAX_EVENTS 10
 #include <vector>
 #include <sys/epoll.h>
 
 #include "ServerSocket.hpp"
+
+#define MAX_EVENTS 10
 
 std::vector<ServerSocket *> serverSockets;
 
@@ -24,13 +24,9 @@ void	stopServer(int)
 	exit(0);
 }
 
-
-
-void	manageRequests(ServerSocket *socket, int epollInstance)
+void	manageRequests(ServerSocket *server_socket, int epollInstance)
 {
-	int	conn_sock;
 	int nfds;
-	struct epoll_event ev;
 	struct epoll_event events[MAX_EVENTS];
 
 	while (true) {
@@ -38,29 +34,14 @@ void	manageRequests(ServerSocket *socket, int epollInstance)
 		// Specifying a timeout of -1 causes epoll_wait() to block indefinitely
 		if ((nfds = epoll_wait(epollInstance, events, MAX_EVENTS, -1)) == -1) {
 			throw std::runtime_error("an error occured when wait connection to the fd : '" + \
-				ft_itoa(socket->getSocketFd()) + \
+				ft_itoa(server_socket->getSocketFd()) + \
 				"'. Error code : " + ft_itoa(errno));
 			exit(1);
 		}
 		for (int n = 0; n < nfds; ++n) {
 			//TODO handle multiple listen_stock with map
-			if (events[n].data.fd == socket->getSocketFd()) {
-				// recover the value of client fd, variables that are set to NULL represent the client informations could be useful later...
-				conn_sock = accept(socket->getSocketFd(), NULL, NULL);
-				if (conn_sock == -1) {
-					throw std::runtime_error("an error occured when accepting connection to the fd : " + \
-						ft_itoa(socket->getSocketFd()) + \
-						". Error code : " + ft_itoa(errno));
-				}
-				setnonblocking(conn_sock);
-				// add client to the list
-				ev.events = EPOLLIN | EPOLLET;
-				ev.data.fd = conn_sock;
-				if (epoll_ctl(epollInstance, EPOLL_CTL_ADD, conn_sock, &ev) == -1) {
-					throw std::runtime_error("an error occured when allowing connection to the fd : '" + \
-						ft_itoa(socket->getSocketFd()) + \
-						"'. Error code : " + ft_itoa(errno));
-				}
+			if (events[n].data.fd == server_socket->getSocketFd()) {
+				// TODO new ClientSocket(epollInstance, server_socket) in map	
 			}
 			else {
 				// TODO client packet response handling

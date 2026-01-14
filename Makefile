@@ -53,7 +53,8 @@ endif
 
 #==============================SOURCES===========================#
 
-SRCS_FILES:=	main.cpp
+SRCS_FILES:=	main.cpp \
+				ServerSocket.cpp
 
 SRCS:=			$(addprefix $(SRC_DIR)/, $(SRCS_FILES))
 
@@ -99,10 +100,10 @@ $(NAME): $(OBJS)
 	'   \ `\___x___/\ \____\\ \_,__/    \ `\____\ \____\\ \_\  \ \___/ ' \
 	'    `\/__//__/  \/____/ \/___/      \/_____/\/____/ \/_/   \/__/  '
 	@echo "$(NOC)"
+	@if [ 0 -eq 0 ]; then echo "os : Linux"; else echo "os : Mac/Win"; fi
 
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(DIRS)
-	@if [ 0 -eq 0 ]; then echo "os : Linux"; else echo "os : Mac/Win"; fi
 	@mkdir -p $(BUILD_DIR)
 	@if [ $(NB_COMP) -eq 1 ]; then echo "\n$(BOLD)Compilation of source files :$(NOC)";fi
 	$(eval PERCENT=$(shell expr $(NB_COMP)00 "/" $(TO_COMP)))

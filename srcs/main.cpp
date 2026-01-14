@@ -51,6 +51,8 @@ void	manageRequests()
 	}
 }
 
+#include "ServerSocket.hpp"
+
 int	main(void)
 {
 	//TODO sera défini par la config (parser nécéssaire on verra pour définir sur quel standard partir)
@@ -58,33 +60,10 @@ int	main(void)
 	
 	// AF_INET is used to allow ipv4 connection.
 	// SOCK_STREAM is to tell the socket to use TCP protocol
-	if ((serverSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-		return (0);
-
-	// sockaddr_in is an un obfuscated version of sockaddr
-	sockaddr_in serverAddress;
-	serverAddress.sin_family = AF_INET;
-	serverAddress.sin_port = htons(port);
-
-	// INADDR_ANY : accept connection from any IP address
-	serverAddress.sin_addr.s_addr = INADDR_ANY;
-
-	if (bind(serverSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
-		std::cerr << "Error while binding adress to the server socket" << std::endl;
-		close(serverSocket);
-		return 1;
-	}
-
+	ServerSocket *socket = new ServerSocket(port, AF_INET);
+	(void)socket;
 	signal(SIGINT, stopServer);
 
-	// listen at the server socket and allow 5 connexions at a time
-	if (listen(serverSocket, 5) == -1) {
-		std::cerr << "Error while listening" << std::endl;
-		close(serverSocket);
-		return 1;
-	}
-
-	std::cout << "Server started on port " << port << std::endl;
 	manageRequests();
 	return (0);
 }

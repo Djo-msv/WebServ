@@ -6,12 +6,16 @@
 #include <string>
 #include <cstring>
 #include <cstdlib>
+#include <vector>
+#include <sys/epoll.h>
+#include "../includes/ServerSocket.hpp"
 
 // This will basically correspond to the FD of our server
+std::vector<ServerSocket *> serverSockets;
 
 void	stopServer(int)
 {
-	exit(1);
+	exit(0);
 }
 
 void	manageRequests(int serverSocket)
@@ -49,8 +53,6 @@ void	manageRequests(int serverSocket)
 	}
 }
 
-#include "ServerSocket.hpp"
-
 int	main(void)
 {
 	//TODO sera défini par la config (parser nécéssaire on verra pour définir sur quel standard partir)
@@ -58,10 +60,21 @@ int	main(void)
 	
 	// AF_INET is used to allow ipv4 connection.
 	// SOCK_STREAM is to tell the socket to use TCP protocol
-	ServerSocket *socket = new ServerSocket(port, AF_INET);
-	signal(SIGINT, stopServer);
+	int epollInstance = epoll_create(1);
+	ServerConfig config = (ServerConfig) {port, AF_INET};
+	try
+	{
+		ServerSocket *socket = new ServerSocket(config, epollInstance);
+		signal(SIGINT, stopServer);
 
-	manageRequests(socket->getSocketFd());
+		manageRequests(socket->getSocketFd());
+	} catch (std::runtime_error e)
+	{
+		for (ServerSocketIterator it = serverSockets.begin(); it != serverSockets.end(); ++it)
+			delete *it;
+		std::cout << e.what() << std::endl;
+		return (1);
+	}
 	return (0);
 }
 

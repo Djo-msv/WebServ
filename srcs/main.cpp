@@ -8,39 +8,42 @@
 #include <cstdlib>
 #include <sys/epoll.h>
 
-// This will basically correspond to the FD of our server
 #define MAX_EVENTS 10
-
-void	stopServer(int)
-{
-	exit(0);
-}
+#include <vector>
+#include <sys/epoll.h>
 
 #include "ServerSocket.hpp"
 
-void	manageRequests(ServerSocket *socket)
+std::vector<ServerSocket *> serverSockets;
+
+void	stopServer(int)
+{
+	for (ServerSocketIterator it = serverSockets.begin(); it != serverSockets.end(); ++it)
+		delete *it;
+	exit(0);
+}
+
+
+
+void	manageRequests(ServerSocket *socket, int epollInstance)
 {
 	int	conn_sock;
-	int epfd, nfds;
+	int nfds;
 	struct epoll_event ev;
 	struct epoll_event events[MAX_EVENTS];
-	sockaddr_in serverAddress = socket->getServerAddress();
 
 	while (true) {
 		// nfds is number of file descriptors ready for the requested I/O operation.
 		// Specifying a timeout of -1 causes epoll_wait() to block indefinitely
-		if ((nfds = epoll_wait(epfd, events, MAX_EVENTS, -1)) == -1) {
+		if ((nfds = epoll_wait(epollInstance, events, MAX_EVENTS, -1)) == -1) {
 			std::cerr << "epoll failure" << std::endl;
 			exit(1);
 		}
-		socklen_t socklen = static_cast<socklen_t>(socket->getAddressLen());
 		for (int n = 0; n < nfds; ++n) {
 			//TODO handle multiple listen_stock with map
 			if (events[n].data.fd == socket->getSocketFd()) {
 				// recover the value of client fd
-				conn_sock = accept(socket->getSocketFd(), \
-						(struct sockaddr *) &serverAddress, \
-						&socklen);
+				conn_sock = accept(socket->getSocketFd(), NULL, NULL);
 				if (conn_sock == -1) {
 					std::cerr << "an error occure when accept" << std::endl;
 					exit(1);
@@ -49,7 +52,7 @@ void	manageRequests(ServerSocket *socket)
 				// add client to the list
 				ev.events = EPOLLIN | EPOLLET;
 				ev.data.fd = conn_sock;
-				if (epoll_ctl(epfd, EPOLL_CTL_ADD, conn_sock, &ev) == -1) {
+				if (epoll_ctl(epollInstance, EPOLL_CTL_ADD, conn_sock, &ev) == -1) {
 					std::cerr << "An error occure when epoll create" << std::endl;
 					exit(1);
 				}
@@ -69,10 +72,20 @@ int	main(void)
 	
 	// AF_INET is used to allow ipv4 connection.
 	// SOCK_STREAM is to tell the socket to use TCP protocol
-	ServerSocket *socket = new ServerSocket(port, AF_INET);
-	
-	signal(SIGINT, stopServer);
+	int epollInstance = epoll_create(1);
+	ServerConfig config = (ServerConfig) {port, AF_INET};
+	try
+	{
+		ServerSocket *socket = new ServerSocket(config, epollInstance);
+		signal(SIGINT, stopServer);
 
-	manageRequests(socket);
+		manageRequests(socket, epollInstance);
+	} catch (std::runtime_error e)
+	{
+		for (ServerSocketIterator it = serverSockets.begin(); it != serverSockets.end(); ++it)
+			delete *it;
+		std::cout << e.what() << std::endl;
+		return (1);
+	}
 	return (0);
 }

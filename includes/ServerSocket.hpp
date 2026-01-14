@@ -4,34 +4,47 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <stdexcept>
+#include <vector>
+#include "socket_utils.hpp"
+
+struct ServerConfig
+{
+	int sin_port;
+	sa_family_t sin_family;
+};
 
 class ServerSocket
 {
+
 	public :
-		ServerSocket(int sin_port, sa_family_t sin_family);
+		ServerSocket(ServerConfig, int epollInstance);
 		~ServerSocket();
 
 		int getSocketFd();
 		sockaddr_in getServerAddress();
-		int	getAddressLen();
+		socklen_t	getSockAdressLength();
 
 	private :
-		int	_socketFd;
-		sockaddr_in _serverAddress;
-		int	_addressLen;
-
+		int			_socketFd;
+		socklen_t	_sockaddrLength;
+		
+		sockaddr_in setupSocketAddress(ServerConfig);
+		
 		// Error class
 		class SocketError : public std::runtime_error {
 			public :
-				SocketError(const char *msg) : std::runtime_error(msg) {}
+				SocketError(const std::string msg) : std::runtime_error(msg) {}
 		};
 		class BindError : public std::runtime_error {
 			public :
-				BindError(const char *msg) : std::runtime_error(msg) {}
+				BindError(const std::string msg) : std::runtime_error(msg) {}
 		};
 		class ListenError : public std::runtime_error {
 			public :
-				ListenError(const char *msg) : std::runtime_error(msg) {}
+				ListenError(const std::string msg) : std::runtime_error(msg) {}
 		};
 };
+
+typedef std::vector<ServerSocket *>::iterator ServerSocketIterator;

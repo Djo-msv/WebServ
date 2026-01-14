@@ -15,7 +15,7 @@
 
 #define MAX_EVENTS 10
 
-std::vector<ServerSocket *> serverSockets;
+std::map<ServerSocket *> serverSockets;
 
 void	stopServer(int)
 {

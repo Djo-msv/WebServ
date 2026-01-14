@@ -13,9 +13,13 @@ class ServerSocket
 		~ServerSocket();
 
 		int getSocketFd();
+		sockaddr_in getServerAddress();
+		int	getAddressLen();
 
 	private :
 		int	_socketFd;
+		sockaddr_in _serverAddress;
+		int	_addressLen;
 
 		// Error class
 		class SocketError : public std::runtime_error {

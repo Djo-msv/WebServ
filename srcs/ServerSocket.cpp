@@ -9,14 +9,12 @@ ServerSocket::ServerSocket(int sin_port, sa_family_t sin_family)
 		throw SocketError("Error during socket creation");
 	}
 
-	sockaddr_in serverAddress;
+	_serverAddress.sin_family = sin_family;
+	_serverAddress.sin_port = htons(sin_port); /* sin_port is port number. */
+	_serverAddress.sin_addr.s_addr = INADDR_ANY; /* INADDR_ANY : accept connection from any IP address */
+	_addressLen = sizeof(_serverAddress);
 
-	serverAddress.sin_family = sin_family;
-	serverAddress.sin_port = htons(sin_port); /* sin_port is port number. */
-	serverAddress.sin_addr.s_addr = INADDR_ANY; /* INADDR_ANY : accept connection from any IP address */
-	
-
-	if (bind(_socketFd, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
+	if (bind(_socketFd, (struct sockaddr*)&_serverAddress, sizeof(_serverAddress)) == -1) {
 		close(_socketFd);
 		throw BindError("Error while binding adress to the server socket");
 	}
@@ -38,4 +36,14 @@ ServerSocket::~ServerSocket(void)
 int	ServerSocket::getSocketFd(void)
 {
 	return (_socketFd);
+}
+
+sockaddr_in	ServerSocket::getServerAddress(void)
+{
+	return(_serverAddress);
+}
+
+int	ServerSocket::getAddressLen(void)
+{
+	return (_addressLen);
 }

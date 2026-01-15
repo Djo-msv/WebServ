@@ -8,12 +8,14 @@
 #define key first
 #define value second
 #include "ServerSocket.hpp"
+#include "ClientSocket.hpp"
 #define CATCH_AND_HANDLE(ExceptionType) \
     catch (const ExceptionType& e) { \
         handleError(e.what()); \
 	}
 
 std::map<int, ServerSocket *> serverSockets;
+std::map<int, ClientSocket *> clientSockets;
 
 void	stopServer(int)
 {
@@ -32,7 +34,6 @@ void handleError(const char* msg)
 
 void	manageRequests(int epollInstance)
 {
-	int	client_socket;
 	int nbfds;
 	epoll_event events[MAX_EVENTS];
 
@@ -44,26 +45,35 @@ void	manageRequests(int epollInstance)
 			exit(1);
 		}
 		for (int n = 0; n < nbfds; ++n) {
-			//TODO handle multiple listen_stock with map
-			ServerSocketIterator ssocket = serverSockets.find(events[n].data.fd);
-			if (ssocket != serverSockets.end()) {
-				// recover the value of client fd, variables that are set to NULL represent the client informations could be useful later...
-				client_socket = accept(ssocket->key, NULL, NULL);
-				if (client_socket == -1) {
-					throw std::runtime_error("An error occured while allowing connection to the fd : '" + \
-						ft_itoa(ssocket->key) + "'. Error code : " + ft_itoa(errno));
-				}
-				setnonblocking(client_socket);
-				// add client to the list
-				epoll_add(epollInstance, client_socket, EPOLLIN | EPOLLET);
+			ServerSocketIterator ssocketIterator = serverSockets.find(events[n].data.fd);
+			if (ssocketIterator != serverSockets.end()) {
+				ClientSocket *csocket = new ClientSocket(epollInstance, *ssocketIterator->value); 
+				clientSockets.insert(std::make_pair(csocket->getSocketFd(), 
+							csocket));
 			}
 			else {
+				ClientSocketIterator csocketIterator = clientSockets.find(events[n].data.fd);
+				if (csocketIterator == clientSockets.end() || csocketIterator->value->getStatus() != WRITE){}
+					//trow error
+				// TODO 
+				// TODO exec CGI
 				// TODO client packet response handling
 //				do_use_fd(events[n].data.fd);
 			}
 		}
+		for (std::map<int, ClientSocket *>::iterator it = clientSockets.begin(); it != clientSockets.end(); it++) {
+			ClientSocket *csocket = it->value;
+			if (csocket->getStatus() != READ)
+				continue;
+			csocket->read();
+			if (csocket->getStatus() == WRITE)
+				epoll_add(epollInstance, csocket->getSocketFd(), EPOLLOUT | EPOLLET);
+		}
 	}
 }
+
+// client fd 1
+// server fd 2
 
 int	main(void)
 {
@@ -78,7 +88,7 @@ int	main(void)
 	{
 		ServerSocket *socket = new ServerSocket(config, epollInstance);
 		signal(SIGINT, stopServer);
-
+		(void)socket;
 		manageRequests(epollInstance);
 	}
 	CATCH_AND_HANDLE(std::runtime_error)

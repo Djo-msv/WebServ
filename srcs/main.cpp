@@ -2,18 +2,16 @@
 #include <signal.h>
 #include <cstring>
 #include <cstdlib>
-<<<<<<< HEAD
 #include <sys/epoll.h>
-#include <errno.h>
-#include <vector>
-=======
+
 #define MAX_EVENTS 10
 #define key first
 #define value second
->>>>>>> refs/remotes/origin/main
-#include <sys/epoll.h>
-
 #include "ServerSocket.hpp"
+#define CATCH_AND_HANDLE(ExceptionType) \
+    catch (const ExceptionType& e) { \
+        handleError(e.what()); \
+	}
 
 std::map<int, ServerSocket *> serverSockets;
 
@@ -22,6 +20,14 @@ void	stopServer(int)
 	for (ServerSocketIterator it = serverSockets.begin(); it != serverSockets.end(); ++it)
 		delete it->value;
 	exit(0);
+}
+
+void handleError(const char* msg)
+{
+	for (ServerSocketIterator it = serverSockets.begin(); it != serverSockets.end(); ++it)
+		delete it->value;
+    std::cerr << msg << std::endl;
+	exit(1);
 }
 
 void	manageRequests(int epollInstance)
@@ -67,19 +73,15 @@ int	main(void)
 	// AF_INET is used to allow ipv4 connection.
 	// SOCK_STREAM is to tell the socket to use TCP protocol
 	int epollInstance = epoll_create(1);
-	ServerConfig config = (ServerConfig) {port, AF_INET};
+	ServerConfig config = (ServerConfig) {port, AF_INET, 0, 0};
 	try
 	{
 		ServerSocket *socket = new ServerSocket(config, epollInstance);
 		signal(SIGINT, stopServer);
 
 		manageRequests(epollInstance);
-	} catch (std::runtime_error e)
-	{
-		for (ServerSocketIterator it = serverSockets.begin(); it != serverSockets.end(); ++it)
-			delete it->value;
-		std::cout << e.what() << std::endl;
-		return (1);
 	}
+	CATCH_AND_HANDLE(std::runtime_error)
+	CATCH_AND_HANDLE(std::bad_alloc)
 	return (0);
 }

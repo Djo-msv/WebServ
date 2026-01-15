@@ -11,8 +11,10 @@
 
 struct ServerConfig
 {
-	int sin_port;
+	int 		sin_port;
 	sa_family_t sin_family;
+	std::string	cgi_path;
+	std::string	index_file;
 };
 
 class ServerSocket

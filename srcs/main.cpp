@@ -47,7 +47,7 @@ void	manageRequests(int epollInstance)
 		for (int n = 0; n < nbfds; ++n) {
 			ServerSocketIterator ssocketIterator = serverSockets.find(events[n].data.fd);
 			if (ssocketIterator != serverSockets.end()) {
-				ClientSocket *csocket = new ClientSocket(epollInstance, *ssocketIterator->value); 
+				ClientSocket *csocket = new ClientSocket(*ssocketIterator->value); 
 				clientSockets.insert(std::make_pair(csocket->getSocketFd(), 
 							csocket));
 			}

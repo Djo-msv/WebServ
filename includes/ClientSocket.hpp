@@ -16,10 +16,10 @@
 class ClientSocket
 {
 	public :
-		ClientSocket(int epollInstance, ServerSocket &serverSocket);
+		ClientSocket(ServerSocket &serverSocket);
 		~ClientSocket();
 
-		int		read();
+		void	read();
 		// TODO send()
 
 		int		getSocketFd();
@@ -27,7 +27,7 @@ class ClientSocket
 
 	private :
 		int				_clientSocketFd;
-		ServerSocket	_serverSocket;
+		ServerSocket	*_serverSocket;
 		std::string	_clientRequest;
 		bool		_status;
 };

@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <unistd.h>
+#include <map>
 
 
 class Socket
@@ -21,3 +22,5 @@ class Socket
 				SocketError(const std::string msg) : std::runtime_error(msg) {}
 		};
 };
+
+typedef std::map<const int, Socket *>::iterator SocketIterator;

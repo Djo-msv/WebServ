@@ -3,28 +3,30 @@
 #include <cstring>
 #include <cstdlib>
 #include <sys/epoll.h>
+#include <deque>
 
 #define MAX_EVENTS 10
 #define key first
 #define value second
 #include "ServerSocket.hpp"
+#include "ClientSocket.hpp"
 #define CATCH_AND_HANDLE(ExceptionType) \
     catch (const ExceptionType& e) { \
         handleError(e.what()); \
 	}
 
-std::map<int, ServerSocket *> serverSockets;
+std::map<const int, Socket *> sockets;
 
 void	stopServer(int)
 {
-	for (ServerSocketIterator it = serverSockets.begin(); it != serverSockets.end(); ++it)
+	for (SocketIterator it = sockets.begin(); it != sockets.end(); ++it)
 		delete it->value;
 	exit(0);
 }
 
 void handleError(const char* msg)
 {
-	for (ServerSocketIterator it = serverSockets.begin(); it != serverSockets.end(); ++it)
+	for (SocketIterator it = sockets.begin(); it != sockets.end(); ++it)
 		delete it->value;
     std::cerr << msg << std::endl;
 	exit(1);
@@ -32,9 +34,9 @@ void handleError(const char* msg)
 
 void	manageRequests(int epollInstance)
 {
-	int	client_socket;
-	int nbfds;
-	epoll_event events[MAX_EVENTS];
+	int 						nbfds;
+	epoll_event 				events[MAX_EVENTS];
+	std::deque<ClientSocket *>	clientsToRead;
 
 	while (true) {
 		// nbfds defines the number of file descriptors ready for the requested I/O operation.
@@ -44,22 +46,33 @@ void	manageRequests(int epollInstance)
 			exit(1);
 		}
 		for (int n = 0; n < nbfds; ++n) {
-			//TODO handle multiple listen_stock with map
-			ServerSocketIterator ssocket = serverSockets.find(events[n].data.fd);
-			if (ssocket != serverSockets.end()) {
-				// recover the value of client fd, variables that are set to NULL represent the client informations could be useful later...
-				client_socket = accept(ssocket->key, NULL, NULL);
-				if (client_socket == -1) {
-					throw std::runtime_error("An error occured while allowing connection to the fd : '" + \
-						ft_itoa(ssocket->key) + "'. Error code : " + ft_itoa(errno));
-				}
-				setnonblocking(client_socket);
-				// add client to the list
-				epoll_add(epollInstance, client_socket, EPOLLIN | EPOLLET);
+			SocketIterator socketIterator = sockets.find(events[n].data.fd);
+			if (socketIterator == sockets.end());
+				// WTF ?? THROW ERROR
+			ServerSocket *sSocket = dynamic_cast<ServerSocket *>(socketIterator->value);
+			if (sSocket != NULL)
+			{
+				ClientSocket *csocket = new ClientSocket(*sSocket); 
+				sockets.insert(std::make_pair(csocket->getSocketFd(), 
+							csocket));
+				clientsToRead.push_back(csocket);
 			}
 			else {
+				ClientSocket *cSocket = dynamic_cast<ClientSocket *>(socketIterator->value);
+				if (cSocket->getStatus() != WRITE);
+					//trow error
+				// TODO 
+				// TODO exec CGI
 				// TODO client packet response handling
 //				do_use_fd(events[n].data.fd);
+			}
+		}
+		for (std::deque<ClientSocket *>::iterator it = clientsToRead.begin(); it != clientsToRead.end(); ++it) {
+			ClientSocket *csocket = *it;
+			csocket->read();
+			if (csocket->getStatus() == WRITE) {
+				epoll_add(epollInstance, csocket->getSocketFd(), EPOLLOUT | EPOLLET);
+				it = clientsToRead.erase(it);
 			}
 		}
 	}
@@ -78,7 +91,7 @@ int	main(void)
 	{
 		ServerSocket *socket = new ServerSocket(config, epollInstance);
 		signal(SIGINT, stopServer);
-
+		(void)socket;
 		manageRequests(epollInstance);
 	}
 	CATCH_AND_HANDLE(std::runtime_error)

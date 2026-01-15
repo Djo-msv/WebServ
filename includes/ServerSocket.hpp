@@ -41,5 +41,3 @@ class ServerSocket : public Socket
 				ListenError(const std::string msg) : std::runtime_error(msg) {}
 		};
 };
-
-typedef std::map<int, ServerSocket *>::iterator ServerSocketIterator;

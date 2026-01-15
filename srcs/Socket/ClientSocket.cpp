@@ -1,36 +1,46 @@
 #include "ClientSocket.hpp"
 
-ClientSocket::ClientSocket(int epollInstance, int server_socket)
-{
-	// recover the value of client fd, variables that are set to NULL represent the client informations could be useful later...
-	_clientSocket = accept(server_socket, NULL, NULL);
-	if (_clientSocket == -1) {
-		throw std::runtime_error("an error occured when accepting connection to the fd : " + \
-			ft_itoa(server_socket) + \
-			". Error code : " + ft_itoa(errno));
-	}
-	setnonblocking(_clientSocket);
-	// add client to the list
-	epoll_add(epollInstance, _clientSocket, EPOLLIN | EPOLLET);
-}
+ClientSocket::ClientSocket(ServerSocket &serverSocket) : _status(READ), _serverSocket(serverSocket), Socket::Socket() {}
 
-ClientSocket::~ClientSocket(void)
-{
-	if (_clientSocket > 0)
-		close(_clientSocket);
-}
+ClientSocket::~ClientSocket(void) {}
 
 void	ClientSocket::read(void)
 {
 	char	buffer[BUF_SIZE];
 
-	ssize_t	size = ::read(_clientSocket, static_cast<void*>(buffer), BUF_SIZE);
+	// read into Client Socket and put result into buffer
+	// read return size of char put into buffer, -1 is for error
+	ssize_t	size = ::read(_socketFd, static_cast<void*>(buffer), BUF_SIZE);
 
-	if (size == -1){
-		close(_clientSocket);
-		throw std::runtime_error("an error occured when read the fd : " + \
-				ft_itoa(_clientSocket) + \
-				". Error code : " + ft_itoa(errno));
+	if (size == -1) {
+		if (errno == EWOULDBLOCK) {
+			_status = WRITE;
+			return ;
+		}
+		throw std::runtime_error("an error occured when reading the fd : " + \
+				ft_itoa(_socketFd) + ". Error code : " + ft_itoa(errno));
 	}
 	_clientRequest += buffer;
+}
+
+bool	ClientSocket::getStatus(void)
+{
+	return (_status);
+}
+
+int ClientSocket::createSocket()
+{
+	int sSocketFd;
+	int cSocketFd;
+	
+	sSocketFd = _serverSocket.getSocketFd();
+
+	// recover the value of client fd, variables that are set to NULL represent the client informations could be useful later...
+	cSocketFd = accept(sSocketFd, NULL, NULL);
+	if (cSocketFd == -1) {
+		throw std::runtime_error("an error occured when accepting connection to the fd : " + \
+			ft_itoa(sSocketFd) + ". Error code : " + ft_itoa(errno));
+	}
+	setnonblocking(cSocketFd);
+	return (cSocketFd);
 }

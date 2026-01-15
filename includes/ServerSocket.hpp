@@ -7,7 +7,8 @@
 #include <fcntl.h>
 #include <stdexcept>
 #include <map>
-#include "socket_utils.hpp"
+#include <socket_utils.hpp>
+#include <Socket.hpp>
 
 struct ServerConfig
 {
@@ -17,25 +18,20 @@ struct ServerConfig
 	std::string	index_file;
 };
 
-class ServerSocket
+class ServerSocket : public Socket
 {
 
 	public :
 		ServerSocket(ServerConfig, int epollInstance);
 		~ServerSocket();
 
-		int getSocketFd();
-
 	private :
-		int			_socketFd;
-		
+		ServerConfig _config;	
+
+		virtual int	createSocket();
 		sockaddr_in setupSocketAddress(ServerConfig);
 		
 		// Error class
-		class SocketError : public std::runtime_error {
-			public :
-				SocketError(const std::string msg) : std::runtime_error(msg) {}
-		};
 		class BindError : public std::runtime_error {
 			public :
 				BindError(const std::string msg) : std::runtime_error(msg) {}

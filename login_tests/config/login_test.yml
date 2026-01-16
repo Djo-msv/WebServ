@@ -1,0 +1,14 @@
+#les indentations pour démarquer les objets, ici un seul server je l'appelle login_test, toutes les paires dedans lui appartiennent
+login_test:
+	#infos importantes ici
+	listen: 7500
+	host: localhost
+	max_clients: 30000 #probablement plus
+	methods: #les méthodes gérées pour l'instant
+		- GET
+		- POST
+	root: html/ #la base des fichiers à aller tirer des requests (j'ai pas encore réussi à bien gérer les requests encore mais ça arrive)
+	index: login.html #ici j'ai considéré "index" la première page à afficher
+	login: true
+	login_logs: /logs/logins.txt
+	#surement encore plein d'autres infos auxquelles j'ai pas encore pensé, etc. le cgi et tout principalement

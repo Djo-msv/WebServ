@@ -1,6 +1,6 @@
 #include "Socket.hpp"
 
-Socket::Socket() : _socketFd(createSocket()) {}
+Socket::Socket(int fd) : _socketFd(fd) {}
 
 Socket::~Socket() { close(_socketFd); }
 

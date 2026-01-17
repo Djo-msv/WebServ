@@ -30,4 +30,7 @@ class ProcessExecution
 			public :
 				ExecError(const std::string msg) : std::runtime_error(msg) {}
 		};
+
+		// Error Function
+		void	closesFds(); /* just before throw an error to prevent leaks */
 };

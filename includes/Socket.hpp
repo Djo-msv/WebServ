@@ -8,7 +8,7 @@
 class Socket
 {
 	protected :
-		const int _socketFd;
+		int _socketFd;
 	public :
 		Socket();
 		virtual ~Socket();

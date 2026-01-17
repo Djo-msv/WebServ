@@ -1,7 +1,7 @@
 #include "ServerSocket.hpp"
 #include <errno.h>
 
-ServerSocket::ServerSocket(ServerConfig config, int epollInstance) : Socket(), _config(config)
+ServerSocket::ServerSocket(ServerConfig config, int epollInstance) : Socket(createSocket()), _config(config)
 {
 	// sin_family is always AF_INET.
 	// SOCK_STREAM is to tell the socket to use TCP protocol.

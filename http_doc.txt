@@ -1,0 +1,44 @@
+so, about that http standard documentation
+
+general shape of a HTTP message ::
+	start-line\r\n
+	headers (each \r\n-terminated, in [key: value] form)
+	\r\n
+	(optional) message body
+
+start-line can be a request (client->server) or a status (server->client)
+	request-line in form : method request-target HTTP-version
+		request-target explained :: 4 types
+			origin-form = absolute path within server (+"?" query), for all methods to server but OPTIONS/CONNECTION
+			absolute-form = only for requests that go through proxies (irrelevant for us ith)
+			authority-form = only for CONNECTION methods
+			asterisk-form = literally "*", only for OPTIONS method to get server-wide and not resource-specific
+	status-line in form : HTTP-version status-code (optional)status-message
+
+relevant rules ::
+	messages must follow the parsing rules or be disregarded as 400 Bad Request
+	headers must have a [Host: host] pair
+	if transfer-encoding ; no content-length
+
+common status messages :: 1xx (info) 2xx (success) 3xx (redirection) 4xx (client error) 5xx (server error)
+	200 OK
+	400 Bad Request
+	404 Not Found
+	501 Not Implemented (method isn't allowed for this server/location, encoding isn't handled, etc.)
+	414 URI Too Long
+	301 Moved Permanently
+	204 No Content
+	411 Length Required (message body but no length provided)
+
+the relevant common methods ::
+	GET :: asking for representation of target
+	DELETE :: asking to delete target
+	OPTIONS :: asking for allowed methods on target
+	POST :: submit data to target to create a new resource/perform an action --> new user creation, form submission, etc.
+
+on connection systems ::
+	we still need to decide if we want to do a close or keep-alive system --> so far i implemented just a close system (pretty sure)
+	supposedly a close should be in stages :: server->close, closes the write side, waits for ack, then closes
+
+next up ::
+	transfer-encoding: gzip(compressed), chunked --> for file/heavy data transfers

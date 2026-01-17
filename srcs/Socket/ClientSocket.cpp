@@ -1,6 +1,6 @@
 #include "ClientSocket.hpp"
 
-ClientSocket::ClientSocket(ServerSocket &serverSocket) : _status(READ), _serverSocket(serverSocket), Socket::Socket() {}
+ClientSocket::ClientSocket(ServerSocket &serverSocket) : Socket::Socket(), _serverSocket(serverSocket), _status(READ){}
 
 ClientSocket::~ClientSocket(void) {}
 

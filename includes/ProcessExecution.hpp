@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ClientSocket.hpp"
+
 // This class allows the server to execute a program using a CGI script.
 class ProcessExecution
 {
@@ -24,7 +26,7 @@ class ProcessExecution
 		};
 		class ForkError : public std::runtime_error {
 			public :
-				PipeError(const std::string msg) : std::runtime_error(msg) {}
+				ForkError(const std::string msg) : std::runtime_error(msg) {}
 		};
 		class ExecError : public std::runtime_error {
 			public :

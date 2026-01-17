@@ -46,7 +46,7 @@ void	manageRequests(int epollInstance)
 		// TODO Boucle for a déplacer dans une fonction "handle_epoll_events"
 		for (int n = 0; n < nbfds; ++n) {
 			SocketIterator socketIterator = sockets.find(events[n].data.fd);
-			if (socketIterator == sockets.end());
+			if (socketIterator == sockets.end()) {};
 				// WTF ?? THROW ERROR
 			ServerSocket *sSocket = dynamic_cast<ServerSocket *>(socketIterator->value);
 			if (sSocket != NULL)
@@ -58,7 +58,7 @@ void	manageRequests(int epollInstance)
 			}
 			else {
 				ClientSocket *cSocket = dynamic_cast<ClientSocket *>(socketIterator->value);
-				if (cSocket->getStatus() != WRITE);
+				if (cSocket->getStatus() != WRITE) {};
 					//trow error
 				// TODO 
 				// TODO exec CGI

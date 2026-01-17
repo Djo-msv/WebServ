@@ -11,9 +11,9 @@ class Socket
 		const int _socketFd;
 	public :
 		Socket();
-		~Socket();
+		virtual ~Socket();
 
-		const int getSocketFd();
+		int getSocketFd();
 	
 		virtual int createSocket() = 0;
 

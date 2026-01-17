@@ -1,7 +1,12 @@
 #include "ProcessExecution.hpp"
 
-ProcessExecution::ProcessExecution(void) : _pipeIn({-1, -1}), _pipeOut({-1, -1}, _pid(0))
-{}
+ProcessExecution::ProcessExecution(void) : _pid(0)
+{
+	_pipeIn[0] = -1;
+	_pipeIn[1] = -1;
+	_pipeOut[0] = -1;
+	_pipeOut[1] = -1;
+} 
 
 ProcessExecution::~ProcessExecution(void)
 {
@@ -58,7 +63,7 @@ int ProcessExecution::readDataProcess(char buffer[BUF_SIZE]) /* Read the output 
 }
 
 
-void	closesFds(void) /* just before throw an error to prevent leaks */
+void	ProcessExecution::closesFds(void) /* just before throw an error to prevent leaks */
 {
 	if (_pipeIn[0] != -1)
 		close(_pipeIn[0]);

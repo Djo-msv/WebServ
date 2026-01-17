@@ -10,7 +10,7 @@ class Socket
 	protected :
 		const int _socketFd;
 	public :
-		Socket();
+		Socket(int fd);
 		virtual ~Socket();
 
 		int getSocketFd();

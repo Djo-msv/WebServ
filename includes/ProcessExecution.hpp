@@ -1,6 +1,5 @@
 #pragma once
 
-
 // This class allows the server to execute a program using a CGI script.
 class ProcessExecution
 {
@@ -12,9 +11,23 @@ class ProcessExecution
 		
 		int sendDataProcess(char *bytes); /* send data to the child Process */
 		int readDataProcess(char buffer[BUF_SIZE]); /* Read the output data from the child process, and fill the buffer passed as a parameter. */
-		int getProcessData(int *input, int *output); /* return the pid of the Process and set the fd input and output value */
+
 	private :
 		int _pipeIn[2]; /* execve input */
 		int _pipeOut[2]; /* execve output */
 		int _pid; /* Process pid */
+
+		// Error class
+		class PipeError : public std::runtime_error {
+			public :
+				PipeError(const std::string msg) : std::runtime_error(msg) {}
+		};
+		class ForkError : public std::runtime_error {
+			public :
+				PipeError(const std::string msg) : std::runtime_error(msg) {}
+		};
+		class ExecError : public std::runtime_error {
+			public :
+				ExecError(const std::string msg) : std::runtime_error(msg) {}
+		};
 };

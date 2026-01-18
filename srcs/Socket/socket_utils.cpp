@@ -13,7 +13,7 @@ void setnonblocking(int fd)
 	{
 		int flags = throw_fcntl_error(fcntl(fd, F_GETFL));
 		throw_fcntl_error(fcntl(fd, F_SETFL, flags | O_NONBLOCK));
-	} catch (std::runtime_error e)
+	} catch (std::runtime_error &e)
 	{
 		close(fd);
 		throw e;

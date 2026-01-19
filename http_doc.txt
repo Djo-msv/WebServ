@@ -24,6 +24,7 @@ common status messages :: 1xx (info) 2xx (success) 3xx (redirection) 4xx (client
 	200 OK
 	400 Bad Request
 	404 Not Found
+	403 Forbidden
 	501 Not Implemented (method isn't allowed for this server/location, encoding isn't handled, etc.)
 	414 URI Too Long
 	301 Moved Permanently

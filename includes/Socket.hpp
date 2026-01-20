@@ -14,8 +14,6 @@ class Socket
 		virtual ~Socket();
 
 		int getSocketFd();
-	
-		virtual int createSocket() = 0;
 
 		class SocketError : public std::runtime_error {
 			public :

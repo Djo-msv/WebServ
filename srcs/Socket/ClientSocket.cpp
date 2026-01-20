@@ -1,6 +1,6 @@
 #include "ClientSocket.hpp"
 
-ClientSocket::ClientSocket(ServerSocket &serverSocket) : Socket::Socket(createSocket()), _serverSocket(serverSocket), _status(READ){}
+ClientSocket::ClientSocket(ServerSocket &serverSocket) : Socket::Socket(createSocket(serverSocket)), _status(READ){}
 
 ClientSocket::~ClientSocket(void) {}
 
@@ -12,6 +12,7 @@ void	ClientSocket::read(void)
 	// read return size of char put into buffer, -1 is for error
 	ssize_t	size = ::read(_socketFd, static_cast<void*>(buffer), BUF_SIZE);
 
+	std::cout << "Size read :" << size << std::endl;
 	if (size == -1) {
 		if (errno == EWOULDBLOCK) {
 			_status = WRITE;
@@ -28,12 +29,12 @@ bool	ClientSocket::getStatus(void)
 	return (_status);
 }
 
-int ClientSocket::createSocket()
+int ClientSocket::createSocket(ServerSocket & serverSocket)
 {
 	int sSocketFd;
 	int cSocketFd;
 	
-	sSocketFd = _serverSocket.getSocketFd();
+	sSocketFd = serverSocket.getSocketFd();
 
 	// recover the value of client fd, variables that are set to NULL represent the client informations could be useful later...
 	cSocketFd = accept(sSocketFd, NULL, NULL);

@@ -1,7 +1,7 @@
 #include "ServerSocket.hpp"
 #include <errno.h>
 
-ServerSocket::ServerSocket(ServerConfig config, int epollInstance) : Socket(createSocket()), _config(config)
+ServerSocket::ServerSocket(ServerConfig config, int epollInstance) : Socket(createSocket(config)), _config(config)
 {
 	// sin_family is always AF_INET.
 	// SOCK_STREAM is to tell the socket to use TCP protocol.
@@ -34,11 +34,11 @@ sockaddr_in ServerSocket::setupSocketAddress(ServerConfig config)
 	return (serverAddress);
 }
 
-int ServerSocket::createSocket()
+int ServerSocket::createSocket(ServerConfig &config)
 {
 	int socketFd;
 
-	if ((socketFd = socket(_config.sin_family, SOCK_STREAM, 0)) == -1) {
+	if ((socketFd = socket(config.sin_family, SOCK_STREAM, 0)) == -1) {
 		throw SocketError("Error during socket creation. Error code : " + ft_itoa(errno));
 	}
 

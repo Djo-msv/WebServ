@@ -46,7 +46,9 @@ void	manageRequests(int epollInstance)
 		// TODO Boucle for a déplacer dans une fonction "handle_epoll_events"
 		for (int n = 0; n < nbfds; ++n) {
 			SocketIterator socketIterator = sockets.find(events[n].data.fd);
-			if (socketIterator == sockets.end()) {};
+			if (socketIterator == sockets.end()) {
+				std::cout << "WTf ?" << std::endl;
+			};
 				// WTF ?? THROW ERROR
 			ServerSocket *sSocket = dynamic_cast<ServerSocket *>(socketIterator->value);
 			if (sSocket != NULL)
@@ -73,6 +75,8 @@ void	manageRequests(int epollInstance)
 			if (csocket->getStatus() == WRITE) {
 				epoll_add(epollInstance, csocket->getSocketFd(), EPOLLOUT | EPOLLET);
 				it = clientsToRead.erase(it);
+				if (it == clientsToRead.end())
+					break ;
 			}
 		}
 	}
@@ -86,12 +90,12 @@ int	main(void)
 	// AF_INET is used to allow ipv4 connection.
 	// SOCK_STREAM is to tell the socket to use TCP protocol
 	int epollInstance = epoll_create(1);
-	ServerConfig config = (ServerConfig) {port, AF_INET, 0, 0};
+	ServerConfig config = (ServerConfig) {port, AF_INET, "", ""};
 	try
 	{
 		ServerSocket *socket = new ServerSocket(config, epollInstance);
 		signal(SIGINT, stopServer);
-		(void)socket;
+		sockets.insert(std::make_pair(socket->getSocketFd(), socket));
 		manageRequests(epollInstance);
 	}
 	CATCH_AND_HANDLE(std::runtime_error)

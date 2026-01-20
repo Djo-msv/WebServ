@@ -28,8 +28,8 @@ class ServerSocket : public Socket
 	private :
 		ServerConfig _config;	
 
-		virtual int	createSocket();
-		sockaddr_in setupSocketAddress(ServerConfig);
+		int			createSocket(ServerConfig &);
+		sockaddr_in	setupSocketAddress(ServerConfig);
 		
 		// Error class
 		class BindError : public std::runtime_error {

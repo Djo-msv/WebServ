@@ -28,9 +28,9 @@ class ClientSocket : public Socket
 		bool	getStatus();
 
 	private :
-		ServerSocket &	_serverSocket;
+		// ServerSocket &	_serverSocket;
 		std::string		_clientRequest;
 		bool			_status;
 
-		virtual int createSocket();
+		int createSocket(ServerSocket &);
 };

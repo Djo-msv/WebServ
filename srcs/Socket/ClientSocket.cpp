@@ -8,20 +8,20 @@ void	ClientSocket::read(void)
 {
 	char	buffer[BUF_SIZE];
 
+	std::memset(buffer, 0, BUF_SIZE);
 	// read into Client Socket and put result into buffer
 	// read return size of char put into buffer, -1 is for error
-	ssize_t	size = ::read(_socketFd, static_cast<void*>(buffer), BUF_SIZE);
+	ssize_t	size = ::read(_socketFd, buffer, BUF_SIZE);
 
 	std::cout << "Size read :" << size << std::endl;
-	if (size == -1) {
-		if (errno == EWOULDBLOCK) {
-			_status = WRITE;
-			return ;
-		}
+	std::cout << buffer << std::endl;
+	if (size == -1)
 		throw std::runtime_error("an error occured when reading the fd : " + \
 				ft_itoa(_socketFd) + ". Error code : " + ft_itoa(errno));
-	}
-	_clientRequest += buffer;
+	if (size == 0)
+		_status = WRITE;
+	else
+		_clientRequest += buffer;
 }
 
 bool	ClientSocket::getStatus(void)

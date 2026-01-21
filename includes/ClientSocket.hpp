@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <sys/socket.h>
 #include <socket_utils.hpp>
+#include <cstring>
 
 #define BUF_SIZE 1024
 

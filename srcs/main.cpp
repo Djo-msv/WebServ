@@ -15,7 +15,8 @@
         handleError(e.what()); \
 	}
 
-std::map<const int, Socket *> sockets;
+std::map<const int, Socket *>	sockets;
+std::deque<ClientSocket *>		clientsToRead;
 
 void	stopServer(int)
 {
@@ -36,20 +37,19 @@ void	manageRequests(int epollInstance)
 {
 	int 						nbfds;
 	epoll_event 				events[MAX_EVENTS];
-	std::deque<ClientSocket *>	clientsToRead;
 
 	while (true) {
 		// nbfds defines the number of file descriptors ready for the requested I/O operation.
 		// Specifying a timeout of -1 causes epoll_wait() to block indefinitely
-		if ((nbfds = epoll_wait(epollInstance, events, MAX_EVENTS, -1)) == -1)
+		if ((nbfds = epoll_wait(epollInstance, events, MAX_EVENTS, 10)) == -1)
 			throw std::runtime_error("An error has occured while waiting for connections. Error code : " + ft_itoa(errno));
 		// TODO Boucle for a déplacer dans une fonction "handle_epoll_events"
 		for (int n = 0; n < nbfds; ++n) {
 			SocketIterator socketIterator = sockets.find(events[n].data.fd);
 			if (socketIterator == sockets.end()) {
 				std::cout << "WTf ?" << std::endl;
-			};
 				// WTF ?? THROW ERROR
+			};
 			ServerSocket *sSocket = dynamic_cast<ServerSocket *>(socketIterator->value);
 			if (sSocket != NULL)
 			{

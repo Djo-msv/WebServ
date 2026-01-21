@@ -20,7 +20,7 @@ void setnonblocking(int fd)
 	}
 }
 
-inline std::string ft_itoa(int nb)
+inline std::string  ft_itoa(int nb)
 {
 	std::stringstream ss;
 	ss << nb;

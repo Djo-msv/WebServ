@@ -56,10 +56,45 @@ void Request::check_request()
 	//startline
 	try {
 		this->startline_check(line);
-		//no header or body read for now, just regular old get requests :: start-line only
+		//header-reading :: the basics
+		//      the map first :: make pairs with ':' delim (checkers that its all alphanumerical, i think)
+		//      then the getters :: spec getSize() for now
+		while (!s.eof() && !line.empty() && line != "\r")
+		{
+			getline(s, line);
+			this->headers_add(line);
+		}
 		//this->headers_check(line); ->later, since the headers are sort of irrelevant rn
 	}
 	catch (std::exception &e) {throw ;}
+}
+
+void Request::headers_add(std::string line)
+{
+	std::stringstream s(line);
+	std::string key;
+	std::string val;
+	getline(s, key, ':');
+	getline(s, val, '\r');
+	if (key.empty() || val.empty())
+		return ;
+	try {
+		//here checking the a-num values
+		//check_key(key);
+		if (val[0] == ' ')
+			val = val.substr(1);
+		headers.insert(std::pair<std::string, std::string>(key, val));
+	}
+	catch (std::exception &e) {throw;}
+}
+
+int Request::getSize() const
+{
+	if (headers.count("Content-Length"))
+		return atoi((headers.at("Content-Length")).c_str());
+	if (headers.count("Transfer-Encoding"))
+		return -1;
+	return 0;
 }
 
 void Request::startline_check(std::string line)
@@ -104,7 +139,6 @@ void Request::make_env(std::string params)
 	while (!s.eof())
 	{
 		getline(s, param, '&');
-		std::cout << "param : " << param << std::endl;
 		tab1.push_back(param);
 	}
 	_env = new std::string[tab1.size()];
@@ -135,11 +169,16 @@ std::string Request::getMethod() const
 
 void Request::read() const
 {
-	std::cout << "this request has method : " << _method << ", target : " << _target << ", and env : {";
+	std::cout << "this request has method : " << _method << ", target : " << _target << ", env : {";
 	if (_env)
 	{
 		for (size_t i = 0; i < env_size; i++)
 			std::cout << _env[i] << ";";
 	}
-	std::cout << "}\n";
+	std::cout << "}, and map ::\n";
+	if (!headers.empty())
+	{
+		for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); it++)
+			std::cout << it->first << "; " << it->second << std::endl;
+	}
 }

@@ -11,16 +11,16 @@ int main()
 		if (getenv("password") == NULL)
 			throw std::out_of_range("5"); //bad request
 		std::string pwd = getenv("password");
-		std::string path = "./logins/" + name;
+		std::string path = ".logs/logins/" + name;
 		std::ifstream user(path.c_str(), std::ios::in);
 		if (user.is_open())
 		{
 			user >> path;
 			user.close();
 			if (path != pwd)
-				std::cout << "retry.html";
+				std::cout << "/html/retry.html";
 			else
-				std::cout << "success.html";
+				std::cout << "/html/success.html";
 			return 0;
 		}
 		std::ofstream n_user(path.c_str(), std::ios::out);
@@ -28,7 +28,7 @@ int main()
 			throw std::out_of_range("4"); //server error
 		n_user << pwd;
 		n_user.close();
-		std::cout << "success.html";
+		std::cout << "/html/success.html";
 	}
 	catch (std::exception &e)
 	{

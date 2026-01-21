@@ -17,6 +17,8 @@
 #define READ 0
 #define WRITE 1
 
+class ProcessExecution;
+
 class ClientSocket : public Socket
 {
 	public :
@@ -28,10 +30,13 @@ class ClientSocket : public Socket
 
 		bool	getStatus();
 
+		void	setStatus(ProcessExecution *process);
+
 	private :
 		// ServerSocket &	_serverSocket;
 		std::string		_clientRequest;
 		bool			_status;
+		ProcessExecution	*_process;
 
 		int createSocket(ServerSocket &);
 };

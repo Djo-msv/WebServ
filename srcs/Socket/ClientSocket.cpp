@@ -29,6 +29,11 @@ bool	ClientSocket::getStatus(void)
 	return (_status);
 }
 
+void	ClientSocket::setStatus(ProcessExecution *process)
+{
+	_process = process;
+}
+
 int ClientSocket::createSocket(ServerSocket & serverSocket)
 {
 	int sSocketFd;

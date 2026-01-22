@@ -34,6 +34,20 @@ void handleError(const char* msg)
 	exit(1);
 }
 
+void	readClient(int epollInstance)
+{	
+	for (std::deque<ClientSocket *>::iterator it = clientsToRead.begin(); it != clientsToRead.end(); ++it) {
+		ClientSocket *csocket = *it;
+		csocket->read();
+		if (csocket->getStatus() == WRITE) {
+			epoll_add(epollInstance, csocket->getSocketFd(), EPOLLOUT | EPOLLET);
+			it = clientsToRead.erase(it);
+			if (it == clientsToRead.end())
+				break ;
+		}
+	}
+}
+
 void	manageRequests(int epollInstance)
 {
 	int 						nbfds;
@@ -63,22 +77,12 @@ void	manageRequests(int epollInstance)
 				ClientSocket *cSocket = dynamic_cast<ClientSocket *>(socketIterator->value);
 				if (cSocket->getStatus() != WRITE) {};
 					//trow error
-				ProcessExecution *process = new ProcessExecution();
-				process->startProcess(NULL, NULL);
+//				ProcessExecution *process = new ProcessExecution();
+		//		process->startProcess(NULL, NULL); // first args is the file and seconde is env
 				// TODO client packet response handling
 			}
 		}
-		// TODO Pareil déplacer dans une fonction "readClients"
-		for (std::deque<ClientSocket *>::iterator it = clientsToRead.begin(); it != clientsToRead.end(); ++it) {
-			ClientSocket *csocket = *it;
-			csocket->read();
-			if (csocket->getStatus() == WRITE) {
-				epoll_add(epollInstance, csocket->getSocketFd(), EPOLLOUT | EPOLLET);
-				it = clientsToRead.erase(it);
-				if (it == clientsToRead.end())
-					break ;
-			}
-		}
+		readClient(epollInstance);
 	}
 }
 

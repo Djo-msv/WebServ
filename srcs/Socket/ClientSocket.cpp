@@ -1,7 +1,7 @@
 #include "ClientSocket.hpp"
 #include "ProcessExecution.hpp"
 
-ClientSocket::ClientSocket(ServerSocket &serverSocket) : Socket(createSocket(serverSocket)), _status(READ) {}
+ClientSocket::ClientSocket(ServerSocket &serverSocket) : Socket(createSocket(serverSocket)), _status(Read_request) {}
 
 ClientSocket::~ClientSocket(void) {}
 
@@ -21,9 +21,6 @@ void	ClientSocket::readRequest(void)
 	 * ! read also returns -1 if fd is nonblocking and there is no more information to read from 
 	*/
 	ssize_t	size = ::read(_socketFd, buffer, BUF_SIZE);
-
-	std::cout << "Size read :" << size << " on socket " << _socketFd << std::endl;
-	std::cout << buffer << std::endl;
 	if (size == -1)
 	{
 		/**
@@ -31,7 +28,7 @@ void	ClientSocket::readRequest(void)
 		 * *	we check that the socket is still valid, if not we throw an error
 		*/
 		if (!getsockname(_socketFd, NULL, NULL))
-			_status = EXEC;
+			_status = Parse_request;
 		else
 			throw std::runtime_error("an error occured while reading into client : '" + \
 				ft_itoa(_socketFd) + "' socket : " + std::string(strerror(errno)));
@@ -58,7 +55,7 @@ void	ClientSocket::readProcess(void)
 		throw std::runtime_error("an error occured while reading the process fd : " + \
 			ft_itoa(_processFd) + " of client '" + ft_itoa(_socketFd) + "' : " + strerror(errno));
 	if (size == 0)
-		_status = WRITE;
+		_status = Write;
 	else
 		_processResponse += buffer;
 }

@@ -13,10 +13,7 @@
 #include <Socket.hpp>
 #include <ServerSocket.hpp>
 #include <ProcessExecution.hpp>
-
-#define READ 0
-#define EXEC 1
-#define WRITE 2
+#include <Request.hpp>
 
 class ClientSocket : public Socket
 {
@@ -32,10 +29,18 @@ class ClientSocket : public Socket
 
 		//void	setProcess(ProcessExecution *process);
 
+		enum state {
+			Read_request,
+			Parse_request,
+			Read_process,
+			Write
+		};
+
 	private :
 		// ServerSocket &	_serverSocket;
-		unsigned int		_status;
+		state				_status;
 		std::string			_clientRequest;
+		// Request				_request;
 		std::string			_processResponse;
 		int					_processFd;
 		ProcessExecution	_process;

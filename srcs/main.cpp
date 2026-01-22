@@ -10,6 +10,7 @@
 #define value second
 #include "ServerSocket.hpp"
 #include "ClientSocket.hpp"
+#include "ProcessExecution.hpp"
 #define CATCH_AND_HANDLE(ExceptionType) \
     catch (const ExceptionType& e) { \
         handleError(e.what()); \
@@ -83,8 +84,9 @@ void	manageRequests()
 				ClientSocket *cSocket = dynamic_cast<ClientSocket *>(socketIterator->value);
 				if (cSocket->getStatus() != WRITE) {};
 					//trow error
-				// TODO 
-				// TODO exec CGI
+				ProcessExecution *process = new ProcessExecution();
+		//		process->startProcess(NULL, NULL); // first args is the file and seconde is env
+				cSocket->setProcess(process);
 				// TODO client packet response handling
 //				do_use_fd(events[n].data.fd);
 			}
@@ -106,6 +108,7 @@ int	main(void)
 	{
 		ServerSocket *socket = new ServerSocket(config, epollInstance);
 		signal(SIGINT, stopServer);
+		signal(SIGPIPE, SIG_IGN);
 		sockets.insert(std::make_pair(socket->getSocketFd(), socket));
 		manageRequests();
 	}

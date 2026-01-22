@@ -2,6 +2,8 @@
 
 #include "ClientSocket.hpp"
 
+class ClientSocket ;
+
 // This class allows the server to execute a program using a CGI script.
 class ProcessExecution
 {

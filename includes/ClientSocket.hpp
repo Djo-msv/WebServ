@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <socket_utils.hpp>
 #include <cstring>
+#include <signal.h>
 
 #define BUF_SIZE 1024
 
@@ -17,6 +18,8 @@
 #define READ 0
 #define EXEC 1
 #define WRITE 2
+
+class ProcessExecution;
 
 class ClientSocket : public Socket
 {
@@ -30,12 +33,15 @@ class ClientSocket : public Socket
 
 		unsigned int	getStatus();
 
+		void	setProcess(ProcessExecution *process);
+
 	private :
 		// ServerSocket &	_serverSocket;
 		std::string		_clientRequest;
 		std::string		_processResponse;
 		unsigned int	_status;
 		int				_processFd;
+		ProcessExecution	*_process;
 
 		int createSocket(ServerSocket &);
 };

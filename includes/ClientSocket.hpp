@@ -33,15 +33,15 @@ class ClientSocket : public Socket
 
 		unsigned int	getStatus();
 
-		void	setProcess(ProcessExecution *process);
+		//void	setProcess(ProcessExecution *process);
 
 	private :
 		// ServerSocket &	_serverSocket;
-		std::string		_clientRequest;
-		std::string		_processResponse;
-		unsigned int	_status;
-		int				_processFd;
-		ProcessExecution	*_process;
+		unsigned int		_status;
+		std::string			_clientRequest;
+		std::string			_processResponse;
+		int					_processFd;
+		ProcessExecution	_process;
 
 		int createSocket(ServerSocket &);
 };

@@ -1,6 +1,6 @@
 #include "Request.hpp"
 
-Request::Request() : _request(""), _env(NULL), c_env(NULL), env_size(0)
+Request::Request() : _request(""), _env(NULL), c_env(NULL), env_size(0), exec(false)
 {
 	std::cout << "Request default constructor called\n";
 }
@@ -12,12 +12,12 @@ Request::~Request()
 	std::cout << "Request destructor called\n";
 }
 
-Request::Request(const std::string &request) : _request(request), _env(NULL), c_env(NULL), env_size(0)
+Request::Request(const std::string &request) : _request(request), _env(NULL), c_env(NULL), env_size(0), exec(false)
 {
 	std::cout << "Request constructor called\n";
 }
 
-Request::Request(const Request &other) : _request(other._request), _method(other._method), _target(other._target), _env(other._env), c_env(other.c_env)
+Request::Request(const Request &other) : _request(other._request), _method(other._method), _target(other._target), _env(other._env), c_env(other.c_env), exec(other.exec)
 {
 	std::cout << "Request copy constructor called\n";
 }
@@ -31,6 +31,7 @@ Request& Request::operator=(const Request &other)
 		_env = other._env;
 		c_env = other.c_env;
 		_target = other._target;
+		exec = other.exec;
 		std::cout << "Request assignment operator called\n";
 	}
 	return *this;
@@ -56,6 +57,8 @@ void Request::check_request()
 	//startline
 	try {
 		this->startline_check(line);
+		//check if the request requires cgi execution
+		this->adjust_exec();
 		//header-reading :: the basics
 		//      the map first :: make pairs with ':' delim (checkers that its all alphanumerical, i think)
 		//      then the getters :: spec getSize() for now
@@ -67,6 +70,13 @@ void Request::check_request()
 		//this->headers_check(line); ->later, since the headers are sort of irrelevant rn
 	}
 	catch (std::exception &e) {throw ;}
+}
+
+void Request::adjust_exec()
+{
+	//method check here against authorized in server at the location + adjusting for exec/get/post/delete
+	if (_target.substr(0, 9) == "/scripts/" || _target.substr(0, 8) == "scripts/")
+		exec = true;
 }
 
 void Request::headers_add(std::string line)
@@ -103,9 +113,6 @@ void Request::startline_check(std::string line)
 	std::string current;
 	getline(l, current, ' ');
 	_method = current;
-	//method check here against authorized in server
-	/*if (!isin(server->methods, _method))
-		throw std::exception(); //unauthorized method*/
 	if (l.eof())
 		throw std::out_of_range("1"); //bad request
 	getline(l, current, ' ');
@@ -167,9 +174,19 @@ std::string Request::getMethod() const
 	return _method;
 }
 
+bool Request::isExec() const
+{
+	return exec;
+}
+
 void Request::read() const
 {
-	std::cout << "this request has method : " << _method << ", target : " << _target << ", env : {";
+	std::cout << "this request ";
+	if (exec)
+		std::cout << "needs execution";
+	else
+		std::cout << "needs no execution";
+	std::cout << ", has method : " << _method << ", target : " << _target << ", env : {";
 	if (_env)
 	{
 		for (size_t i = 0; i < env_size; i++)

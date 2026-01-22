@@ -5,7 +5,7 @@
 # include <sstream>
 # include <exception>
 # include <vector>
-#include <cmath>
+# include <cmath>
 # include <map>
 
 class Request
@@ -18,6 +18,7 @@ class Request
 		const char **c_env;
 		size_t env_size;
 		std::map<std::string, std::string> headers;
+		bool exec;
 		//Server who received the request
 	public:
 		Request();
@@ -27,12 +28,14 @@ class Request
 		Request &operator=(const Request &other);
 		void make_env(std::string params);
 		void check_request();
+		void adjust_exec();
 		void startline_check(std::string line);
 		void headers_add(std::string line);
 		void read() const;
 		const char **getEnv() const;
 		std::string getTarget() const;
 		std::string getMethod() const;
+		bool isExec() const;
 		int getSize() const;
 };
 

@@ -4,7 +4,12 @@ ClientSocket::ClientSocket(ServerSocket &serverSocket) : Socket::Socket(createSo
 
 ClientSocket::~ClientSocket(void) {}
 
-void	ClientSocket::read(void)
+unsigned int	ClientSocket::getStatus(void)
+{
+	return (_status);
+}
+
+void	ClientSocket::readRequest(void)
 {
 	char	buffer[BUF_SIZE];
 
@@ -16,17 +21,30 @@ void	ClientSocket::read(void)
 	std::cout << "Size read :" << size << std::endl;
 	std::cout << buffer << std::endl;
 	if (size == -1)
-		throw std::runtime_error("an error occured when reading the fd : " + \
-				ft_itoa(_socketFd) + ". Error code : " + ft_itoa(errno));
+		throw std::runtime_error("an error occured while reading into client : '" + \
+			ft_itoa(_socketFd) + "' socket : " + std::string(strerror(errno)));
 	if (size == 0)
-		_status = WRITE;
+		_status = EXEC;
 	else
 		_clientRequest += buffer;
 }
 
-bool	ClientSocket::getStatus(void)
+void	ClientSocket::readProcess(void)
 {
-	return (_status);
+	char	buffer[BUF_SIZE];
+
+	std::memset(buffer, 0, BUF_SIZE);
+	// read into CGI process and put result into buffer
+	// read return size of char put into buffer, -1 is for error
+	ssize_t	size = ::read(_processFd, buffer, BUF_SIZE);
+	std::cout << "buffer : " << buffer << " size read : " << size << std::endl;
+	if (size == -1)
+		throw std::runtime_error("an error occured while reading the process fd : " + \
+			ft_itoa(_processFd) + " of client '" + ft_itoa(_socketFd) + "' : " + strerror(errno));
+	if (size == 0)
+		_status = WRITE;
+	else
+		_processResponse += buffer;
 }
 
 int ClientSocket::createSocket(ServerSocket & serverSocket)

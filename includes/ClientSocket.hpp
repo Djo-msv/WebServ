@@ -15,7 +15,8 @@
 #define BUF_SIZE 1024
 
 #define READ 0
-#define WRITE 1
+#define EXEC 1
+#define WRITE 2
 
 class ClientSocket : public Socket
 {
@@ -23,15 +24,18 @@ class ClientSocket : public Socket
 		ClientSocket(ServerSocket &serverSocket);
 		~ClientSocket();
 
-		void	read();
+		void	readRequest();
+		void	readProcess();
 		// TODO send()
 
-		bool	getStatus();
+		unsigned int	getStatus();
 
 	private :
 		// ServerSocket &	_serverSocket;
 		std::string		_clientRequest;
-		bool			_status;
+		std::string		_processResponse;
+		unsigned int	_status;
+		int				_processFd;
 
 		int createSocket(ServerSocket &);
 };

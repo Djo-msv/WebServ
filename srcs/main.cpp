@@ -16,12 +16,14 @@
 	}
 
 std::map<const int, Socket *>	sockets;
-std::deque<ClientSocket *>		clientsToRead;
+std::deque<ClientSocket *>		pendingClientSockets;
+const int 						epollInstance = epoll_create(1);
 
 void	stopServer(int)
 {
 	for (SocketIterator it = sockets.begin(); it != sockets.end(); ++it)
 		delete it->value;
+	close(epollInstance);
 	exit(0);
 }
 
@@ -29,11 +31,30 @@ void handleError(const char* msg)
 {
 	for (SocketIterator it = sockets.begin(); it != sockets.end(); ++it)
 		delete it->value;
+	close(epollInstance);
     std::cerr << msg << std::endl;
 	exit(1);
 }
 
-void	manageRequests(int epollInstance)
+void	managePendingClients()
+{	
+	for (std::deque<ClientSocket *>::iterator it = pendingClientSockets.begin(); it != pendingClientSockets.end(); ++it) {
+			ClientSocket *csocket = *it;
+
+			if (csocket->getStatus() == READ)
+				csocket->readRequest();
+			else
+				csocket->readProcess();
+			// if (csocket->getStatus() == WRITE) {
+			// 	epoll_add(epollInstance, csocket->getSocketFd(), EPOLLOUT | EPOLLET);
+			// 	it = pendingClientSockets.erase(it);
+			// 	if (it == pendingClientSockets.end())
+			// 		break ;
+			// }
+	}
+}
+
+void	manageRequests()
 {
 	int 						nbfds;
 	epoll_event 				events[MAX_EVENTS];
@@ -56,7 +77,7 @@ void	manageRequests(int epollInstance)
 				ClientSocket *csocket = new ClientSocket(*sSocket); 
 				sockets.insert(std::make_pair(csocket->getSocketFd(), 
 							csocket));
-				clientsToRead.push_back(csocket);
+				pendingClientSockets.push_back(csocket);
 			}
 			else {
 				ClientSocket *cSocket = dynamic_cast<ClientSocket *>(socketIterator->value);
@@ -69,16 +90,7 @@ void	manageRequests(int epollInstance)
 			}
 		}
 		// TODO Pareil déplacer dans une fonction "readClients"
-		for (std::deque<ClientSocket *>::iterator it = clientsToRead.begin(); it != clientsToRead.end(); ++it) {
-			ClientSocket *csocket = *it;
-			csocket->read();
-			if (csocket->getStatus() == WRITE) {
-				epoll_add(epollInstance, csocket->getSocketFd(), EPOLLOUT | EPOLLET);
-				it = clientsToRead.erase(it);
-				if (it == clientsToRead.end())
-					break ;
-			}
-		}
+		managePendingClients();
 	}
 }
 
@@ -89,14 +101,13 @@ int	main(void)
 	
 	// AF_INET is used to allow ipv4 connection.
 	// SOCK_STREAM is to tell the socket to use TCP protocol
-	int epollInstance = epoll_create(1);
 	ServerConfig config = (ServerConfig) {port, AF_INET, "", ""};
 	try
 	{
 		ServerSocket *socket = new ServerSocket(config, epollInstance);
 		signal(SIGINT, stopServer);
 		sockets.insert(std::make_pair(socket->getSocketFd(), socket));
-		manageRequests(epollInstance);
+		manageRequests();
 	}
 	CATCH_AND_HANDLE(std::runtime_error)
 	CATCH_AND_HANDLE(std::bad_alloc)

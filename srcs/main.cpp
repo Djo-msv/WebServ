@@ -42,9 +42,9 @@ void	managePendingClients()
 	for (std::deque<ClientSocket *>::iterator it = pendingClientSockets.begin(); it != pendingClientSockets.end(); ++it) {
 			ClientSocket *csocket = *it;
 
-			if (csocket->getStatus() == READ)
+			if (csocket->getStatus() == ClientSocket::Read_request)
 				csocket->readRequest();
-			else
+			else if (csocket->getStatus() == ClientSocket::Read_process)
 				csocket->readProcess();
 			// if (csocket->getStatus() == WRITE) {
 			// 	epoll_add(epollInstance, csocket->getSocketFd(), EPOLLOUT | EPOLLET);
@@ -82,7 +82,7 @@ void	manageRequests()
 			}
 			else {
 				ClientSocket *cSocket = dynamic_cast<ClientSocket *>(socketIterator->value);
-				if (cSocket->getStatus() != WRITE) {};
+				if (cSocket->getStatus() != ClientSocket::Write) {};
 					//trow error
 				// TODO client packet response handling
 //				do_use_fd(events[n].data.fd);

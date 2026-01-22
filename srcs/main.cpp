@@ -100,6 +100,7 @@ int	main(void)
 	{
 		ServerSocket *socket = new ServerSocket(config, epollInstance);
 		signal(SIGINT, stopServer);
+		signal(SIGPIPE, SIG_IGN);
 		sockets.insert(std::make_pair(socket->getSocketFd(), socket));
 		manageRequests(epollInstance);
 	}

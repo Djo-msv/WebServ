@@ -16,18 +16,24 @@ void	ClientSocket::read(void)
 	std::memset(buffer, 0, BUF_SIZE);
 	// read into Client Socket and put result into buffer
 	// read return size of char put into buffer, -1 is for error
-	ssize_t	size = recv(_socketFd, buffer, BUF_SIZE, MSG_DONTWAIT);
+	ssize_t	size = ::read(_socketFd, buffer, BUF_SIZE);
 
 	std::cout << "Size read :" << size << " on socket " << _socketFd << std::endl;
 	std::cout << buffer << std::endl;
-	if (size == -1) {
-		close(_socketFd);
-		throw std::runtime_error("an error occured when reading the fd : " + \
-				ft_itoa(_socketFd) + ". Error code : " + ft_itoa(errno));
+	if (!getsockname(_socketFd, NULL, NULL))
+	{
+		if (size == -1)
+		{			
+			throw std::runtime_error("an error occured when reading the fd : " + \
+					ft_itoa(_socketFd) + ". Error code : " + ft_itoa(errno));
+		}
 	}
-	if (size == 0)
-		_status = WRITE;
 	else
+	{
+		std::cout << "Would Block" << std::endl;
+		_status = WRITE;
+	}
+	if (size != 0)
 		_clientRequest += buffer;
 }
 
@@ -51,6 +57,7 @@ int ClientSocket::createSocket(ServerSocket & serverSocket)
 	// recover the value of client fd, variables that are set to NULL represent the client informations could be useful later...
 	cSocketFd = accept(sSocketFd, NULL, NULL);
 	if (cSocketFd == -1) {
+		close(cSocketFd);
 		throw std::runtime_error("an error occured when accepting connection to the fd : " + \
 			ft_itoa(sSocketFd) + ". Error code : " + ft_itoa(errno));
 	}

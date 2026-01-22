@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <socket_utils.hpp>
 #include <cstring>
+#include <signal.h>
 
 #define BUF_SIZE 1024
 

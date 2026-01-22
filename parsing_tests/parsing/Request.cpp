@@ -1,26 +1,16 @@
 #include "Request.hpp"
 
-Request::Request() : _request(""), _env(NULL), c_env(NULL), env_size(0), exec(false)
-{
-	std::cout << "Request default constructor called\n";
-}
+Request::Request() : _request(""), _env(NULL), c_env(NULL), env_size(0), exec(false) {}
 
 Request::~Request()
 {
 	delete[] _env;
 	delete[] c_env;
-	std::cout << "Request destructor called\n";
 }
 
-Request::Request(const std::string &request) : _request(request), _env(NULL), c_env(NULL), env_size(0), exec(false)
-{
-	std::cout << "Request constructor called\n";
-}
+Request::Request(const std::string &request) : _request(request), _env(NULL), c_env(NULL), env_size(0), exec(false) {}
 
-Request::Request(const Request &other) : _request(other._request), _method(other._method), _target(other._target), _env(other._env), c_env(other.c_env), exec(other.exec)
-{
-	std::cout << "Request copy constructor called\n";
-}
+Request::Request(const Request &other) : _request(other._request), _method(other._method), _target(other._target), _env(other._env), c_env(other.c_env), exec(other.exec) {}
 
 Request& Request::operator=(const Request &other)
 {
@@ -32,7 +22,6 @@ Request& Request::operator=(const Request &other)
 		c_env = other.c_env;
 		_target = other._target;
 		exec = other.exec;
-		std::cout << "Request assignment operator called\n";
 	}
 	return *this;
 }

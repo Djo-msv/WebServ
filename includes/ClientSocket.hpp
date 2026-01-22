@@ -6,18 +6,17 @@
 #include <sys/socket.h>
 #include <socket_utils.hpp>
 #include <cstring>
+#include <signal.h>
 
 #define BUF_SIZE 1024
 
 #include <Socket.hpp>
 #include <ServerSocket.hpp>
-
-#define BUF_SIZE 1024
+#include <ProcessExecution.hpp>
 
 #define READ 0
-#define WRITE 1
-
-class ProcessExecution;
+#define EXEC 1
+#define WRITE 2
 
 class ClientSocket : public Socket
 {
@@ -25,18 +24,21 @@ class ClientSocket : public Socket
 		ClientSocket(ServerSocket &serverSocket);
 		~ClientSocket();
 
-		void	read();
+		void	readRequest();
+		void	readProcess();
 		// TODO send()
 
-		bool	getStatus();
+		unsigned int	getStatus();
 
-		void	setProcess(ProcessExecution *process);
+		//void	setProcess(ProcessExecution *process);
 
 	private :
 		// ServerSocket &	_serverSocket;
-		std::string		_clientRequest;
-		bool			_status;
-		ProcessExecution	*_process;
+		unsigned int		_status;
+		std::string			_clientRequest;
+		std::string			_processResponse;
+		int					_processFd;
+		ProcessExecution	_process;
 
 		int createSocket(ServerSocket &);
 };

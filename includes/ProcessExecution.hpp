@@ -1,8 +1,12 @@
 #pragma once
 
-#include "ClientSocket.hpp"
+#include <stdexcept>
+#include <unistd.h>
+#include <errno.h>
 
-class ClientSocket ;
+#include <socket_utils.hpp>
+
+#define BUF_SIZE 1024
 
 // This class allows the server to execute a program using a CGI script.
 class ProcessExecution

@@ -1,7 +1,8 @@
 #include "ServerSocket.hpp"
 #include <errno.h>
+#include <cstring>
 
-ServerSocket::ServerSocket(ServerConfig config, int epollInstance) : Socket(createSocket(config)), _config(config)
+ServerSocket::ServerSocket(ServerConfig config, const int epollInstance) : Socket(createSocket(config)), _config(config)
 {
 	// sin_family is always AF_INET.
 	// SOCK_STREAM is to tell the socket to use TCP protocol.
@@ -10,18 +11,18 @@ ServerSocket::ServerSocket(ServerConfig config, int epollInstance) : Socket(crea
 	sockaddr_in serverAddress = setupSocketAddress(_config);
 	
 	if (bind(_socketFd, (struct sockaddr*) &serverAddress, sizeof(serverAddress)) == -1)
-		throw BindError("Error while binding adress to the server socket. Error code : " + ft_itoa(errno));
+		throw BindError("Error while binding adress to the server socket. Error code : " + std::string(strerror(errno)));
 
 	// listen at the server socket and allow 5 connexions at a time
 	if (listen(_socketFd, 5) == -1)
-		throw ListenError("Error while setting socket to listening. Error code :" + ft_itoa(errno));
+		throw ListenError("Error while setting socket to listening. Error : " + std::string(strerror(errno)));
 
 	epoll_add(epollInstance, _socketFd, EPOLLIN | EPOLLET);
 
 	std::cout << "Server started on port " << config.sin_port << std::endl;
 }
 
-ServerSocket::~ServerSocket(void) { }
+ServerSocket::~ServerSocket(void) {}
 
 sockaddr_in ServerSocket::setupSocketAddress(ServerConfig config)
 {

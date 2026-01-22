@@ -30,7 +30,7 @@ class ClientSocket : public Socket
 
 		bool	getStatus();
 
-		void	setStatus(ProcessExecution *process);
+		void	setProcess(ProcessExecution *process);
 
 	private :
 		// ServerSocket &	_serverSocket;

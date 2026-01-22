@@ -1,8 +1,13 @@
 #include "ClientSocket.hpp"
+#include "ProcessExecution.hpp"
 
-ClientSocket::ClientSocket(ServerSocket &serverSocket) : Socket::Socket(createSocket(serverSocket)), _status(READ){}
+ClientSocket::ClientSocket(ServerSocket &serverSocket) : Socket::Socket(createSocket(serverSocket)), _status(READ), _process(NULL){}
 
-ClientSocket::~ClientSocket(void) {}
+ClientSocket::~ClientSocket(void)
+{
+	if (_process)
+		delete _process;
+}
 
 void	ClientSocket::read(void)
 {
@@ -31,7 +36,7 @@ bool	ClientSocket::getStatus(void)
 	return (_status);
 }
 
-void	ClientSocket::setStatus(ProcessExecution *process)
+void	ClientSocket::setProcess(ProcessExecution *process)
 {
 	_process = process;
 }

@@ -77,8 +77,9 @@ void	manageRequests(int epollInstance)
 				ClientSocket *cSocket = dynamic_cast<ClientSocket *>(socketIterator->value);
 				if (cSocket->getStatus() != WRITE) {};
 					//trow error
-//				ProcessExecution *process = new ProcessExecution();
+				ProcessExecution *process = new ProcessExecution();
 		//		process->startProcess(NULL, NULL); // first args is the file and seconde is env
+				cSocket->setProcess(process);
 				// TODO client packet response handling
 			}
 		}

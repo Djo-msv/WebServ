@@ -84,9 +84,6 @@ void	manageRequests()
 				ClientSocket *cSocket = dynamic_cast<ClientSocket *>(socketIterator->value);
 				if (cSocket->getStatus() != WRITE) {};
 					//trow error
-				ProcessExecution *process = new ProcessExecution();
-		//		process->startProcess(NULL, NULL); // first args is the file and seconde is env
-				cSocket->setProcess(process);
 				// TODO client packet response handling
 //				do_use_fd(events[n].data.fd);
 			}

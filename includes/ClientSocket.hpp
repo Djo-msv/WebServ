@@ -12,14 +12,11 @@
 
 #include <Socket.hpp>
 #include <ServerSocket.hpp>
-
-#define BUF_SIZE 1024
+#include <ProcessExecution.hpp>
 
 #define READ 0
 #define EXEC 1
 #define WRITE 2
-
-class ProcessExecution;
 
 class ClientSocket : public Socket
 {

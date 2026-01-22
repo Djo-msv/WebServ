@@ -1,7 +1,7 @@
 #include "ClientSocket.hpp"
 #include "ProcessExecution.hpp"
 
-ClientSocket::ClientSocket(ServerSocket &serverSocket) : Socket::Socket(createSocket(serverSocket)), _status(READ) {}
+ClientSocket::ClientSocket(ServerSocket &serverSocket) : Socket(createSocket(serverSocket)), _status(READ) {}
 
 ClientSocket::~ClientSocket(void) {}
 

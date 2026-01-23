@@ -1,6 +1,6 @@
 #include "Request.hpp"
 
-Request::Request() : _request(""), _env(NULL), c_env(NULL), env_size(0), exec(false) {}
+Request::Request() : status(0), _env(NULL), c_env(NULL), env_size(0), exec(false) {}
 
 Request::~Request()
 {
@@ -8,57 +8,41 @@ Request::~Request()
 	delete[] c_env;
 }
 
-Request::Request(const std::string &request) : _request(request), _env(NULL), c_env(NULL), env_size(0), exec(false) {}
-
-Request::Request(const Request &other) : _request(other._request), _method(other._method), _target(other._target), _env(other._env), c_env(other.c_env), exec(other.exec) {}
+Request::Request(const Request &other) : status(other.status), _method(other._method), _target(other._target), _env(other._env), c_env(other.c_env), exec(other.exec) {}
 
 Request& Request::operator=(const Request &other)
 {
 	if (this != &other)
 	{
 		_method = other._method;
-		_request = other._request;
 		_env = other._env;
 		c_env = other.c_env;
 		_target = other._target;
 		exec = other.exec;
+		status = other.status;
 	}
 	return *this;
 }
 
-void Request::check_request()
+int Request::check_line(std::string line)
 {
-	if (_request.empty())
-		throw std::out_of_range("request empty !\n");
-	//here parsing the request ::
-		//startline first ::x
-			//method x
-			//target x
-			//http version x
-		//then headers ::
-			//content-type accepted
-			//content-length::transfer-encoding (is there a body ? also parsing changes)
-			//maybe specific user agents authorized ?
-		//then body, if body :: if chunked, do that
-	std::stringstream s(_request);
-	std::string line;
-	getline(s, line);
-	//startline
 	try {
-		this->startline_check(line);
-		//check if the request requires cgi execution
-		this->adjust_exec();
-		//header-reading :: the basics
-		//      the map first :: make pairs with ':' delim (checkers that its all alphanumerical, i think)
-		//      then the getters :: spec getSize() for now
-		while (!s.eof() && !line.empty() && line != "\r")
-		{
-			getline(s, line);
-			this->headers_add(line);
+		switch (status) {
+			case 0:
+				this->startline_check(line);
+				break ;
+			case 1:
+				this->headers_add(line);
+				break ;
+			default:
+				body += line;
 		}
-		//this->headers_check(line); ->later, since the headers are sort of irrelevant rn
+		status++;
 	}
 	catch (std::exception &e) {throw ;}
+	if (status == 2)
+		return this->getSize();
+	return -2;
 }
 
 void Request::adjust_exec()
@@ -83,6 +67,7 @@ void Request::headers_add(std::string line)
 		if (val[0] == ' ')
 			val = val.substr(1);
 		headers.insert(std::pair<std::string, std::string>(key, val));
+		status--;
 	}
 	catch (std::exception &e) {throw;}
 }
@@ -149,24 +134,15 @@ void Request::make_env(std::string params)
 	c_env[env_size] = NULL;
 }
 
-const char **Request::getEnv() const
-{
-	return c_env;
-}
-std::string Request::getTarget() const
-{
-	return _target;
-}
+const char **Request::getEnv() const { return c_env; }
 
-std::string Request::getMethod() const
-{
-	return _method;
-}
+std::string Request::getTarget() const { return _target; }
 
-bool Request::isExec() const
-{
-	return exec;
-}
+std::string Request::getMethod() const { return _method; }
+
+bool Request::isExec() const { return exec; }
+
+std::string Request::getBody() const { return body; }
 
 void Request::read() const
 {
@@ -187,4 +163,5 @@ void Request::read() const
 		for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); it++)
 			std::cout << it->first << "; " << it->second << std::endl;
 	}
+	std::cout << "and the body" << std::endl << body << std::endl;
 }

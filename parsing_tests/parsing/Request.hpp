@@ -11,10 +11,11 @@
 class Request
 {
 	private:
-		std::string _request;
+		int status;
 		std::string _method;
 		std::string _target;
 		std::string *_env;
+		std::string body;
 		const char **c_env;
 		size_t env_size;
 		std::map<std::string, std::string> headers;
@@ -23,11 +24,10 @@ class Request
 	public:
 		Request();
 		~Request();
-		Request(const std::string &request);
 		Request(const Request &other);
 		Request &operator=(const Request &other);
 		void make_env(std::string params);
-		void check_request();
+		int check_line(std::string line);
 		void adjust_exec();
 		void startline_check(std::string line);
 		void headers_add(std::string line);
@@ -36,6 +36,7 @@ class Request
 		std::string getTarget() const;
 		std::string getMethod() const;
 		bool isExec() const;
+		std::string getBody() const;
 		int getSize() const;
 };
 

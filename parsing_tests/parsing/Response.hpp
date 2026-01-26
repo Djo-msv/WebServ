@@ -1,7 +1,10 @@
 #ifndef RESPONSE_HPP
 # define RESPONSE_HPP
+
 # include "Request.hpp"
+# include "ProcessExecution.hpp"
 # include <sys/stat.h>
+# include <fstream>
 
 class Response
 {
@@ -13,13 +16,13 @@ class Response
 	public:
 		Response();
 		~Response();
-		Response(const std::string &name);
 		Response(const Response &other);
 		Response &operator=(const Response &other);
-		void makeResponse(Request *req);
-		void seekTarget(Request *req);
-		void makeBody();
-		void fix_error(std::string error);
+		void makeResponse(Request *req); //distribution
+		std::string getResponse() const;
+		void seekTarget(Request *req); //looking for target :: if non existent, redirects to 404
+		void makeBody(); //reads the target file into a body string
+		void fix_error(std::string error); //takes status, adjusts target to the corresponding error_page
 };
 
 #endif

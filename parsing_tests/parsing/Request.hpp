@@ -8,7 +8,16 @@
 # include <cmath>
 # include <map>
 
+<<<<<<< HEAD
 #define CHUNKED -1
+=======
+inline std::string  ft_itoa(int nb)
+{
+	std::stringstream ss;
+	ss << nb;
+	return (ss.str());
+}
+>>>>>>> refs/remotes/origin/ExecutionProcess
 
 class Request
 {

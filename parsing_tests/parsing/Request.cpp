@@ -127,7 +127,9 @@ void Request::startline_check(std::string line)
 		throw std::out_of_range("3"); //wrong http version -> unauthorized ? not provided ?
 	getline(l, current);
 	if (!current.empty() && !l.eof())
-		throw std::out_of_range("4"); //bad request (formatting) 
+		throw std::out_of_range("4"); //bad request (formatting)
+	this->adjust_exec();
+	_target = "." + _target;
 }
 
 void Request::make_env(std::string params)

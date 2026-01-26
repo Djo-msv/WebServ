@@ -11,7 +11,7 @@ int main()
 		if (getenv("password") == NULL)
 			throw std::out_of_range("5"); //bad request
 		std::string pwd = getenv("password");
-		std::string path = ".logs/logins/" + name;
+		std::string path = "./logs/logins/" + name;
 		std::ifstream user(path.c_str(), std::ios::in);
 		if (user.is_open())
 		{

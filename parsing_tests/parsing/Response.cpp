@@ -26,7 +26,7 @@ void Response::makeResponse(Request *req)
 
 void Response::seekTarget(Request *req)
 {
-	struct stat restrict buf;
+	struct stat buf;
 	if (stat(_target.c_str(), &buf) == -1)
 	{
 		this->fix_error("404 Not Found"); //update target and status accordingly

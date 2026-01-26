@@ -40,10 +40,17 @@ class ClientSocket : public Socket
 		// ServerSocket &	_serverSocket;
 		state				_status;
 		std::string			_clientRequest;
-		// Request				_request;
+		Request				_request;
+		
 		std::string			_processResponse;
 		int					_processFd;
 		ProcessExecution	_process;
 
-		int createSocket(ServerSocket &);
+		int	_bytes_read = 0;
+		int	_content_length = 0;
+		int _header_size = 0;
+		int	_bytes_to_read = BUF_SIZE;
+
+		int 	createSocket(ServerSocket &);
+		void	parseHeader();
 };

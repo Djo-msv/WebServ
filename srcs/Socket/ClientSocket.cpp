@@ -12,21 +12,22 @@ unsigned int	ClientSocket::getStatus(void)
 
 void	ClientSocket::readRequest(void)
 {
-	char	buffer[BUF_SIZE];
+	char	buffer[_bytes_to_read];
 
-	std::memset(buffer, 0, BUF_SIZE);
+	std::memset(buffer, 0, _bytes_to_read);
 	/**
 	 * * read into Client Socket and put result into buffer.
 	 * * read return size of char put into buffer. Returns -1 on error.
 	 * ! read also returns -1 if fd is nonblocking and there is no more information to read from 
 	*/
-	ssize_t	size = ::read(_socketFd, buffer, BUF_SIZE);
+	ssize_t	size = ::read(_socketFd, buffer, _bytes_to_read);
 	if (size == -1)
 	{
 		/**
 		 * *	getsockname returns 0 on successful connection to the socket.
 		 * *	we check that the socket is still valid, if not we throw an error
 		*/
+		size = 0;
 		if (!getsockname(_socketFd, NULL, NULL))
 			_status = Parse_request;
 		else
@@ -40,6 +41,23 @@ void	ClientSocket::readRequest(void)
 		return ;
 	}
 	_clientRequest += buffer;
+	_bytes_read += size;
+	parseHeader();
+}
+
+void	ClientSocket::parseHeader(void)
+{
+	std::size_t headerEnd = _clientRequest.find("\r\n\r\n");
+	if (headerEnd == std::string::npos)
+		return ;
+	// * substr takes the position and the length to extract so we add 4 to include the \r\n\r\n
+	std::string header = _clientRequest.substr(0, headerEnd + 4);
+	_header_size = header.size();
+	try {
+		_content_length = _request.check_header(header);
+	} catch (std::exception &e) {throw ;}
+	_clientRequest = _clientRequest.substr(headerEnd + 4);
+	_bytes_to_read = _content_length - (_bytes_read - _header_size);
 }
 
 void	ClientSocket::readProcess(void)

@@ -52,20 +52,38 @@ void Request::adjust_exec()
 		exec = true;
 }
 
+int	Request::check_header(std::string header)
+{
+	std::stringstream s(header);
+	while (!s.eof())
+	{
+		std::string line;
+		std::getline(s, line, '\n');
+		try {
+			int res = this->check_line(line);
+			if (res != -2)
+				return res;
+		}
+		catch (std::exception &e) {throw ;}
+	}
+	return this->getSize();
+}
+
 void Request::headers_add(std::string line)
 {
 	std::stringstream s(line);
 	std::string key;
 	std::string val;
-	getline(s, key, ':');
-	getline(s, val, '\r');
+	
+	std::getline(s, key, ':');
+	std::getline(s, val, '\r');
 	if (key.empty() || val.empty())
 		return ;
 	try {
 		//here checking the a-num values
 		//check_key(key);
 		if (val[0] == ' ')
-			val = val.substr(1);
+			val.erase(val.begin());
 		headers.insert(std::pair<std::string, std::string>(key, val));
 		status--;
 	}
@@ -77,7 +95,7 @@ int Request::getSize() const
 	if (headers.count("Content-Length"))
 		return atoi((headers.at("Content-Length")).c_str());
 	if (headers.count("Transfer-Encoding"))
-		return -1;
+		return CHUNKED;
 	return 0;
 }
 

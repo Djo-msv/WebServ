@@ -10,6 +10,7 @@
 #define value second
 #include "ServerSocket.hpp"
 #include "ClientSocket.hpp"
+
 #include "ProcessExecution.hpp"
 #define CATCH_AND_HANDLE(ExceptionType) \
     catch (const ExceptionType& e) { \
@@ -73,8 +74,7 @@ void	manageRequests()
 				// WTF ?? THROW ERROR
 			};
 			ServerSocket *sSocket = dynamic_cast<ServerSocket *>(socketIterator->value);
-			if (sSocket != NULL)
-			{
+			if (sSocket != NULL) {
 				ClientSocket *csocket = new ClientSocket(*sSocket); 
 				sockets.insert(std::make_pair(csocket->getSocketFd(), 
 							csocket));

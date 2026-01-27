@@ -16,6 +16,7 @@ struct ServerConfig
 	sa_family_t sin_family;
 	std::string	cgi_path;
 	std::string	index_file;
+	std::string	name;
 };
 
 class ServerSocket : public Socket

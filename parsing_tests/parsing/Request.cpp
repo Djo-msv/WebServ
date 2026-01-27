@@ -1,6 +1,6 @@
 #include "Request.hpp"
 
-Request::Request() : _status(START), _env(NULL), c_env(NULL), env_size(0), exec(false) {}
+Request::Request() : _env(NULL), c_env(NULL), env_size(0), exec(false) {}
 
 Request::~Request()
 {
@@ -8,7 +8,7 @@ Request::~Request()
 	delete[] c_env;
 }
 
-Request::Request(const Request &other) : _status(other._status), _method(other._method), _target(other._target), _env(other._env), c_env(other.c_env), exec(other.exec) {}
+Request::Request(const Request &other) : _method(other._method), _target(other._target), _env(other._env), _body(other._body), c_env(other.c_env), exec(other.exec) {}
 
 Request& Request::operator=(const Request &other)
 {
@@ -19,7 +19,7 @@ Request& Request::operator=(const Request &other)
 		c_env = other.c_env;
 		_target = other._target;
 		exec = other.exec;
-		_status = other._status;
+		_body = other._body;
 	}
 	return *this;
 }
@@ -35,39 +35,46 @@ void Request::parse()
 	std::string header;
 	std::size_t headerEnd = _request.find("\r\n\r\n");
 
-	if (headerEnd == std::string::npos || headerEnd + 4 >= _request.size())
+	if (headerEnd == std::string::npos)
+		throw std::out_of_range("0"); //no header-delim, bad request/connection lost
+	if (headerEnd + 4 >= _request.size())
 		header = _request;
 	else
 	{
-		// * substr takes the position and the length to extract so we add 4 to include the \r\n\r\n
-		header = _request.substr(0, headerEnd + 4);
+		header = _request.substr(0, headerEnd);
 		_body = _request.substr(headerEnd + 4);
 	}
 	try {
 		this->parse_header(header);
-		if (headerEnd == std::string::npos)
-		{
-			if (this->getSize() >= 0)
-				//TODO throw error, incomplete request (because there is no body despite content-length/transfer-encoding)
-			return ;
-		}
+		this->parse_body();
 	}
 	catch (std::exception &e) {throw ;}
 }
 
-void Request::check_line(std::string line)
+void Request::body_check(int diff)
+{
+	if (diff < 0)
+		throw std::out_of_range("7"); //additional data
+	if (diff > 0)
+		throw std::out_of_range("8"); //missing data
+}
+
+void Request::parse_body()
 {
 	try {
-		switch (_status) {
-			case START:
-				this->startline_check(line);
+		switch (this->getSize()) {
+			case CHUNKED:
+				//this->chunk_parse(); //future chunked parse with size->substr loop()
 				break ;
-			default :
-				this->headers_add(line);
+			case 0:
+				if (!_body.empty())
+					throw std::out_of_range("6"); //there should be a content-length
+				break ;
+			default:
+				this->body_check(this->getSize() - _body.size());
 		}
-		_status++;
 	}
-	catch (std::exception &e) {throw ;}
+	catch (std::exception &e) { throw ; }
 }
 
 void Request::adjust_exec()
@@ -80,15 +87,17 @@ void Request::adjust_exec()
 void	Request::parse_header(std::string header)
 {
 	std::stringstream s(header);
-	while (!s.eof())
-	{
-		std::string line;
-		std::getline(s, line, '\n');
-		try {
-			this->check_line(line);
+	std::string line;
+	std::getline(s, line, '\n');
+	try {
+		this->startline_check(line);
+		while (!s.eof())
+		{
+			std::getline(s, line, '\n');
+			this->headers_add(line);
 		}
-		catch (std::exception &e) {throw ;}
 	}
+	catch (std::exception &e) {throw ;}
 }
 
 void Request::headers_add(std::string line)
@@ -103,11 +112,10 @@ void Request::headers_add(std::string line)
 		return ;
 	try {
 		//here checking the a-num values
-		//check_key(key);
+		//check_key(key); -> that'll be error 5
 		if (val[0] == ' ')
 			val.erase(val.begin());
 		headers.insert(std::pair<std::string, std::string>(key, val));
-		_status++;
 	}
 	catch (std::exception &e) {throw;}
 }

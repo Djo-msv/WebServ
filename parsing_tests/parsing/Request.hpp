@@ -10,9 +10,6 @@
 # include <socket_utils.hpp>
 
 #define CHUNKED -1
-#define	START 0
-#define HEADER 1
-#define	BODY 2
 
 class Request
 {
@@ -26,7 +23,6 @@ class Request
 
 
 		void	parse();
-		void	adjust_exec();
 		void	read() const;
 		
 		const char	**getEnv() const;
@@ -39,8 +35,6 @@ class Request
 		int 		getSize() const;
 
 	private:
-		int	_status;
-
 		std::string 	_method;
 		std::string		_target;
 		std::string		*_env;
@@ -55,9 +49,11 @@ class Request
 		//Server who received the request
 		
 		void	parse_header(std::string header);
-		void	check_line(std::string line);
+		void	parse_body();
+		void	body_check(int diff);
 		void	headers_add(std::string line);
 		void	startline_check(std::string line);
 		void	make_env(std::string params);
+		void	adjust_exec();
 		
 };

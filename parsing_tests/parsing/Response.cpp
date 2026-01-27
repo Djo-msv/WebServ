@@ -34,14 +34,9 @@ std::string Response::getResponse() const { return msg; }
 
 void Response::seekTarget(Request *req)
 {
-<<<<<<< HEAD
-	struct stat buf;
-	if (stat(_target.c_str(), &buf) == -1)
-=======
 	//check if file exists
 	struct stat buf;
 	if (stat(req->getTarget().c_str(), &buf) == -1)
->>>>>>> refs/remotes/origin/ExecutionProcess
 	{
 		this->fix_error("404 Not Found"); //update target and status accordingly
 		return ;

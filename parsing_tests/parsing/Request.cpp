@@ -1,6 +1,6 @@
 #include "Request.hpp"
 
-Request::Request() : status(0), _env(NULL), c_env(NULL), env_size(0), exec(false) {}
+Request::Request() : _status(START), _env(NULL), c_env(NULL), env_size(0), exec(false) {}
 
 Request::~Request()
 {
@@ -8,7 +8,7 @@ Request::~Request()
 	delete[] c_env;
 }
 
-Request::Request(const Request &other) : status(other.status), _method(other._method), _target(other._target), _env(other._env), c_env(other.c_env), exec(other.exec) {}
+Request::Request(const Request &other) : _status(other._status), _method(other._method), _target(other._target), _env(other._env), c_env(other.c_env), exec(other.exec) {}
 
 Request& Request::operator=(const Request &other)
 {
@@ -19,30 +19,55 @@ Request& Request::operator=(const Request &other)
 		c_env = other.c_env;
 		_target = other._target;
 		exec = other.exec;
-		status = other.status;
+		_status = other._status;
 	}
 	return *this;
 }
 
-int Request::check_line(std::string line)
+Request &Request::operator+=(const char *buffer)
 {
+	_request += buffer;
+	return *this;
+}
+
+void Request::parse()
+{
+	std::string header;
+	std::size_t headerEnd = _request.find("\r\n\r\n");
+
+	if (headerEnd == std::string::npos || headerEnd + 4 >= _request.size())
+		header = _request;
+	else
+	{
+		// * substr takes the position and the length to extract so we add 4 to include the \r\n\r\n
+		header = _request.substr(0, headerEnd + 4);
+		_body = _request.substr(headerEnd + 4);
+	}
 	try {
-		switch (status) {
-			case 0:
-				this->startline_check(line);
-				break ;
-			case 1:
-				this->headers_add(line);
-				break ;
-			default:
-				body += line;
+		this->parse_header(header);
+		if (headerEnd == std::string::npos)
+		{
+			if (this->getSize() >= 0)
+				//TODO throw error, incomplete request (because there is no body despite content-length/transfer-encoding)
+			return ;
 		}
-		status++;
 	}
 	catch (std::exception &e) {throw ;}
-	if (status == 2)
-		return this->getSize();
-	return -2;
+}
+
+void Request::check_line(std::string line)
+{
+	try {
+		switch (_status) {
+			case START:
+				this->startline_check(line);
+				break ;
+			default :
+				this->headers_add(line);
+		}
+		_status++;
+	}
+	catch (std::exception &e) {throw ;}
 }
 
 void Request::adjust_exec()
@@ -52,7 +77,7 @@ void Request::adjust_exec()
 		exec = true;
 }
 
-int	Request::check_header(std::string header)
+void	Request::parse_header(std::string header)
 {
 	std::stringstream s(header);
 	while (!s.eof())
@@ -60,13 +85,10 @@ int	Request::check_header(std::string header)
 		std::string line;
 		std::getline(s, line, '\n');
 		try {
-			int res = this->check_line(line);
-			if (res != -2)
-				return res;
+			this->check_line(line);
 		}
 		catch (std::exception &e) {throw ;}
 	}
-	return this->getSize();
 }
 
 void Request::headers_add(std::string line)
@@ -85,7 +107,7 @@ void Request::headers_add(std::string line)
 		if (val[0] == ' ')
 			val.erase(val.begin());
 		headers.insert(std::pair<std::string, std::string>(key, val));
-		status--;
+		_status++;
 	}
 	catch (std::exception &e) {throw;}
 }
@@ -162,7 +184,7 @@ std::string Request::getMethod() const { return _method; }
 
 bool Request::isExec() const { return exec; }
 
-std::string Request::getBody() const { return body; }
+std::string Request::getBody() const { return _body; }
 
 void Request::read() const
 {
@@ -183,5 +205,5 @@ void Request::read() const
 		for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); it++)
 			std::cout << it->first << "; " << it->second << std::endl;
 	}
-	std::cout << "and the body" << std::endl << body << std::endl;
+	std::cout << "and the body" << std::endl << _body << std::endl;
 }

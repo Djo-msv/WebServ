@@ -13,7 +13,7 @@
 #include <Socket.hpp>
 #include <ServerSocket.hpp>
 #include <ProcessExecution.hpp>
-#include <Request.hpp>
+#include <../parsing_tests/parsing/Request.hpp>
 
 class ClientSocket : public Socket
 {
@@ -23,6 +23,7 @@ class ClientSocket : public Socket
 
 		void	readRequest();
 		void	readProcess();
+		void	parseRequest();
 		// TODO send()
 
 		unsigned int	getStatus();
@@ -39,18 +40,11 @@ class ClientSocket : public Socket
 	private :
 		// ServerSocket &	_serverSocket;
 		state				_status;
-		std::string			_clientRequest;
 		Request				_request;
 		
 		std::string			_processResponse;
 		int					_processFd;
 		ProcessExecution	_process;
 
-		int	_bytes_read = 0;
-		int	_content_length = 0;
-		int _header_size = 0;
-		int	_bytes_to_read = BUF_SIZE;
-
 		int 	createSocket(ServerSocket &);
-		void	parseHeader();
 };

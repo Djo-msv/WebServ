@@ -45,6 +45,8 @@ void	managePendingClients()
 
 			if (csocket->getStatus() == ClientSocket::Read_request)
 				csocket->readRequest();
+			else if (csocket->getStatus() == ClientSocket::Parse_request)
+				csocket->parseRequest();
 			else if (csocket->getStatus() == ClientSocket::Read_process)
 				csocket->readProcess();
 			// if (csocket->getStatus() == WRITE) {

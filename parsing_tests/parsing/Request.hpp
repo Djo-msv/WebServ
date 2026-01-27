@@ -7,45 +7,28 @@
 # include <vector>
 # include <cmath>
 # include <map>
+# include <socket_utils.hpp>
 
-<<<<<<< HEAD
 #define CHUNKED -1
-=======
-inline std::string  ft_itoa(int nb)
-{
-	std::stringstream ss;
-	ss << nb;
-	return (ss.str());
-}
->>>>>>> refs/remotes/origin/ExecutionProcess
+#define	START 0
+#define HEADER 1
+#define	BODY 2
 
 class Request
 {
-	private:
-		int status;
-		std::string _method;
-		std::string _target;
-		std::string *_env;
-		std::string body;
-		const char **c_env;
-		size_t env_size;
-		std::map<std::string, std::string> headers;
-		bool exec;
-		//Server who received the request
-		void	headers_add(std::string line);
-		void	startline_check(std::string line);
-		void	make_env(std::string params);
 	public:
 		Request();
 		~Request();
 		Request(const Request &other);
+
 		Request &operator=(const Request &other);
-		
-		int		check_header(std::string header);
-		int		check_line(std::string line);
+		Request &operator+=(const char *buffer);
+
+
+		void	parse();
 		void	adjust_exec();
 		void	read() const;
-
+		
 		const char	**getEnv() const;
 		std::string	getTarget() const;
 		std::string	getMethod() const;
@@ -54,4 +37,27 @@ class Request
 		
 		std::string	getBody() const;
 		int 		getSize() const;
+
+	private:
+		int	_status;
+
+		std::string 	_method;
+		std::string		_target;
+		std::string		*_env;
+		std::string		_body;
+		std::string		_request;
+
+		const char		**c_env;
+		size_t			env_size;
+		bool 			exec;
+
+		std::map<std::string, std::string> headers;
+		//Server who received the request
+		
+		void	parse_header(std::string header);
+		void	check_line(std::string line);
+		void	headers_add(std::string line);
+		void	startline_check(std::string line);
+		void	make_env(std::string params);
+		
 };

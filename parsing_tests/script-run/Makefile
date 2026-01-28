@@ -1,7 +1,7 @@
 CC=c++
 FLAGS=-Wall -Wextra -Werror -std=c++98
-NAME=parsing
-SRC=main.cpp Request.cpp #Response.cpp ProcessExecution.cpp
+NAME=cgi-test
+SRC=main.cpp Request.cpp ProcessExecution.cpp
 
 all: $(NAME)
 

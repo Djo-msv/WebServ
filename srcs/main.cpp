@@ -100,7 +100,7 @@ int	main(void)
 	
 	// AF_INET is used to allow ipv4 connection.
 	// SOCK_STREAM is to tell the socket to use TCP protocol
-	ServerConfig config = (ServerConfig) {port, AF_INET, "", ""};
+	ServerConfig config = (ServerConfig) {port, AF_INET, "", "", ""};
 	try
 	{
 		ServerSocket *socket = new ServerSocket(config, epollInstance);

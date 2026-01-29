@@ -1,6 +1,6 @@
 #include "MymlParser.hpp"
 
-MymlParser::MymlParser(char *file) : _confFileFd(-1) /* setup fd in case of failure */
+MymlParser::MymlParser(char *file)
 {
 	std::string	line;
 	std::string::iterator it;
@@ -20,8 +20,15 @@ MymlParser::MymlParser(char *file) : _confFileFd(-1) /* setup fd in case of fail
 
 MymlParser::~MymlParser(void)
 {
-	if (_confFileFd != -1);
-		close(_confFileFd);
+	_file.close();
+}
+
+std::string	MymlParser::readFile(void)
+{
+	std::string	line;
+	
+	getline(&line, _file);
+	return (line);
 }
 
 void	MylmParser::openFile(const char *path)
@@ -39,9 +46,11 @@ void	MylmParser::openFile(const char *path)
 	_confFileFd = open(path, O_RDONLY);
 	if (_confFileFd < 0)
 		throw wrongPerm("Need read permition");
+	ifstream file(path, ios::in);
+	_file = file;
 }
 
-void	addServerConfiguration(std::string serverName)
+void	MymlParser::addServerConfiguration(std::string serverName)
 {
 	ServerConfig	server = {0};
 
@@ -56,30 +65,30 @@ void	addServerConfiguration(std::string serverName)
 }
 
 
-void	addSetting(line)
+void	MymlParser::addSetting(std::string line)
 {
+	int	i = 0;
 	std::string setting[] = {"sin_port", "sin_family", "cgi_path", "index_file"};
 
 	if (_servConf.empty() == 1)
 		throw badParsing("at line : " + line + "no Server define before");
-	for (int i = 0; i <= 3 && line.find(setting[0], 0) == 0, i++) {};
+	for (i = 0; i <= 3 && line.find(setting[i], 0) == 0; i++) {};
 	std::iterator it = line.find(':', 0) + line.begin() + 1;
-	for (it; it != line.end() && isspace(static_cast<int>(it); it++) {};
-	line.erease(serverName.begin(), it);
+	for (; it != line.end() && isspace(static_cast<int>(it); it++)) {};
+	line.erase(serverName.begin(), it);
 	switch (i)
 	{
-		case (i = 0):
-			static_cast<ServerConfig>(_servConf.end()).sin_port = line;
+		case (i == 0):
+			(*_servConf.end()).sin_port = atoi(line);
 			break ;
-		case (i = 1):	
-			static_cast<ServerConfig>(_servConf.end()).sin_family = line;
+		case (i == 1):	
+			(*_servConf.end()).sin_family = atoi(line);
 			break ;
-		case (i = 2):
-			static_cast<ServerConfig>(_servConf.end()).cgi_path = line;
+		case (i == 2):
+			(*_servConf.end()).cgi_path = line;
 			break ;
-		case (i = 3);
-			static_cast<ServerConfig>(_servConf.end()).index_file = line;
+		case (i == 3):
+			(*_servConf.end()).index_file = line;
 			break ;
 	}
-		
 }

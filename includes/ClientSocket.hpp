@@ -13,7 +13,6 @@
 #include <Socket.hpp>
 #include <ServerSocket.hpp>
 #include <ProcessExecution.hpp>
-#include <Request.hpp>
 
 class ClientSocket : public Socket
 {

@@ -1,4 +1,8 @@
-#prama once
+#pragma once
+
+#include "ServerSocket.hpp"
+#include <vector>
+#include <fstream>
 
 class MymlParser
 {
@@ -6,13 +10,13 @@ class MymlParser
 		MymlParser(char *files); /* Calling the constructor, verifying the file, and executing the process */
 		~MymlParser(); /* Close _confFilefd */
 
-		std::vector<serverConfiguration>	getServerConfiguration(); // return vector of serverConfiguration */
+		std::vector<ServerConfig>	getServerConfiguration(); // return vector of serverConfiguration */
 	private :
-		int									_confFileFd;
-		std::vector<serverConfiguration>	_servConf;
+		ifstream					_file;
+		std::vector<ServerConfig>	_servConf;
 
-		int			openFile();
-		void		addServerConfiguration();
-		std::string	readLine();
-		void		error();
+		int			openFile(const char *path);
+		void		addServerConfiguration(std::string serverName);
+		void		addSetting(std::string line);
+		std::string	readFile();
 };

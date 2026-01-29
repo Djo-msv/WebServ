@@ -3,6 +3,7 @@
 # include <unistd.h>
 # include <errno.h>
 # include <socket_utils.hpp>
+
 #define BUF_SIZE 1024
 
 // This class allows the server to execute a program using a CGI script.

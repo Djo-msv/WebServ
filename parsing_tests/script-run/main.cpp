@@ -1,5 +1,6 @@
-#include "ProcessExecution.hpp"
-#include "Request.hpp"
+//#include "ProcessExecution.hpp"
+//#include "Request.hpp"
+#include "Response.hpp"
 
 int main()
 {
@@ -15,13 +16,13 @@ int main()
 		obj.parse();
 		obj.read();
 		std::cout << "and now see get size : " << obj.getSize() << std::endl;
-		ProcessExecution obj1;
+		/*ProcessExecution obj1;
 		obj1.startProcess(obj.getBody(), obj.getTarget(), obj.getEnv());
 		while (!obj1.getStatus())
-			obj1.readDataProcess();
-		/*Response res;
-		res.makeResponse(&obj);*/
-		std::cout << std::endl << std::endl << obj1.getResponse() << std::endl;
+			obj1.readDataProcess();*/
+		Response res;
+		res.makeResponse(&obj);
+		std::cout << std::endl << std::endl << res.getResponse() << std::endl;
 	}
 	catch (std::exception &e)
 	{

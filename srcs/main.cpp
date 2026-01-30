@@ -43,18 +43,25 @@ void	managePendingClients()
 	for (std::deque<ClientSocket *>::iterator it = pendingClientSockets.begin(); it != pendingClientSockets.end(); ++it) {
 			ClientSocket *csocket = *it;
 
-			if (csocket->getStatus() == ClientSocket::Read_request)
-				csocket->readRequest();
-			else if (csocket->getStatus() == ClientSocket::Parse_request)
-				csocket->parseRequest();
-			else if (csocket->getStatus() == ClientSocket::Read_process)
-				csocket->readProcess();
-			// if (csocket->getStatus() == WRITE) {
-			// 	epoll_add(epollInstance, csocket->getSocketFd(), EPOLLOUT | EPOLLET);
-			// 	it = pendingClientSockets.erase(it);
-			// 	if (it == pendingClientSockets.end())
-			// 		break ;
-			// }
+		try
+		{
+			switch (csocket->getStatus())
+			{
+				case ClientSocket::ReadRequest :
+					csocket->readRequest();
+				case ClientSocket::ParseRequest :
+					csocket->parseRequest();
+				case ClientSocket::ExecProcess :
+					csocket->execProcess();
+				case ClientSocket::ReadProcess :
+					csocket->readProcess();
+				case ClientSocket::SendResponse :
+					epoll_add(epollInstance, csocket->getSocketFd(), EPOLLOUT | EPOLLET);
+					it = pendingClientSockets.erase(it);
+					if (it == pendingClientSockets.end())
+						return ;
+			}
+		} catch(const std::exception& e){ throw; }
 	}
 }
 
@@ -84,8 +91,8 @@ void	manageRequests()
 			}
 			else {
 				ClientSocket *cSocket = dynamic_cast<ClientSocket *>(socketIterator->value);
-				if (cSocket->getStatus() != ClientSocket::Write) {};
-					//trow error
+				if (cSocket->getStatus() != ClientSocket::SendResponse) {};
+					continue ; // Impossible variable
 				// TODO client packet response handling
 //				do_use_fd(events[n].data.fd);
 			}

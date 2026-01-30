@@ -25,6 +25,8 @@ class ServerSocket : public Socket
 		ServerSocket(ServerConfig, int epollInstance);
 		~ServerSocket();
 
+		ServerConfig getConfig();
+
 	private :
 		ServerConfig _config;	
 

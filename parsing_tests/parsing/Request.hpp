@@ -7,7 +7,9 @@
 # include <vector>
 # include <cmath>
 # include <map>
+
 # include <socket_utils.hpp>
+# include <HttpError.hpp>
 
 #define CHUNKED -1
 
@@ -33,6 +35,11 @@ class Request
 		
 		std::string	getBody() const;
 		int 		getSize() const;
+
+		class BadRequest : public HttpError {
+			public :
+				BadRequest();
+		};
 
 	private:
 		std::string 	_method;

@@ -11,6 +11,7 @@
 #define BUF_SIZE 1024
 
 #include <Socket.hpp>
+#include <HttpError.hpp>
 #include <ServerSocket.hpp>
 #include <ProcessExecution.hpp>
 #include <../parsing_tests/parsing/Request.hpp>
@@ -23,6 +24,7 @@ class ClientSocket : public Socket
 
 		void	readRequest();
 		void	readProcess();
+		void	execProcess();
 		void	parseRequest();
 		// TODO send()
 
@@ -31,14 +33,20 @@ class ClientSocket : public Socket
 		//void	setProcess(ProcessExecution *process);
 
 		enum state {
-			Read_request,
-			Parse_request,
-			Read_process,
-			Write
+			ReadRequest,
+			ParseRequest,
+			ExecProcess,
+			ReadProcess,
+			SendResponse
+		};
+
+		class GatewayTimeout : public HttpError {
+			public :
+				GatewayTimeout(); 
 		};
 
 	private :
-		// ServerSocket &	_serverSocket;
+		ServerSocket &		_serverSocket;
 		state				_status;
 		Request				_request;
 		

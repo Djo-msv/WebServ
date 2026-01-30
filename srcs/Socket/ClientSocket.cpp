@@ -1,7 +1,7 @@
 #include "ClientSocket.hpp"
 #include "ProcessExecution.hpp"
 
-ClientSocket::ClientSocket(ServerSocket &serverSocket) : Socket(createSocket(serverSocket)), _status(Read_request) {}
+ClientSocket::ClientSocket(ServerSocket &serverSocket) : Socket(createSocket(serverSocket)), _serverSocket(serverSocket), _status(ReadRequest) {}
 
 ClientSocket::~ClientSocket(void) {}
 
@@ -30,7 +30,7 @@ void	ClientSocket::readRequest(void)
 		 * * 	read all available data
 		*/
 		if (!getsockname(_socketFd, NULL, NULL))
-			_status = Parse_request;
+			_status = ParseRequest;
 		else
 			throw std::runtime_error("an error occured while reading into client : '" + \
 				ft_itoa(_socketFd) + "' socket : " + std::string(strerror(errno)));
@@ -49,8 +49,22 @@ void	ClientSocket::parseRequest(void)
 {
 	try {
 		_request.parse();
-		_status = Read_process;
-	} catch (std::exception &e) {throw ;}
+		_status = ExecProcess;
+	} catch (HttpError &e)
+	{
+		_processResponse = e.what();
+		_status = SendResponse;
+	}
+	catch (std::exception &e) {throw ;}
+}
+
+
+void	ClientSocket::execProcess(void)
+{
+	// TODO Logique de L'exécution
+	(void) _serverSocket;
+	// _process.startProcess(&_serverSocket.getConfig().cgi_path)
+	_status = ReadProcess;
 }
 
 void	ClientSocket::readProcess(void)
@@ -66,7 +80,7 @@ void	ClientSocket::readProcess(void)
 		throw std::runtime_error("an error occured while reading the process fd : " + \
 			ft_itoa(_processFd) + " of client '" + ft_itoa(_socketFd) + "' : " + strerror(errno));
 	if (size == 0)
-		_status = Write;
+		_status = SendResponse;
 	else
 		_processResponse += buffer;
 }
@@ -89,3 +103,13 @@ int ClientSocket::createSocket(ServerSocket & serverSocket)
 	std::cout << "create socket : " << cSocketFd << std::endl;
 	return (cSocketFd);
 }
+
+
+ClientSocket::GatewayTimeout::GatewayTimeout() : HttpError("HTTP/1.1 504 Gateway Time-out\r\n"
+														   "Content-length: 92\r\n"
+												    	   "Cache-Control: no-cache\r\n"
+													       "Content-Type: text/html\r\n"
+														   "\r\n"
+														   "<html><body><h1>504 Gateway Time-out</h1>\n"
+														   "The server didn't respond in time.\n"
+														   "</body></html>", 504) {}

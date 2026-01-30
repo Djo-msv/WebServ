@@ -106,10 +106,16 @@ void Request::headers_add(std::string line)
 	std::string key;
 	std::string val;
 	
+	std::cout << line << std::endl;
 	std::getline(s, key, ':');
 	std::getline(s, val, '\r');
+	std::cout << val << std::endl;
+	// should throw error 400 bad request, error case are when there is no ':', no char before or after ':'
 	if (key.empty() || val.empty())
-		return ;
+		throw BadRequest();
+	// Happens is if there is a \r in the value 
+	if (!s.eof())
+		throw BadRequest();
 	try {
 		//here checking the a-num values
 		//check_key(key); -> that'll be error 5
@@ -215,3 +221,13 @@ void Request::read() const
 	}
 	std::cout << "and the body" << std::endl << _body << std::endl;
 }
+
+Request::BadRequest::BadRequest() : HttpError("HTTP/1.1 400 Bad request\r\n"
+											  "Content-length: 90\r\n"
+											  "Cache-Control: no-cache\r\n"
+											  "Connection: close\rn"
+											  "Content-Type: text/html\r\n"
+											  "\r\n"
+											  "<html><body><h1>400 Bad request</h1>\n"
+											  "Your browser sent an invalid request.\n"
+											  "</body></html>", 400) {}

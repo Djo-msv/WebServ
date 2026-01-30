@@ -54,6 +54,7 @@ endif
 #==============================SOURCES===========================#
 
 SRCS_FILES:=	main.cpp \
+				HttpError.cpp \
 				Execution/ProcessExecution.cpp \
 				Socket/ClientSocket.cpp \
 				Socket/ServerSocket.cpp \

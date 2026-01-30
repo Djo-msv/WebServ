@@ -7,18 +7,10 @@ MymlParser::MymlParser(char *path)
 
 	while ((file = openFile(path, name))) /* if directory open each fd of .myml file, else return fd */
 	{
-		std::string	line;
-
+		readFile(file);
 //		_myml.insert(name, MymlList); // if file already have list
-		while (std::getline(*file, line)) /* read each line inside file */
-		{
-			std::string::iterator it = line.begin();
-			while (it != line.end()) /* tocken */
-			{
-				if (*it == '#')
-					break ;
-			}
-		}
+		// read file
+		// tokenizer
 	}
 }
 
@@ -27,27 +19,27 @@ MymlParser::~MymlParser(void)
 	_file->close();
 }
 
-std::string	MymlParser::readFile(void)
+void	MymlParser::readFile(ifstream *file)
 {
-	std::string line;
-	
-	std::getline(*_file, line);
-	return (line);
-}
+	std::string	line;
 
-void	MymlParser::openFile(const char *path)
-{
-	struct stat s;
-
-	if (stat(path, &s) == 0)
+	while (std::getline(*file, line)) /* read each line inside file */
 	{
-		if (!(s.st_mode & S_IFREG))
-			throw NotAnFile("cannot read anything other than a file");
+		int						indentLevel = 0;
+		std::string::iterator	it = line.begin();
+		while (it != line.end()) /* tocken */
+		{
+			if (*it == '-')
+				_elementOfList = true;
+			if (*it == ':' && it == line.end()) {};
+				_elementOfDico = true;
+			else if (*it == ':')
+				_isDicionary = true;
+			if (*it == '\t')
+				indentLevel++;
+			if (isWorld(it))
+			if (*it == '#')
+				break ;
+		}
 	}
-	else
-		throw NotAnFile("can't open file");
-	std::ifstream file(path, std::ios::in);
-	_file = &file;
-}
-
 }

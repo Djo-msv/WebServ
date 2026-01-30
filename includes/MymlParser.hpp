@@ -56,6 +56,9 @@ class MymlParser
 		std::ifstream		*_file;
 		std::map<std::string, MymlObject>	_myml;
 
+		void	readFile(ifstream *file);
+		void	tokenizer();
+
 		void	addList();
 		void	addDictionary();
 

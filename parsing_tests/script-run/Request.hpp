@@ -7,7 +7,13 @@
 # include <vector>
 # include <algorithm>
 # include <map>
-# include <socket_utils.hpp>
+//# include <socket_utils.hpp>
+inline std::string  ft_itoa(int nb)
+{
+	std::stringstream ss;
+	ss << nb;
+	return (ss.str());
+}
 
 #define CHUNKED -1
 

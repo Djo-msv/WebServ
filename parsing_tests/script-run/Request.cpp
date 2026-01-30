@@ -183,7 +183,10 @@ void Request::startline_check(std::string line)
 	if (!current.empty() && !l.eof())
 		throw std::out_of_range("4"); //bad request (formatting)
 	this->adjust_exec();
-	_target = "." + _target;
+	if (_target == "/")
+		_target = "/html/index.html";
+	if (_target[0] != '.')
+		_target = "." + _target;
 }
 
 std::string Request::getTarget() const { return _target; }

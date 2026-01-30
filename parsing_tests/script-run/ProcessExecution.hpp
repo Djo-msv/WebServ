@@ -2,7 +2,9 @@
 # include <stdexcept>
 # include <unistd.h>
 # include <errno.h>
-# include <socket_utils.hpp>
+//# include <socket_utils.hpp>
+# include "Request.hpp"
+inline std::string  ft_itoa(int nb);
 
 #define BUF_SIZE 1024
 
@@ -13,12 +15,15 @@ class ProcessExecution
 		ProcessExecution(); /*set all value to 0 */
 		~ProcessExecution(); /* close both pipes in case of crash */
 	
-		void startProcess (std::string body, std::string target, char **env); /* fork Process and exec CGI, and stock execve output fd */
+		void startProcess (bool pipein, std::string target, char **env); /* fork Process and exec CGI, and stock execve output fd */
 		
-		void readDataProcess(); /* Read the output data from the child process, and fill the buffer passed as a parameter. */
+		void writeDataProcess(std::string body); /* writes the request body to the child process */
+		void readDataProcess(); /* Read the output data from the child process */
 
-		bool		getStatus();
-		std::string	getResponse();
+		bool		getStatus() const;
+		std::string	getResponse() const;
+		int		getFdIn() const;
+		int		getFdOut() const;
 
 	private :
 		int			_pipeIn[2]; /* execve input */

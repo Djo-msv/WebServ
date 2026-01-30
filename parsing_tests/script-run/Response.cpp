@@ -1,6 +1,6 @@
 #include "Response.hpp"
 
-Response::Response() : msg("HTTP/1.1"), status("200 OK"), body("\r\n") {}
+Response::Response() : msg("HTTP/1.1"), status("200 OK"), body("\r\n"), _status(2), exec(NULL) {}
 
 Response::~Response() {}
 
@@ -22,16 +22,20 @@ void Response::makeResponse(Request *req)
 {
 	try {
 		this->seekTarget(req);
-		if (body.empty())
+		//this if will now only come into effect if there is no exec to be parsed through :: ie, _status does not switch to 1 or 0
+		if (_status == 2)
 			this->makeBody();
-		//classic recipe here for a static webpage response
-		msg += " " + status + "\r\n" + "Content-Type: text/html\r\nContent-Length: " + ft_itoa(body.length() - 2) + "\r\n";
-		msg += body;
 	}
 	catch (std::exception &e) {throw ;}
 }
 
-std::string Response::getResponse() const { return msg; }
+std::string Response::getResponse()
+{
+	//classic recipe here for a static webpage response
+	msg += " " + status + "\r\n" + "Content-Type: text/html\r\nContent-Length: " + ft_itoa(body.length() - 2) + "\r\n";
+	msg += body;
+	return msg;
+}
 
 void Response::seekTarget(Request *req)
 {
@@ -45,15 +49,59 @@ void Response::seekTarget(Request *req)
 	_target = req->getTarget();
 	if (req->isExec())
 	{
-		//handle execution here, acquire new target, hand it to _target component;
+		//handle execution here
 		try {
-			ProcessExecution obj;
-			obj.startProcess(req->getBody(), req->getTarget(), req->getEnv());
-			while (!obj.getStatus())
-				obj.readDataProcess();
-			body = obj.getResponse();
+			exec = new ProcessExecution;
+			if (req->getBody().empty())
+				_status = 0; // no writing needed, read directly from pipeOut once exec is running
+			else
+			{
+				body = req->getBody();
+				_status = 1; // next up, write body to pipeIn to exec running
+			}
+			//no more need for a body in startProcess, since that'll be sent directly through this response instead
+			exec->startProcess(!body.empty(), req->getTarget(), req->getEnv());
 		}
 		catch (std::exception &e) {throw ;}
+	}
+}
+//a "take_action" function that checks in on the exec
+void Response::actionExec()
+{
+	switch (_status) {
+		case 1:
+			writeExec();
+			break ;
+		case 0:
+			readExec();
+	}
+}
+//remember, no writeExec() if we don't have a body to send to the cgi-exec
+void Response::writeExec()
+{
+	if (!exec)
+	{
+		_status = 2;
+		return ;
+	}
+	exec->writeDataProcess(body);
+	_status = 0;
+}
+
+void Response::readExec()
+{
+	if (!exec)
+	{
+		_status = 2;
+		return ;
+	}
+	exec->readDataProcess();
+	if (exec->getStatus())
+	{
+		_status = 2;
+		body = exec->getResponse();
+		delete exec;
+		exec = NULL;
 	}
 }
 
@@ -63,10 +111,8 @@ void Response::makeBody()
 	if (!file.is_open())
 	{
 		//later this will likely be more of a "forbidden" type error
-		/*this->fix_error("404 Not Found");
-		_target = "." + _target;
-		this->makeBody();*/
 		body += "<html><body><h1>Error opening the file requested !</h1></body></hmtl>";
+		return ;
 	}
 	std::stringstream buffer;
 	buffer << file.rdbuf();
@@ -82,5 +128,18 @@ void Response::fix_error(std::string error)
 	//for now it's just the error 404 basic stuff
 	status = error;
 	_target = "./html/error_404.html";
-	body += "<html><body><h1>Error opening the file requested !</h1></body></hmtl>";
+}
+
+unsigned int Response::getStatus() const { return _status; }
+
+int Response::getFd() const
+{
+	switch (_status) {
+		case 0:
+			return exec->getFdOut();
+		case 1:
+			return exec->getFdIn();
+		default:
+			return -1;
+	}
 }

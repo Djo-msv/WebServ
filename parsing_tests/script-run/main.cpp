@@ -6,12 +6,12 @@ int main()
 {
 	try {
 		Request obj;
-		obj += "POST /scripts/script.py HTTP/1.1\r\n";
+		obj += "POST /scripts/login.py HTTP/1.1\r\n";
 		obj += "User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:146.0) Gecko/20100101 Firefox/146.0\r\n";
 		obj += "Accept-Language: en-US,en;q=0.5\r\n";
-		obj += "Content-Length: 29\r\n";
+		obj += "Content-Length: 30\r\n";
 		obj += "\r\n";
-		obj += "username=param&password=param";
+		obj += "username=param&password=param1";
 		std::cout << std::endl;
 		obj.parse();
 		obj.read();
@@ -22,6 +22,8 @@ int main()
 			obj1.readDataProcess();*/
 		Response res;
 		res.makeResponse(&obj);
+		while (res.getStatus() != 2)
+			res.actionExec();
 		std::cout << std::endl << std::endl << res.getResponse() << std::endl;
 	}
 	catch (std::exception &e)

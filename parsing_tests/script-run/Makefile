@@ -1,7 +1,7 @@
 CC=c++
 FLAGS=-Wall -Wextra -Werror -std=c++98
 NAME=cgi-test
-SRC=main.cpp Request.cpp ProcessExecution.cpp
+SRC=main.cpp Request.cpp ProcessExecution.cpp Response.cpp
 
 all: $(NAME)
 

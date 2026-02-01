@@ -1,6 +1,6 @@
 #include "Response.hpp"
 
-Response::Response() : msg("HTTP/1.1"), status("200 OK"), body("\r\n"), _status(2), exec(NULL) {}
+Response::Response() : status("200 OK"), body("\r\n"), _status(2), exec(NULL) {}
 
 Response::~Response() {}
 
@@ -32,8 +32,11 @@ void Response::makeResponse(Request *req)
 std::string Response::getResponse()
 {
 	//classic recipe here for a static webpage response
-	msg += " " + status + "\r\n" + "Content-Type: text/html\r\nContent-Length: " + ft_itoa(body.length() - 2) + "\r\n";
-	msg += body;
+	if (msg.empty())
+	{
+		msg += "HTTP/1.1 " + status + "\r\n" + "Content-Type: text/html\r\nContent-Length: " + ft_itoa(body.length() - 2) + "\r\n";
+		msg += body;
+	}
 	return msg;
 }
 
@@ -62,7 +65,7 @@ void Response::seekTarget(Request *req)
 			//no more need for a body in startProcess, since that'll be sent directly through this response instead
 			exec->startProcess(!body.empty(), req->getTarget(), req->getEnv());
 		}
-		catch (std::exception &e) {throw ;}
+		catch (std::exception &e) {if(exec) { delete exec; } throw ;}
 	}
 }
 //a "take_action" function that checks in on the exec
@@ -99,7 +102,7 @@ void Response::readExec()
 	if (exec->getStatus())
 	{
 		_status = 2;
-		body = exec->getResponse();
+		msg = exec->getResponse();
 		delete exec;
 		exec = NULL;
 	}

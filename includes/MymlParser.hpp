@@ -53,11 +53,8 @@ class MymlParser
 		std::map<std::string, MymlObject>	getMyml(); // return vector of serverConfiguration */
 
 	private :
-		std::ifstream		*_file;
 		std::map<std::string, MymlObject>	_myml;
-
-		void	readFile(ifstream *file);
-		void	tokenizer();
+		std::vector<Tokenizer>				_tokens;
 
 		void	addList();
 		void	addDictionary();

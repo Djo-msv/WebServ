@@ -8,12 +8,36 @@ MymlParser::MymlParser(char *path)
 	openFile(std::string(path), file);
 	for (std::map<std::string, std::ifstream *>::iterator it = file.begin(); it != file.end(); it++) /* iterate on every file */
 		readFile(it);
-//	clarityCheck(); /* Checks the parsing in its entirety; if an error is found, displays an error message explaining the nature of the error. */
+	check(); /* Checks the parsing in its entirety; if an error is found, displays an error message explaining the nature of the error. */
 //	buildTree(_myml); /* create a tree resulting from the parsing */
 }
 
 MymlParser::~MymlParser(void)
+{}
+
+void	MymlParser::check(void)
 {
+	bool	insideList = false;
+	int	lastStatus = 1; /* 1 is for definition, 2 is for list and 3 for dictionary */
+	int	lastIndent = 0;
+
+	for (std::vector::iterator it = _tokens.begin(); it != _tokens.end(); it++) {
+		if ((*it).isPartofList()) {
+			if (lastStatus == 1) {
+				if (lastIdent < (*it).getIdent()) {}; // empty def
+			}
+
+
+			if (lastStatus != 1 || lastStatus != 2) {}; // wrong parsing
+			lastStatus = 2;
+		}
+		if (*it.isPartofDictionary()) {
+			if (lastStatis != 2 || lastStatus != 3) {}; // wrong parsing
+		if ((*it).isDefine()) {
+			lastIdent = (*it).getIndent();
+			lastStatus = 1;
+		}
+	}
 }
 
 int	MymlParser::isDirectory(std::string path)

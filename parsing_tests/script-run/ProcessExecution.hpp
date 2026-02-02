@@ -2,9 +2,7 @@
 # include <stdexcept>
 # include <unistd.h>
 # include <errno.h>
-//# include <socket_utils.hpp>
-# include "Request.hpp"
-inline std::string  ft_itoa(int nb);
+# include <socket_utils.hpp>
 
 #define BUF_SIZE 1024
 

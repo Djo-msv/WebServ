@@ -39,3 +39,29 @@ void	epoll_add(int epollInstance, int fd, u_int32_t flags)
 		throw std::runtime_error("Could not add '" + ft_itoa(fd) + "' socket to epoll interest list. Error Code :" + ft_itoa(errno));
 	}
 }
+
+void	epoll_mod(int epollInstance, int fd, u_int32_t flags)
+{
+	epoll_event ev;
+
+	ev.events = flags;
+	ev.data.fd = fd;
+	if (epoll_ctl(epollInstance, EPOLL_CTL_MOD, fd, &ev) == -1)
+	{
+		close(fd);
+		throw std::runtime_error("Could not add '" + ft_itoa(fd) + "' socket to epoll interest list. Error Code :" + ft_itoa(errno));
+	}
+}
+
+void	epoll_del(int epollInstance, int fd, u_int32_t flags)
+{
+	epoll_event ev;
+
+	ev.events = flags;
+	ev.data.fd = fd;
+	if (epoll_ctl(epollInstance, EPOLL_CTL_DEL, fd, &ev) == -1)
+	{
+		close(fd);
+		throw std::runtime_error("Could not add '" + ft_itoa(fd) + "' socket to epoll interest list. Error Code :" + ft_itoa(errno));
+	}
+}

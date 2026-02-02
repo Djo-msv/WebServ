@@ -14,10 +14,7 @@
 #include <HttpError.hpp>
 #include <ServerSocket.hpp>
 #include <ProcessExecution.hpp>
-#include <Request.hpp>
-#include <Response.hpp>
-
-//ok ok, trying it out here
+#include <../parsing_tests/parsing/Request.hpp>
 
 class ClientSocket : public Socket
 {
@@ -25,31 +22,23 @@ class ClientSocket : public Socket
 		ClientSocket(ServerSocket &serverSocket);
 		~ClientSocket();
 
-		//untouched readRequest() so far (we stop when we hit 0 cause I don't want to bother yet)
 		void	readRequest();
-		//readProcess() becomes a write/read call to the Response->actionExec() ; write/read depending on status
-		//future only post epoll confirmation
 		void	readProcess();
-		//no need for this ? not sure what it's for
-		//void	execProcess();
-		//parseRequest() should probably stay the same, but no need to make it a status :: parse -> read/write/send immediate switch
+		void	execProcess();
 		void	parseRequest();
 		// TODO send()
-		void sendResponse() const;
 
-		int getProcessFd() const;
-		void step();
+		unsigned int	getStatus();
 
 		//void	setProcess(ProcessExecution *process);
 
 		enum state {
-			Start,
 			ReadRequest,
-			WriteProcess,
+			ParseRequest,
+			ExecProcess,
 			ReadProcess,
 			SendResponse
 		};
-		state	getStatus();
 
 		class GatewayTimeout : public HttpError {
 			public :
@@ -60,7 +49,6 @@ class ClientSocket : public Socket
 		ServerSocket &		_serverSocket;
 		state				_status;
 		Request				_request;
-		Response			_response;
 		
 		std::string			_processResponse;
 		int					_processFd;

@@ -1,13 +1,17 @@
 #include "ClientSocket.hpp"
-#include "ProcessExecution.hpp"
 
-ClientSocket::ClientSocket(ServerSocket &serverSocket) : Socket(createSocket(serverSocket)), _serverSocket(serverSocket), _status(ReadRequest) {}
+ClientSocket::ClientSocket(ServerSocket &serverSocket) : Socket(createSocket(serverSocket)), _serverSocket(serverSocket), _status(Start) {}//(ReadRequest) {}
 
 ClientSocket::~ClientSocket(void) {}
 
-unsigned int	ClientSocket::getStatus(void)
+ClientSocket::state	ClientSocket::getStatus(void)
 {
-	return (_status);
+	static int i = 0;
+	if (!i) {
+		i++;
+		return Start;
+	}
+	return _status;
 }
 
 /**
@@ -29,8 +33,41 @@ void	ClientSocket::readRequest(void)
 		 * *	we check that the socket is still valid if it this it means we 
 		 * * 	read all available data
 		*/
-		if (!getsockname(_socketFd, NULL, NULL))
-			_status = ParseRequest;
+		struct sockaddr addr;
+		socklen_t size = sizeof(addr);
+		if (!getsockname(_socketFd, &addr, &size)) {
+			try {
+				//maybe stash this in a separate function later, but still called here
+				//in the future : a separate catch for "missing data" error to start the timeout counter and wait for additional data
+				_request.parse();
+				//start response_making
+				_response.makeResponse(&_request);
+				//updating the processfd and status based on response-making
+				_processFd = _response.getFd();
+				switch (_response.getStatus()) {
+					case 2:
+						_status = SendResponse;
+						_processResponse = _response.getResponse();
+						break ;
+					case 0:
+						_status = ReadProcess;
+						//make _processfd nonblocking ? do we do it here or back at exec
+						//epoll add here :: POLLIN, POLLET, also add to the int, Socket* map
+						break ;
+					case 1:
+						_status = WriteProcess;
+						//make _processfd nonblocking ? do we do it here or back at exec
+						//epoll add here :: POLLOUT, POLLET, also add to the int, Socket* map
+						break ;
+				}
+			}
+			catch (HttpError &e) //where am i catching this from ??
+			{
+				_processResponse = e.what();
+				_status = SendResponse;
+			}
+			catch (std::exception &e) { throw; }
+		}
 		else
 			throw std::runtime_error("an error occured while reading into client : '" + \
 				ft_itoa(_socketFd) + "' socket : " + std::string(strerror(errno)));
@@ -45,45 +82,31 @@ void	ClientSocket::readRequest(void)
 	_request += buffer;
 }
 
-void	ClientSocket::parseRequest(void)
+//readProcess now does both reading and writing
+void	ClientSocket::readProcess()
 {
-	try {
-		_request.parse();
-		_status = ExecProcess;
-	} catch (HttpError &e)
-	{
-		_processResponse = e.what();
+	_response.actionExec();
+	if (_response.getStatus() == 2) {
 		_status = SendResponse;
+		_processResponse = _response.getResponse();
+		return ;
 	}
-	catch (std::exception &e) {throw ;}
+	if (_status == WriteProcess && _response.getStatus() == 0) {
+		_status = ReadProcess;
+		_processFd = _response.getFd();
+		//do the add to e-poll and int, Socket* map here instead so we can read the response next
+	}
 }
 
-
-void	ClientSocket::execProcess(void)
+void ClientSocket::sendResponse() const
 {
-	// TODO Logique de L'exécution
-	(void) _serverSocket;
-	// _process.startProcess(&_serverSocket.getConfig().cgi_path)
-	_status = ReadProcess;
+	if (write(_socketFd, _processResponse.c_str(), _processResponse.length()/* +1 ?*/) == -1)
+		throw std::out_of_range("writing to client went wrong"); //probably closing the connection at this point
+	//ideally here (post-Message Abstraction + pointing), we'd do a simple delete _response and set our status back at _readrequest
 }
 
-void	ClientSocket::readProcess(void)
-{
-	char	buffer[BUF_SIZE];
-
-	std::memset(buffer, 0, BUF_SIZE);
-	// read into CGI process and put result into buffer
-	// read return size of char put into buffer, -1 is for error
-	ssize_t	size = ::read(_processFd, buffer, BUF_SIZE);
-	std::cout << "buffer : " << buffer << " size read : " << size << std::endl;
-	if (size == -1)
-		throw std::runtime_error("an error occured while reading the process fd : " + \
-			ft_itoa(_processFd) + " of client '" + ft_itoa(_socketFd) + "' : " + strerror(errno));
-	if (size == 0)
-		_status = SendResponse;
-	else
-		_processResponse += buffer;
-}
+int ClientSocket::getProcessFd() const { return _processFd; }
+void ClientSocket::step() { _status = ReadRequest; }
 
 int ClientSocket::createSocket(ServerSocket & serverSocket)
 {

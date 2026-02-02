@@ -40,28 +40,30 @@ void handleError(const char* msg)
 
 void	managePendingClients()
 {	
+	if (pendingClientSockets.empty())
+		return ;
 	for (std::deque<ClientSocket *>::iterator it = pendingClientSockets.begin(); it != pendingClientSockets.end(); ++it) {
-			ClientSocket *csocket = *it;
-
+		bool done = (it + 1 == pendingClientSockets.end());
+		ClientSocket *csocket = *it;
 		try
 		{
 			switch (csocket->getStatus())
 			{
-				case ClientSocket::ReadRequest :
+				case ClientSocket::ReadRequest:
 					csocket->readRequest();
-				case ClientSocket::ParseRequest :
-					csocket->parseRequest();
-				case ClientSocket::ExecProcess :
-					csocket->execProcess();
-				case ClientSocket::ReadProcess :
-					csocket->readProcess();
-				case ClientSocket::SendResponse :
-					epoll_add(epollInstance, csocket->getSocketFd(), EPOLLOUT | EPOLLET);
-					it = pendingClientSockets.erase(it);
-					if (it == pendingClientSockets.end())
+					break ;
+				case ClientSocket::SendResponse:
+					epoll_mod(epollInstance, csocket->getSocketFd(), EPOLLOUT | EPOLLET);
+					pendingClientSockets.erase(it);
+					if (done)
 						return ;
+					break ;
+				//this wont be here after :: it needs to be handled at the e-poll tree
+				default:
+					while (csocket->getStatus() != ClientSocket::SendResponse)
+						csocket->readProcess();
 			}
-		} catch(const std::exception& e){ throw; }
+		} CATCH_AND_HANDLE(std::exception)//catch(const std::exception& e){ throw; }
 	}
 }
 
@@ -80,21 +82,38 @@ void	manageRequests()
 			SocketIterator socketIterator = sockets.find(events[n].data.fd);
 			if (socketIterator == sockets.end()) {
 				std::cout << "WTf ?" << std::endl;
-				// WTF ?? THROW ERROR
+				// WTF ?? THROW ERROR -> literally impossible lmao
 			};
 			ServerSocket *sSocket = dynamic_cast<ServerSocket *>(socketIterator->value);
 			if (sSocket != NULL) {
-				ClientSocket *csocket = new ClientSocket(*sSocket); 
+				ClientSocket *csocket = new ClientSocket(*sSocket);
+				//lmao we were missing the most important part ; incredible
+				epoll_add(epollInstance, csocket->getSocketFd(), EPOLLIN | EPOLLET);
 				sockets.insert(std::make_pair(csocket->getSocketFd(), 
 							csocket));
-				pendingClientSockets.push_back(csocket);
+				//pendingClientSockets.push_back(csocket); //too early, i think
 			}
 			else {
 				ClientSocket *cSocket = dynamic_cast<ClientSocket *>(socketIterator->value);
-				if (cSocket->getStatus() != ClientSocket::SendResponse) {};
-					continue ; // Impossible variable
-				// TODO client packet response handling
-//				do_use_fd(events[n].data.fd);
+				//future exec (cgi-write + cgi-read) will be handled here as well,
+				//by switching out socketFd for processFd in sockets map (so we're sure where the problem)
+				//and epoll_del then _add again the socketFd once exec is over and we're ready to send response
+				if (cSocket->getStatus() == ClientSocket::Start) {
+					pendingClientSockets.push_back(cSocket);
+					cSocket->step();
+					//continue ; // Impossible variable -> starting reading or still reading
+				}
+				else if (cSocket->getStatus() == ClientSocket::SendResponse) {
+					//first, send the response back
+					try { cSocket->sendResponse(); }
+					CATCH_AND_HANDLE(std::exception)
+					//then, close the client socket and erase the client from the sockets map
+					sockets.erase(socketIterator);
+					epoll_del(epollInstance, cSocket->getSocketFd(), EPOLLOUT);
+					close(cSocket->getSocketFd());
+					delete cSocket;
+				}
+//					do_use_fd(events[n].data.fd);
 			}
 		}
 		// TODO Pareil déplacer dans une fonction "readClients"

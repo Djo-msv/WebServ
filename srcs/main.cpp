@@ -11,6 +11,8 @@
 #include "ServerSocket.hpp"
 #include "ClientSocket.hpp"
 #include "ProcessExecution.hpp"
+#include "MymlParser.hpp"
+
 #define CATCH_AND_HANDLE(ExceptionType) \
     catch (const ExceptionType& e) { \
         handleError(e.what()); \
@@ -93,23 +95,11 @@ void	manageRequests()
 	}
 }
 
-int	main(void)
+int	main(int argc, char **argv)
 {
-	//TODO sera défini par la config (parser nécéssaire on verra pour définir sur quel standard partir)
-	int port = 7500;
-	
-	// AF_INET is used to allow ipv4 connection.
-	// SOCK_STREAM is to tell the socket to use TCP protocol
-	ServerConfig config = (ServerConfig) {port, AF_INET, "", "", ""};
-	try
-	{
-		ServerSocket *socket = new ServerSocket(config, epollInstance);
-		signal(SIGINT, stopServer);
-		signal(SIGPIPE, SIG_IGN);
-		sockets.insert(std::make_pair(socket->getSocketFd(), socket));
-		manageRequests();
-	}
-	CATCH_AND_HANDLE(std::runtime_error)
-	CATCH_AND_HANDLE(std::bad_alloc)
+	if (argc == 2)
+		MymlParser	config(argv[1]);
+	else
+		return (1);
 	return (0);
 }

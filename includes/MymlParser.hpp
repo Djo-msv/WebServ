@@ -1,18 +1,26 @@
 #pragma once
 
+#include <vector>
+#include <utility>
+#include <sys/stat.h>
+#include <dirent.h>
 #include "ServerSocket.hpp"
+#include "Tokenizer.hpp"
+#include <map>
+#include <fstream>
+#include <string>
 
 class MymlObject
 {
 	public :
-		MymlObject();
-		~MymlObject();
+//		MymlObject();
+//		~MymlObject();
 
 		int	getAsInt();
 		std::string getAsString();
 
 		std::vector<MymlObject> getAsList();
-		std::map<MymlObject> getAsDictionary();
+		std::map<std::string, MymlObject> getAsDictionary();
 		
 		const std::string getKey();
 	private :
@@ -22,9 +30,9 @@ class MymlObject
 		// Error class
 		class WrongType : public std::runtime_error {
 			public :
-				WrongType() : std::runtime_error() {}
+				WrongType(const std::string msg) : std::runtime_error(msg) {}
 		};
-}
+};
 
 class MymlList : public MymlObject
 {
@@ -33,16 +41,16 @@ class MymlList : public MymlObject
 
 	private :
 		std::vector<MymlObject>	list;
-}
+};
 
 class MymlDictionary : public MymlObject
 {
-	public
+	public :
 		MymlObject getMymlObject();
 	
 	private :
 		std::map<std::string, MymlObject>	dictionary;
-}
+};
 
 class MymlParser
 {
@@ -58,6 +66,9 @@ class MymlParser
 
 		void	addList();
 		void	addDictionary();
+		void	readFile(std::map<std::string, std::ifstream *>::iterator file);
+		void	openFile(std::string path, std::map<std::string, std::ifstream *> file);
+		int		isDirectory(std::string path);
 
 		// Error class
 		class WrongPerm : public std::runtime_error {

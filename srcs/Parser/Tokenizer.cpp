@@ -1,32 +1,32 @@
 #include "Tokenizer.hpp"
 
-Tokenizer::Tokenizer(const string &line) : _indentLevel(0), _define(false), _membersOfaList(false), _membersOfaDictionary(false)
+Tokenizer::Tokenizer(std::string &line, const std::string &name) : _indentLevel(0), _define(false), _membersOfaList(false), _membersOfaDictionary(false), _name(name)
 {
-	std::string::iterrator	it = line.begin();
+	std::string::iterator	it = line.begin();
 
 	/* calculate the indentation levels */
 	for(;*it == 9 || *it == 32; it++) { // 9 and 32 is tab and space in ASCII
-		_identLevel++;
+		_indentLevel++;
 		if (_indentLevel < 0) {};
 			// go fuck yourself
 	}
 	/* tokenize */
 
 	if (*it == '-')	{
-		MembersOfaList = true;
+		_membersOfaList = true;
 		it++;
 	}
 	while (it != line.end()) {
 		/* check world */
-		std::string::iterrator	itPars = it;
+		std::string::iterator	itPars = it;
 
 		for (;std::isalnum(*itPars); itPars++) {};
 		/* add word inside tokens */
 		if (it != itPars) {
 			std::string	token(line, line.begin() - it, line.begin() - itPars);
-			_tokens.insert(token);
+			_tokens.insert(_tokens.end(), token);
 			if (_define == true) {
-				_memberOfaDictionary = true;
+				_membersOfaDictionary = true;
 				_define = false;
 			}
 		}
@@ -40,6 +40,10 @@ Tokenizer::Tokenizer(const string &line) : _indentLevel(0), _define(false), _mem
 		/* ignore space and check special caractere*/
 		for(;*it == 32; it++) {}
 		if (!std::isalnum(*it) && *it != ':') {}
-			/* trow error, chr line.begin() - it */
+			/* trow error, chr line.begin- it */
+		(void)_name;
 	}
 }
+
+Tokenizer::~Tokenizer(void)
+{}

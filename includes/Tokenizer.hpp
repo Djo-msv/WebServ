@@ -1,9 +1,12 @@
 #pragma once
 
+#include <iostream>
+#include <vector>
+
 class Tokenizer
 {
 	public :
-		Tokenizer(const string &line);
+		Tokenizer(std::string &line, const std::string &name);
 		~Tokenizer();
 	
 	private :
@@ -12,6 +15,8 @@ class Tokenizer
 		bool	_define;
 		bool	_membersOfaList;
 		bool	_membersOfaDictionary;
+
+		std::string	_name;
 		
 		std::vector<std::string>	_tokens;
 };

@@ -56,6 +56,7 @@ endif
 SRCS_FILES:=	main.cpp \
 				Execution/ProcessExecution.cpp \
 				Parser/MymlParser.cpp \
+				Parser/Tokenizer.cpp \
 				Socket/ClientSocket.cpp \
 				Socket/ServerSocket.cpp \
 				Socket/Socket.cpp \

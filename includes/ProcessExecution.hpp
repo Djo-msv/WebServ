@@ -15,7 +15,7 @@ class ProcessExecution
 	
 		void startProcess (bool pipein, std::string target, char **env); /* fork Process and exec CGI, and stock execve output fd */
 		
-		size_t	writeBufferDataProcess(std::string buffer); /* writes buffer of request body to the child process */
+		ssize_t	writeBufferDataProcess(std::string buffer); /* writes buffer of request body to the child process */
 		void readDataProcess(); /* Read the output data from the child process */
 
 		bool		getStatus() const;

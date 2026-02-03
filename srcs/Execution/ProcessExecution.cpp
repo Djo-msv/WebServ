@@ -57,7 +57,7 @@ void ProcessExecution::startProcess(bool pipein, std::string target, char **env)
 }
 
 //Write the Request body to the child process
-size_t	ProcessExecution::writeBufferDataProcess(std::string buffer)
+ssize_t	ProcessExecution::writeBufferDataProcess(std::string buffer)
 {
 	return (write(_pipeIn[1], buffer.c_str(), buffer.length()));
 }

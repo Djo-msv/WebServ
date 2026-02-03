@@ -15,12 +15,12 @@ class ProcessExecution
 	
 		void startProcess (bool pipein, std::string target, char **env); /* fork Process and exec CGI, and stock execve output fd */
 		
-		void writeDataProcess(std::string body); /* writes the request body to the child process */
+		size_t	writeBufferDataProcess(std::string buffer); /* writes buffer of request body to the child process */
 		void readDataProcess(); /* Read the output data from the child process */
 
 		bool		getStatus() const;
 		std::string	getResponse() const;
-		int		getFdIn() const;
+		int		getFdIn() const; /* for epoll */
 		int		getFdOut() const;
 
 	private :
@@ -40,8 +40,7 @@ class ProcessExecution
 		};
 		class ForkError : public std::runtime_error {
 			public :
-				ForkError(const std::string msg) : std::runtime_error(msg) {}
-		};
+				ForkError(const std::string msg) : std::runtime_error(msg) {} };
 		class ExecError : public std::runtime_error {
 			public :
 				ExecError(const std::string msg) : std::runtime_error(msg) {}

@@ -8,7 +8,7 @@ Tokenizer::Tokenizer(std::string &line, const std::string &name) : _indentLevel(
 	for(;*it == 9 || *it == 32; it++) { // 9 and 32 is tab and space in ASCII
 		_indentLevel++;
 		if (_indentLevel < 0) {};
-			// go fuck yourself
+			// TODO go fuck yourself
 	}
 	/* tokenize */
 
@@ -18,9 +18,9 @@ Tokenizer::Tokenizer(std::string &line, const std::string &name) : _indentLevel(
 	}
 	while (it != line.end()) {
 		/* check world */
-		std::string::iterator	itPars = it;
+		std::string::iterator	itPars;
 
-		for (;std::isalnum(*itPars); itPars++) {};
+		for (itPars = it; std::isalnum(*itPars); itPars++) {};
 		/* add word inside tokens */
 		if (it != itPars) {
 			std::string	token(line, line.begin() - it, line.begin() - itPars);

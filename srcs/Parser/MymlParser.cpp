@@ -58,7 +58,7 @@ void MymlParser::openFile(std::string path, std::map<std::string, std::ifstream 
 		if ((dir = opendir(path.c_str())) != NULL) {
 			while ((ent = readdir(dir)) != NULL)
 				if (*(ent->d_name) != '.')
-					openFile(path + "/" + ent->d_name, file);
+					openFile(path + "/" + ent->d_name, file); // protect this
 		}
 	}
 	else {

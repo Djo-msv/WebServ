@@ -25,16 +25,12 @@ class ClientSocket : public Socket
 		ClientSocket(ServerSocket &serverSocket);
 		~ClientSocket();
 
-		//untouched readRequest() so far (we stop when we hit 0 cause I don't want to bother yet)
+		//untouched readRequest() so far with parsing added
 		void	readRequest();
-		//readProcess() becomes a write/read call to the Response->actionExec() ; write/read depending on status
-		//future only post epoll confirmation
-		void	readProcess();
-		//no need for this ? not sure what it's for
-		//void	execProcess();
-		//parseRequest() should probably stay the same, but no need to make it a status :: parse -> read/write/send immediate switch
-		void	parseRequest();
-		// TODO send()
+		//pipeProcess(), a write/read call to the Response->actionExec() ; write/read + adjust on status
+		void	pipeProcess();
+		//parseRequest() :: todo
+		//void	parseRequest();
 		void sendResponse() const;
 
 		int getProcessFd() const;
@@ -46,6 +42,7 @@ class ClientSocket : public Socket
 			Start,
 			ReadRequest,
 			WriteProcess,
+			WaitProcess,
 			ReadProcess,
 			SendResponse
 		};

@@ -38,6 +38,21 @@ void handleError(const char* msg)
 	exit(1);
 }
 
+//this func :: deletes the old_fd from our epoll map (except pipes, which are automatically deleted), adds the new one with flags
+//it then erases the <old_fd, csocket> from the sockets map and replaces it with <new_fd, csocket>
+void	fd_switch(int old_fd, int new_fd, ClientSocket *csocket, int flags)
+{
+	SocketIterator it = sockets.find(old_fd);
+	if (it == sockets.end())
+		throw std::out_of_range("incorrect old fd, not in sockets map");
+	sockets.erase(it);
+	sockets.insert(std::pair<int, Socket *>(new_fd, csocket));
+	if (old_fd == csocket->getSocketFd())
+		epoll_del(epollInstance, old_fd, EPOLLOUT);
+	epoll_add(epollInstance, new_fd, flags);
+}
+
+//this function now does the reads + fd_switches (obv once the parsing is separate the switch-case will be post parsing instead of readrequest
 void	managePendingClients()
 {	
 	if (pendingClientSockets.empty())
@@ -47,21 +62,37 @@ void	managePendingClients()
 		ClientSocket *csocket = *it;
 		try
 		{
-			switch (csocket->getStatus())
+			if (csocket->getStatus() == ClientSocket::ReadRequest)
 			{
-				case ClientSocket::ReadRequest:
-					csocket->readRequest();
-					break ;
-				case ClientSocket::SendResponse:
-					epoll_mod(epollInstance, csocket->getSocketFd(), EPOLLOUT | EPOLLET);
-					pendingClientSockets.erase(it);
-					if (done)
-						return ;
-					break ;
-				//this wont be here after :: it needs to be handled at the e-poll tree
-				default:
-					while (csocket->getStatus() != ClientSocket::SendResponse)
-						csocket->readProcess();
+				csocket->readRequest();
+				switch (csocket->getStatus()) {
+				//if parsing is done, we switch the fds according to status
+					case ClientSocket::SendResponse:
+						epoll_mod(epollInstance, csocket->getSocketFd(), EPOLLOUT | EPOLLET);
+						break ;
+					case ClientSocket::WriteProcess:
+						fd_switch(csocket->getSocketFd(), csocket->getProcessFd(), csocket, EPOLLOUT | EPOLLET);
+						break ;
+					case ClientSocket::WaitProcess:
+						fd_switch(csocket->getSocketFd(), csocket->getProcessFd(), csocket, EPOLLIN | EPOLLET);
+						break ;
+					default:
+						break ;
+				}
+			}
+			else if (csocket->getStatus() == ClientSocket::ReadProcess)
+			{
+				csocket->pipeProcess();
+				//if pipeOut is read, response is done, send it
+				if (csocket->getStatus() == ClientSocket::SendResponse)
+					fd_switch(csocket->getProcessFd(), csocket->getSocketFd(), csocket, EPOLLOUT | EPOLLET);
+			}
+			//if we're done reading (request and pipe), boot from the client list
+			if (csocket->getStatus() == ClientSocket::SendResponse)
+			{
+				it = pendingClientSockets.erase(it);
+				if (done)
+					return ;
 			}
 		} CATCH_AND_HANDLE(std::exception)//catch(const std::exception& e){ throw; }
 	}
@@ -82,37 +113,49 @@ void	manageRequests()
 			SocketIterator socketIterator = sockets.find(events[n].data.fd);
 			if (socketIterator == sockets.end()) {
 				std::cout << "WTf ?" << std::endl;
-				// WTF ?? THROW ERROR -> literally impossible lmao
+				// WTF ?? THROW ERROR -> literally impossible
 			};
 			ServerSocket *sSocket = dynamic_cast<ServerSocket *>(socketIterator->value);
 			if (sSocket != NULL) {
 				ClientSocket *csocket = new ClientSocket(*sSocket);
-				//lmao we were missing the most important part ; incredible
+				//adding the client to sockets + epoll
 				epoll_add(epollInstance, csocket->getSocketFd(), EPOLLIN | EPOLLET);
 				sockets.insert(std::make_pair(csocket->getSocketFd(), 
 							csocket));
-				//pendingClientSockets.push_back(csocket); //too early, i think
+				//pendingClientSockets.push_back(csocket); //too early
 			}
 			else {
 				ClientSocket *cSocket = dynamic_cast<ClientSocket *>(socketIterator->value);
-				//future exec (cgi-write + cgi-read) will be handled here as well,
-				//by switching out socketFd for processFd in sockets map (so we're sure where the problem)
-				//and epoll_del then _add again the socketFd once exec is over and we're ready to send response
-				if (cSocket->getStatus() == ClientSocket::Start) {
-					pendingClientSockets.push_back(cSocket);
-					cSocket->step();
-					//continue ; // Impossible variable -> starting reading or still reading
+				try {
+				switch (cSocket->getStatus()) {
+					case ClientSocket::Start:
+						//first POLLIN alert from epoll : start reading
+						pendingClientSockets.push_back(cSocket);
+						cSocket->step();
+						break ;
+					case ClientSocket::SendResponse:
+						//first, send the response back
+						cSocket->sendResponse();
+						//then, close the client socket and erase the client from the sockets map
+						sockets.erase(socketIterator);
+						epoll_del(epollInstance, cSocket->getSocketFd(), EPOLLOUT);
+						close(cSocket->getSocketFd());
+						delete cSocket;
+						//if keep-alive, edit above
+						break ;
+					case ClientSocket::WriteProcess:
+						cSocket->pipeProcess();
+						fd_switch(events[n].data.fd, cSocket->getProcessFd(), cSocket, EPOLLIN | EPOLLET);
+						break ;
+					case ClientSocket::WaitProcess:
+						//process is ready to be read : start reading
+						cSocket->step();
+						break ;
+					default:
+						break ;
 				}
-				else if (cSocket->getStatus() == ClientSocket::SendResponse) {
-					//first, send the response back
-					try { cSocket->sendResponse(); }
-					CATCH_AND_HANDLE(std::exception)
-					//then, close the client socket and erase the client from the sockets map
-					sockets.erase(socketIterator);
-					epoll_del(epollInstance, cSocket->getSocketFd(), EPOLLOUT);
-					close(cSocket->getSocketFd());
-					delete cSocket;
 				}
+				CATCH_AND_HANDLE(std::exception)
 //					do_use_fd(events[n].data.fd);
 			}
 		}

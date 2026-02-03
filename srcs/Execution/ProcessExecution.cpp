@@ -61,10 +61,9 @@ void	ProcessExecution::writeDataProcess(std::string body) { write(_pipeIn[1], bo
 
 void	ProcessExecution::readDataProcess(void) /* Read the output data from the child process, and fill the buffer passed as a parameter. */
 {
-	char	buffer[BUF_SIZE];
+	char	buffer[BUF_SIZE + 1];
 
 	ssize_t size = read(_pipeOut[0], buffer, BUF_SIZE);
-	buffer[size] = '\0';
 	if (size < 0)
 		return ;
 	if (size == 0) {
@@ -72,6 +71,7 @@ void	ProcessExecution::readDataProcess(void) /* Read the output data from the ch
 		close(_pipeOut[0]);
 		return ;
 	}
+	buffer[size] = '\0';
 	_response += buffer;
 }
 

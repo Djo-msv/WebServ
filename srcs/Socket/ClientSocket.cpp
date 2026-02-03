@@ -1,16 +1,11 @@
 #include "ClientSocket.hpp"
 
-ClientSocket::ClientSocket(ServerSocket &serverSocket) : Socket(createSocket(serverSocket)), _serverSocket(serverSocket), _status(Start) {}//(ReadRequest) {}
+ClientSocket::ClientSocket(ServerSocket &serverSocket) : Socket(createSocket(serverSocket)), _serverSocket(serverSocket), _status(Start) {}
 
 ClientSocket::~ClientSocket(void) {}
 
 ClientSocket::state	ClientSocket::getStatus(void)
 {
-	static int i = 0;
-	if (!i) {
-		i++;
-		return Start;
-	}
 	return _status;
 }
 
@@ -50,12 +45,14 @@ void	ClientSocket::readRequest(void)
 						_processResponse = _response.getResponse();
 						break ;
 					case 0:
-						_status = ReadProcess;
+						_status = WaitProcess;
+						setnonblocking(_processFd);
 						//make _processfd nonblocking ? do we do it here or back at exec
 						//epoll add here :: POLLIN, POLLET, also add to the int, Socket* map
 						break ;
 					case 1:
 						_status = WriteProcess;
+						setnonblocking(_processFd);
 						//make _processfd nonblocking ? do we do it here or back at exec
 						//epoll add here :: POLLOUT, POLLET, also add to the int, Socket* map
 						break ;
@@ -82,8 +79,8 @@ void	ClientSocket::readRequest(void)
 	_request += buffer;
 }
 
-//readProcess now does both reading and writing
-void	ClientSocket::readProcess()
+//pipeProcess doesboth reading and writing
+void	ClientSocket::pipeProcess()
 {
 	_response.actionExec();
 	if (_response.getStatus() == 2) {
@@ -92,21 +89,34 @@ void	ClientSocket::readProcess()
 		return ;
 	}
 	if (_status == WriteProcess && _response.getStatus() == 0) {
-		_status = ReadProcess;
+		_status = WaitProcess;
 		_processFd = _response.getFd();
+		setnonblocking(_processFd);
 		//do the add to e-poll and int, Socket* map here instead so we can read the response next
 	}
 }
 
 void ClientSocket::sendResponse() const
 {
-	if (write(_socketFd, _processResponse.c_str(), _processResponse.length()/* +1 ?*/) == -1)
+	if (write(_socketFd, _processResponse.c_str(), _processResponse.length()) == -1)
 		throw std::out_of_range("writing to client went wrong"); //probably closing the connection at this point
 	//ideally here (post-Message Abstraction + pointing), we'd do a simple delete _response and set our status back at _readrequest
 }
 
 int ClientSocket::getProcessFd() const { return _processFd; }
-void ClientSocket::step() { _status = ReadRequest; }
+
+void ClientSocket::step() {
+	switch (_status) {
+		case Start:
+			_status = ReadRequest;
+			break ;
+		case WaitProcess:
+			_status = ReadProcess;
+			break ;
+		default:
+			break ;
+	}
+}
 
 int ClientSocket::createSocket(ServerSocket & serverSocket)
 {

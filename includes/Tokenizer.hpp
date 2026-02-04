@@ -8,13 +8,18 @@ class Tokenizer
 	public :
 		Tokenizer(std::string &line, const std::string &name);
 		~Tokenizer();
+
+		int	getIdentLevel();
+		bool	isDefine();
+		bool	isMemberOfaList();
+		bool	isMemberOfaDictionary();
 	
 	private :
 
 		int		_indentLevel;
 		bool	_define;
-		bool	_membersOfaList;
-		bool	_membersOfaDictionary;
+		bool	_memberOfaList;
+		bool	_memberOfaDictionary;
 
 		std::string	_name;
 		

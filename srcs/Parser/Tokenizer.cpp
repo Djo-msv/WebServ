@@ -1,6 +1,6 @@
 #include "Tokenizer.hpp"
 
-Tokenizer::Tokenizer(std::string &line, const std::string &name) : _indentLevel(0), _define(false), _membersOfaList(false), _membersOfaDictionary(false), _name(name)
+Tokenizer::Tokenizer(std::string &line, const std::string &name) : _indentLevel(0), _define(false), _memberOfaList(false), _memberOfaDictionary(false), _name(name)
 {
 	std::string::iterator	it = line.begin();
 
@@ -13,7 +13,7 @@ Tokenizer::Tokenizer(std::string &line, const std::string &name) : _indentLevel(
 	/* tokenize */
 
 	if (*it == '-')	{
-		_membersOfaList = true;
+		_memberOfaList = true;
 		it++;
 	}
 	while (it != line.end()) {
@@ -26,7 +26,7 @@ Tokenizer::Tokenizer(std::string &line, const std::string &name) : _indentLevel(
 			std::string	token(line, line.begin() - it, line.begin() - itPars);
 			_tokens.insert(_tokens.end(), token);
 			if (_define == true) {
-				_membersOfaDictionary = true;
+				_memberOfaDictionary = true;
 				_define = false;
 			}
 		}
@@ -39,7 +39,7 @@ Tokenizer::Tokenizer(std::string &line, const std::string &name) : _indentLevel(
 
 		/* ignore space and check special caractere*/
 		for(;*it == 32; it++) {}
-		if (!std::isalnum(*it) && *it != ':') {}
+		if (!std::isalnum(*it) && *it != ':' && it != line.end()) {}
 			/* trow error, chr line.begin- it */
 		(void)_name;
 	}

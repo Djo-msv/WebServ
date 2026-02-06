@@ -1,12 +1,21 @@
 #include "ClientSocket.hpp"
 
-ClientSocket::ClientSocket(ServerSocket &serverSocket) : Socket(createSocket(serverSocket)), _serverSocket(serverSocket), _status(Start) {}
+ClientSocket::ClientSocket(ServerSocket &serverSocket, int _epoll, std::map<const int, Socket *> &_sockets) : Socket(createSocket(serverSocket)), _status(WaitRequest),  _serverSocket(serverSocket), epollInstance(_epoll), sockets(_sockets) {}
 
 ClientSocket::~ClientSocket(void) {}
 
-ClientSocket::state	ClientSocket::getStatus(void)
+//this func :: deletes the old_fd from our epoll map (except pipes, which are automatically deleted), adds the new one with flags
+//it then erases the <old_fd, csocket> from the sockets map and replaces it with <new_fd, csocket>
+void	ClientSocket::fd_switch(int old_fd, int new_fd, int flags)
 {
-	return _status;
+	SocketIterator it = sockets.find(old_fd);
+	if (it == sockets.end())
+		throw std::out_of_range("incorrect old fd, not in sockets map");
+	sockets.erase(it);
+	sockets.insert(std::pair<int, Socket *>(new_fd, this));
+	if (old_fd == _socketFd)
+		epoll_del(epollInstance, old_fd, EPOLLOUT);
+	epoll_add(epollInstance, new_fd, flags);
 }
 
 /**
@@ -30,41 +39,8 @@ void	ClientSocket::readRequest(void)
 		*/
 		struct sockaddr addr;
 		socklen_t size = sizeof(addr);
-		if (!getsockname(_socketFd, &addr, &size)) {
-			try {
-				//maybe stash this in a separate function later, but still called here
-				//in the future : a separate catch for "missing data" error to start the timeout counter and wait for additional data
-				_request.parse();
-				//start response_making
-				_response.makeResponse(&_request);
-				//updating the processfd and status based on response-making
-				_processFd = _response.getFd();
-				switch (_response.getStatus()) {
-					case 2:
-						_status = SendResponse;
-						_processResponse = _response.getResponse();
-						break ;
-					case 0:
-						_status = WaitProcess;
-						setnonblocking(_processFd);
-						//make _processfd nonblocking ? do we do it here or back at exec
-						//epoll add here :: POLLIN, POLLET, also add to the int, Socket* map
-						break ;
-					case 1:
-						_status = WriteProcess;
-						setnonblocking(_processFd);
-						//make _processfd nonblocking ? do we do it here or back at exec
-						//epoll add here :: POLLOUT, POLLET, also add to the int, Socket* map
-						break ;
-				}
-			}
-			catch (HttpError &e) //where am i catching this from ??
-			{
-				_processResponse = e.what();
-				_status = SendResponse;
-			}
-			catch (std::exception &e) { throw; }
-		}
+		if (!getsockname(_socketFd, &addr, &size)) //reading done (so far) here the status change from read->parse;
+			_status = ParseRequest;
 		else
 			throw std::runtime_error("an error occured while reading into client : '" + \
 				ft_itoa(_socketFd) + "' socket : " + std::string(strerror(errno)));
@@ -79,42 +55,110 @@ void	ClientSocket::readRequest(void)
 	_request += buffer;
 }
 
-//pipeProcess doesboth reading and writing
-void	ClientSocket::pipeProcess()
+void	ClientSocket::parseRequest()
 {
-	_response.actionExec();
-	if (_response.getStatus() == 2) {
+	try {
+		_request.parse();
+		//based on response :: exec/no exec
+		if (_response.makeResponse(&_request))
+			this->startExec();
+		else {
+			_status = WaitResponse;
+			epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
+		}
+	}
+	catch (Request::MissingData &e) {
+		_status = ReadRequest;
+		//do the timeout specification here
+	}
+	catch (HttpError &e) //where am i catching this from ??
+	{
+		_processResponse = e.what();
 		_status = SendResponse;
-		_processResponse = _response.getResponse();
-		return ;
 	}
-	if (_status == WriteProcess && _response.getStatus() == 0) {
-		_status = WaitProcess;
-		_processFd = _response.getFd();
-		setnonblocking(_processFd);
-		//do the add to e-poll and int, Socket* map here instead so we can read the response next
-	}
+	catch (std::exception &e) { throw; }
 }
 
-void ClientSocket::sendResponse() const
+//starting the execution process here (write or exec + read)
+void	ClientSocket::startExec()
 {
-	if (write(_socketFd, _processResponse.c_str(), _processResponse.length()) == -1)
-		throw std::out_of_range("writing to client went wrong"); //probably closing the connection at this point
-	//ideally here (post-Message Abstraction + pointing), we'd do a simple delete _response and set our status back at _readrequest
+	bool body = !(_request.getBody().empty());
+	try { _exec.setupProcess(body); }
+	catch (std::exception &e) { throw ; }
+	if (!body) {
+		_status = WaitExecRead;
+		setnonblocking(_exec.getFdOut());
+		try { _exec.startProcess(false, _request.getTarget(), _request.getEnv()); }
+		catch (std::exception &e) { throw ; }
+		fd_switch(_socketFd, _exec.getFdOut(), EPOLLIN | EPOLLET);
+	}
+	else {
+		_status = WaitExecWrite;
+		setnonblocking(_exec.getFdIn());
+		setnonblocking(_exec.getFdOut());
+		fd_switch(_socketFd, _exec.getFdIn(), EPOLLOUT | EPOLLET);
+	}
 }
 
-int ClientSocket::getProcessFd() const { return _processFd; }
+//new cgi write
+void	ClientSocket::execWrite()
+{
+	static size_t _sendpos = 0;
+	std::string body = _request.getBody();
+	size_t size = body.length() - _sendpos;
+	if (size > BUF_SIZE)
+		size = BUF_SIZE;
+	if (size) {
+		std::string snd = body.substr(_sendpos, size);
+		if (write(_exec.getFdIn(), snd.c_str(), size) == -1)
+			_status = WaitExecWrite;
+		else
+			_sendpos += size;
+	}
+	else { //write is done, start up the process appropriate _status/epoll switching and close
+		try { _exec.startProcess(true, _request.getTarget(), _request.getEnv()); }
+		catch (std::exception &e) { throw ; }
+		close(_exec.getFdIn());
+		_sendpos = 0;
+		fd_switch(_exec.getFdIn(), _exec.getFdOut(), EPOLLIN | EPOLLET);
+		_status = WaitExecRead;
+	}
+}
 
-void ClientSocket::step() {
-	switch (_status) {
-		case Start:
-			_status = ReadRequest;
-			break ;
-		case WaitProcess:
-			_status = ReadProcess;
-			break ;
-		default:
-			break ;
+void	ClientSocket::execRead()
+{
+	char buffer[BUF_SIZE +1];
+	ssize_t size = read(_exec.getFdOut(), buffer, BUF_SIZE);
+	if (size < 0)
+		_status = WaitExecRead;
+	else if (!size) { //read is done, appropriate _status/epoll switching and close
+		close(_exec.getFdOut());
+		fd_switch(_exec.getFdOut(), _socketFd, EPOLLOUT | EPOLLET);
+		_status = WaitResponse;
+	}
+	else {
+		buffer[size] = '\0';
+		_response += buffer;
+	}
+}
+
+void ClientSocket::sendResponse()
+{
+	static size_t _sendpos = 0;
+	std::string msg = _response.getResponse();
+	size_t size = msg.length() - _sendpos;
+	if (size > BUF_SIZE)
+		size = BUF_SIZE;
+	if (size) {
+		std::string snd = msg.substr(_sendpos, size);
+		if (write(_socketFd, snd.c_str(), size) == -1)
+			_status = WaitResponse;
+		else
+			_sendpos += size;
+	}
+	else { //write is done, appropriate _status/epoll switching and close
+		_sendpos = 0;
+		_status = Done; //temporary, in the future we'll do a .clear() on all objects and switch back to WaitRequest
 	}
 }
 

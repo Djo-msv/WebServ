@@ -1,10 +1,10 @@
 #include "Response.hpp"
 
-Response::Response() : status("200 OK"), body("\r\n"), _status(2), exec(NULL) {}
+Response::Response() : status("200 OK"), body("\r\n"), exec(false) {}
 
 Response::~Response() {}
 
-Response::Response(const Response &other) : _target(other._target), msg(other.msg), status(other.status), body(other.body) {}
+Response::Response(const Response &other) : _target(other._target), msg(other.msg), status(other.status), body(other.body), exec(other.exec) {}
 
 Response& Response::operator=(const Response &other)
 {
@@ -14,19 +14,28 @@ Response& Response::operator=(const Response &other)
 		msg = other.msg;
 		status = other.status;
 		body = other.body;
+		exec = other.exec;
 	}
 	return *this;
 }
 
-void Response::makeResponse(Request *req)
+Response &Response::operator+=(const char *buffer)
+{
+	msg += buffer;
+	return *this;
+}
+
+bool Response::makeResponse(Request *req)
 {
 	try {
+		exec = req->isExec();
 		this->seekTarget(req);
-		//this if will now only come into effect if there is no exec to be parsed through :: ie, _status does not switch to 1 or 0
-		if (_status == 2)
+		//this if will now only come into effect if there is no exec || exec script can't be found (or execed ?)
+		if (!exec)
 			this->makeBody();
 	}
 	catch (std::exception &e) {throw ;}
+	return exec;
 }
 
 std::string Response::getResponse()
@@ -47,65 +56,10 @@ void Response::seekTarget(Request *req)
 	if (stat(req->getTarget().c_str(), &buf) == -1)
 	{
 		this->fix_error("404 Not Found"); //update target and status accordingly
+		exec = false;
 		return ;
 	}
 	_target = req->getTarget();
-	if (req->isExec())
-	{
-		//handle execution here
-		try {
-			exec = new ProcessExecution;
-			if (req->getBody().empty())
-				_status = 0; // no writing needed, read directly from pipeOut once exec is running
-			else
-			{
-				body = req->getBody();
-				_status = 1; // next up, write body to pipeIn to exec running
-			}
-			//no more need for a body in startProcess, since that'll be sent directly through this response instead
-			exec->startProcess(!body.empty(), req->getTarget(), req->getEnv());
-		}
-		catch (std::exception &e) {if(exec) { delete exec; } throw ;}
-	}
-}
-//a "take_action" function that checks in on the exec
-void Response::actionExec()
-{
-	switch (_status) {
-		case 1:
-			writeExec();
-			break ;
-		case 0:
-			readExec();
-	}
-}
-//remember, no writeExec() if we don't have a body to send to the cgi-exec
-void Response::writeExec()
-{
-	if (!exec)
-	{
-		_status = 2;
-		return ;
-	}
-	exec->writeDataProcess(body);
-	_status = 0;
-}
-
-void Response::readExec()
-{
-	if (!exec)
-	{
-		_status = 2;
-		return ;
-	}
-	exec->readDataProcess();
-	if (exec->getStatus())
-	{
-		_status = 2;
-		msg = exec->getResponse();
-		delete exec;
-		exec = NULL;
-	}
 }
 
 void Response::makeBody()
@@ -131,18 +85,4 @@ void Response::fix_error(std::string error)
 	//for now it's just the error 404 basic stuff
 	status = error;
 	_target = "./html/error_404.html";
-}
-
-unsigned int Response::getStatus() const { return _status; }
-
-int Response::getFd() const
-{
-	switch (_status) {
-		case 0:
-			return exec->getFdOut();
-		case 1:
-			return exec->getFdIn();
-		default:
-			return -1;
-	}
 }

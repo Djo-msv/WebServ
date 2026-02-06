@@ -35,7 +35,11 @@ class Request
 		bool	isExec() const;
 		
 		int 		getSize() const;
-
+		
+		class MissingData : public std::out_of_range {
+			public:
+				MissingData();
+		};
 	private:
 		std::string		_method;
 		std::string		_target;
@@ -43,6 +47,7 @@ class Request
 		std::string		_request;
 		std::string		_query;
 		std::string		*_env;
+		int			_status;
 
 		const char		**c_env;
 		
@@ -53,7 +58,7 @@ class Request
 		
 		void	parse_header(std::string header);
 		void	parse_body();
-		void	body_check(int diff);
+		void	body_check(size_t size_told, size_t real_size);
 		void	headers_add(std::string line);
 		void	startline_check(std::string line);
 		void	adjust_exec();

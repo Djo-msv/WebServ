@@ -17,36 +17,36 @@
 #include <Request.hpp>
 #include <Response.hpp>
 
-//ok ok, trying it out here
-
 class ClientSocket : public Socket
 {
 	public :
-		ClientSocket(ServerSocket &serverSocket);
+		ClientSocket(ServerSocket &serverSocket, int _epoll, std::map<const int, Socket *> &_sockets);
 		~ClientSocket();
 
-		//untouched readRequest() so far with parsing added
+		//untouched readRequest(), now with adequate status-update
 		void	readRequest();
-		//pipeProcess(), a write/read call to the Response->actionExec() ; write/read + adjust on status
-		void	pipeProcess();
-		//parseRequest() :: todo
-		//void	parseRequest();
-		void sendResponse() const;
-
-		int getProcessFd() const;
-		void step();
-
-		//void	setProcess(ProcessExecution *process);
+		//parseRequest, with optional switch-back to readRequest if more data is needed
+		void	parseRequest();
+		//writing to cgi pipein + appropriate _status, epoll and sockets update && starting cgi once write is over
+		void	execWrite();
+		//reading from running cgi pipeout + appropriate _status, epoll and sockets update
+		void	execRead();
+		//sends response in buffers, currently closes connection in the future .clear() on all objects
+		void sendResponse();
 
 		enum state {
-			Start,
+			WaitRequest,
 			ReadRequest,
-			WriteProcess,
-			WaitProcess,
-			ReadProcess,
-			SendResponse
+			ParseRequest,
+			WaitExecWrite,
+			ExecWrite,
+			WaitExecRead,
+			ExecRead,
+			WaitResponse,
+			SendResponse,
+			Done//temporary, since we don't have request/response/exec .clear() functions yet
 		};
-		state	getStatus();
+		state				_status;
 
 		class GatewayTimeout : public HttpError {
 			public :
@@ -55,13 +55,16 @@ class ClientSocket : public Socket
 
 	private :
 		ServerSocket &		_serverSocket;
-		state				_status;
+		const int epollInstance;
+		std::map<const int, Socket *> &sockets;
+		
 		Request				_request;
+		ProcessExecution		_exec;
 		Response			_response;
 		
 		std::string			_processResponse;
-		int					_processFd;
-		ProcessExecution	_process;
 
 		int 	createSocket(ServerSocket &);
+		void	fd_switch(int old_fd, int new_fd, int flags);
+		void	startExec(); //handles the fd_switches, setnonblock and starting the execution (if read-only)
 };

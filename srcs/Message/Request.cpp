@@ -1,6 +1,6 @@
 #include "Request.hpp"
 
-Request::Request() : _env(NULL), c_env(NULL), exec(false) {}
+Request::Request() : _env(NULL), _status(0), c_env(NULL), exec(false) {}
 
 Request::~Request() {if (_env) { delete[] _env; delete[] c_env; } }
 
@@ -23,18 +23,27 @@ Request& Request::operator=(const Request &other)
 
 Request &Request::operator+=(const char *buffer)
 {
-	_request += buffer;
+	if (_status)
+		_body += buffer;
+	else
+		_request += buffer;
 	return *this;
 }
 
 void Request::parse()
 {
+	if (_status) //headers already parsed on a previous run, _env created etc.
+	{
+		try { this->parse_body(); }
+		catch (std::exception &e) { throw ; }
+		return ;
+	}
 	std::string header;
 	std::size_t headerEnd = _request.find("\r\n\r\n");
 
 	if (headerEnd == std::string::npos)
-		throw std::out_of_range("0"); //no header-delim, bad request/connection lost
-	if (headerEnd + 4 >= _request.size())
+		throw MissingData(); //indicates a return to read
+	if (headerEnd + 4 == _request.size())
 		header = _request;
 	else
 	{
@@ -43,17 +52,18 @@ void Request::parse()
 	}
 	try {
 		this->parse_header(header);
+		_status = 1; //headers are parsed with no error, on next go only the body will need to be further parsed
 		this->parse_body();
 	}
-	catch (std::exception &e) {throw ;}
+	catch (std::exception &e) {/*do a clear of header info if !_status here*/throw ;}
 }
 
-void Request::body_check(int diff)
+void Request::body_check(size_t size_told, size_t real_size)
 {
-	if (diff < 0)
-		throw std::out_of_range("7"); //additional data
-	if (diff > 0)
-		throw std::out_of_range("8"); //missing data
+	if (real_size < size_told)
+		throw MissingData(); //indicates a return to read
+	if (real_size > size_told)
+		_body = _body.substr(0, size_told);
 }
 
 void Request::parse_body()
@@ -61,14 +71,14 @@ void Request::parse_body()
 	try {
 		switch (this->getSize()) {
 			case CHUNKED:
-				//this->chunk_parse(); //future chunked parse with size->substr loop()
+				//this->chunk_parse(); //future chunked parse with getline to size->substr loop()
 				break ;
 			case 0:
 				if (!_body.empty())
-					throw std::out_of_range("6"); //there should be a content-length
+					throw MissingData(); //indicates a return to read
 				break ;
 			default:
-				this->body_check(this->getSize() - _body.size());
+				this->body_check(this->getSize(), _body.size());
 		}
 	}
 	catch (std::exception &e) { throw ; }
@@ -90,7 +100,7 @@ void Request::adjust_exec()
 		headers.insert(std::pair<std::string, std::string>("REQUEST_METHOD", _method));
 		if (!_query.empty())
 			headers.insert(std::pair<std::string, std::string>("QUERY_STRING", _query));
-		//here creating the char * environment which we can use for execve, in two steps as previously
+		//here creating the char * environment which we can use for execve, in two steps as previously established
 		_env = new std::string[headers.size()];
 		c_env = new const char*[headers.size() + 1];
 		size_t i = 0;
@@ -164,7 +174,7 @@ void Request::startline_check(std::string line)
 	getline(l, current, ' ');
 	_method = current;
 	if (l.eof())
-		throw std::out_of_range("1"); //bad request
+		throw MissingData(); //indicates to return to read
 	getline(l, current, ' ');
 	_target = current;
 	//check if target has a query
@@ -175,7 +185,7 @@ void Request::startline_check(std::string line)
 		_target = _target.substr(0, _target.find("?"));
 	}
 	if (l.eof())
-		throw std::out_of_range("2"); //bad request
+		throw MissingData(); //indicates to return to read
 	getline(l, current, '\r');
 	if (current != "HTTP/1.1")
 		throw std::out_of_range("3"); //wrong http version -> unauthorized ? not provided ?
@@ -216,3 +226,5 @@ void Request::read() const
 	}
 	std::cout << "and the body" << std::endl << _body << std::endl;
 }
+
+Request::MissingData::MissingData() : std::out_of_range("data missing from request !") {}

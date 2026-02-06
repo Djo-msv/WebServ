@@ -38,61 +38,42 @@ void handleError(const char* msg)
 	exit(1);
 }
 
-//this func :: deletes the old_fd from our epoll map (except pipes, which are automatically deleted), adds the new one with flags
-//it then erases the <old_fd, csocket> from the sockets map and replaces it with <new_fd, csocket>
-void	fd_switch(int old_fd, int new_fd, ClientSocket *csocket, int flags)
-{
-	SocketIterator it = sockets.find(old_fd);
-	if (it == sockets.end())
-		throw std::out_of_range("incorrect old fd, not in sockets map");
-	sockets.erase(it);
-	sockets.insert(std::pair<int, Socket *>(new_fd, csocket));
-	if (old_fd == csocket->getSocketFd())
-		epoll_del(epollInstance, old_fd, EPOLLOUT);
-	epoll_add(epollInstance, new_fd, flags);
-}
-
 //this function now does the reads + fd_switches (obv once the parsing is separate the switch-case will be post parsing instead of readrequest
 void	managePendingClients()
 {	
 	if (pendingClientSockets.empty())
 		return ;
 	for (std::deque<ClientSocket *>::iterator it = pendingClientSockets.begin(); it != pendingClientSockets.end(); ++it) {
-		bool done = (it + 1 == pendingClientSockets.end());
-		ClientSocket *csocket = *it;
-		try
-		{
-			if (csocket->getStatus() == ClientSocket::ReadRequest)
-			{
-				csocket->readRequest();
-				switch (csocket->getStatus()) {
-				//if parsing is done, we switch the fds according to status
-					case ClientSocket::SendResponse:
-						epoll_mod(epollInstance, csocket->getSocketFd(), EPOLLOUT | EPOLLET);
-						break ;
-					case ClientSocket::WriteProcess:
-						fd_switch(csocket->getSocketFd(), csocket->getProcessFd(), csocket, EPOLLOUT | EPOLLET);
-						break ;
-					case ClientSocket::WaitProcess:
-						fd_switch(csocket->getSocketFd(), csocket->getProcessFd(), csocket, EPOLLIN | EPOLLET);
-						break ;
-					default:
-						break ;
-				}
-			}
-			else if (csocket->getStatus() == ClientSocket::ReadProcess)
-			{
-				csocket->pipeProcess();
-				//if pipeOut is read, response is done, send it
-				if (csocket->getStatus() == ClientSocket::SendResponse)
-					fd_switch(csocket->getProcessFd(), csocket->getSocketFd(), csocket, EPOLLOUT | EPOLLET);
-			}
-			//if we're done reading (request and pipe), boot from the client list
-			if (csocket->getStatus() == ClientSocket::SendResponse)
-			{
-				it = pendingClientSockets.erase(it);
-				if (done)
-					return ;
+		bool done = (*it == pendingClientSockets.back());
+		ClientSocket *cSocket = *it;
+		try {
+			switch (cSocket->_status) {
+				case ClientSocket::ReadRequest:
+					cSocket->readRequest();
+					break ;
+				case ClientSocket::ParseRequest:
+					cSocket->parseRequest();
+					break ;
+				case ClientSocket::ExecWrite:
+					cSocket->execWrite();
+					break ;
+				case ClientSocket::ExecRead:
+					cSocket->execRead();
+					break ;
+				case ClientSocket::SendResponse:
+					cSocket->sendResponse();
+					break ;
+				case ClientSocket::Done:
+					std::cout << "closing connection with socket : " << cSocket->getSocketFd() << std::endl;
+					it = pendingClientSockets.erase(it);
+					sockets.erase(sockets.find(cSocket->getSocketFd())); //temp also
+					epoll_del(epollInstance, cSocket->getSocketFd(), EPOLLOUT); //temp also
+					delete cSocket;
+					if (done)
+						return ;
+					break ;
+				default:
+					break ;
 			}
 		} CATCH_AND_HANDLE(std::exception)//catch(const std::exception& e){ throw; }
 	}
@@ -106,7 +87,7 @@ void	manageRequests()
 	while (true) {
 		// nbfds defines the number of file descriptors ready for the requested I/O operation.
 		// Specifying a timeout of -1 causes epoll_wait() to block indefinitely
-		if ((nbfds = epoll_wait(epollInstance, events, MAX_EVENTS, 10)) == -1)
+		if ((nbfds = epoll_wait(epollInstance, events, MAX_EVENTS, 100)) == -1)
 			throw std::runtime_error("An error has occured while waiting for connections. Error code : " + ft_itoa(errno));
 		// TODO Boucle for a déplacer dans une fonction "handle_epoll_events"
 		for (int n = 0; n < nbfds; ++n) {
@@ -117,49 +98,38 @@ void	manageRequests()
 			};
 			ServerSocket *sSocket = dynamic_cast<ServerSocket *>(socketIterator->value);
 			if (sSocket != NULL) {
-				ClientSocket *csocket = new ClientSocket(*sSocket);
+				ClientSocket *cSocket = new ClientSocket(*sSocket, epollInstance, sockets);
 				//adding the client to sockets + epoll
-				epoll_add(epollInstance, csocket->getSocketFd(), EPOLLIN | EPOLLET);
-				sockets.insert(std::make_pair(csocket->getSocketFd(), 
-							csocket));
-				//pendingClientSockets.push_back(csocket); //too early
+				if (!sockets.count(cSocket->getSocketFd())) {
+					epoll_add(epollInstance, cSocket->getSocketFd(), EPOLLIN | EPOLLET);
+					sockets.insert(std::make_pair(cSocket->getSocketFd(), 
+							cSocket));
+				}
 			}
 			else {
 				ClientSocket *cSocket = dynamic_cast<ClientSocket *>(socketIterator->value);
 				try {
-				switch (cSocket->getStatus()) {
-					case ClientSocket::Start:
-						//first POLLIN alert from epoll : start reading
+				switch (cSocket->_status) {
+					case ClientSocket::WaitRequest:
 						pendingClientSockets.push_back(cSocket);
-						cSocket->step();
+						cSocket->_status = ClientSocket::ReadRequest;
 						break ;
-					case ClientSocket::SendResponse:
-						//first, send the response back
-						cSocket->sendResponse();
-						//then, close the client socket and erase the client from the sockets map
-						sockets.erase(socketIterator);
-						epoll_del(epollInstance, cSocket->getSocketFd(), EPOLLOUT);
-						close(cSocket->getSocketFd());
-						delete cSocket;
-						//if keep-alive, edit above
+					case ClientSocket::WaitExecWrite:
+						cSocket->_status = ClientSocket::ExecWrite;
 						break ;
-					case ClientSocket::WriteProcess:
-						cSocket->pipeProcess();
-						fd_switch(events[n].data.fd, cSocket->getProcessFd(), cSocket, EPOLLIN | EPOLLET);
+					case ClientSocket::WaitExecRead:
+						cSocket->_status = ClientSocket::ExecRead;
 						break ;
-					case ClientSocket::WaitProcess:
-						//process is ready to be read : start reading
-						cSocket->step();
+					case ClientSocket::WaitResponse:
+						cSocket->_status = ClientSocket::SendResponse;
 						break ;
 					default:
 						break ;
 				}
 				}
 				CATCH_AND_HANDLE(std::exception)
-//					do_use_fd(events[n].data.fd);
 			}
 		}
-		// TODO Pareil déplacer dans une fonction "readClients"
 		managePendingClients();
 	}
 }

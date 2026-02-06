@@ -1,6 +1,6 @@
 #include "ProcessExecution.hpp"
 
-ProcessExecution::ProcessExecution(void) : _pid(0), _status(0), cgi("/usr/bin/python3")
+ProcessExecution::ProcessExecution(void) : _pid(0), cgi("/usr/bin/python3")
 {
 	_pipeOut[0] = -1;
 	_pipeOut[1] = -1;
@@ -21,12 +21,8 @@ ProcessExecution::~ProcessExecution(void)
 	//these closes seem redundant to me as :: if error, closes are handled :: if !error, closes are also handled
 }
 
-void ProcessExecution::startProcess(bool pipein, std::string target, char **env) /* fork Process and exec CGI, and stock execve output fd */
+void ProcessExecution::setupProcess(bool pipein)
 {
-	const char **args = new const char*[3];
-	args[0] = cgi.c_str();
-	args[1] = target.c_str();
-	args[2] = NULL;
 	if (pipe(_pipeOut))
 		throw PipeError("An error occurred during the creation of the pipes, Error code : " + ft_itoa(errno));
 	if (pipein && pipe(_pipeIn))
@@ -34,6 +30,15 @@ void ProcessExecution::startProcess(bool pipein, std::string target, char **env)
 		this->closeFds();
 		throw PipeError("An error occurred during the creation of the pipes, Error code : " + ft_itoa(errno));
 	}
+}
+#include <cstdlib>
+void ProcessExecution::startProcess(bool pipein, std::string target, char **env) /* fork Process and exec CGI, and stock execve in/out fds */
+{
+	const char **args = new const char*[3];
+	args[0] = cgi.c_str();
+	args[1] = target.c_str();
+	args[2] = NULL;
+
 	if ((_pid = fork()) < 0) {
 		this->closeFds();
 		throw ForkError("An error occurred during the creation of the fork, Error code : " + ft_itoa(errno)); 
@@ -46,33 +51,18 @@ void ProcessExecution::startProcess(bool pipein, std::string target, char **env)
 		if (pipein)
 			dup2(_pipeIn[0], STDIN_FILENO);
 		this->closeFds();
-		execve(args[0], (char **)args, env); /* This allows a new "args" process to be executed and output the result via the output pipe. */
+		if (execve(args[0], (char **)args, env) == -1) { //execution
+			delete[] args;
+			exit(EXIT_FAILURE);
+			throw ExecError("An error occurred in the children's process, Error code : " + ft_itoa(errno));
+		}
 		delete[] args;
-		throw ExecError("An error occurred in the children's process, Error code : " + ft_itoa(errno));
+		//exit(EXIT_SUCCESS);
 	}
 	delete[] args;
 	close(_pipeOut[1]);
 	if (pipein)
 		close(_pipeIn[0]);
-}
-
-//Write the Request body to the child process
-void	ProcessExecution::writeDataProcess(std::string body) { write(_pipeIn[1], body.c_str(), body.length()); close(_pipeIn[1]);}
-
-void	ProcessExecution::readDataProcess(void) /* Read the output data from the child process, and fill the buffer passed as a parameter. */
-{
-	char	buffer[BUF_SIZE + 1];
-
-	ssize_t size = read(_pipeOut[0], buffer, BUF_SIZE);
-	if (size < 0)
-		return ;
-	if (size == 0) {
-		_status = true;
-		close(_pipeOut[0]);
-		return ;
-	}
-	buffer[size] = '\0';
-	_response += buffer;
 }
 
 void		ProcessExecution::closeFds()
@@ -83,16 +73,6 @@ void		ProcessExecution::closeFds()
 		close(_pipeIn[0]);
 	if (_pipeIn[1] != -1)
 		close(_pipeIn[1]);
-}
-
-bool		ProcessExecution::getStatus() const
-{
-	return (_status);
-}
-
-std::string	ProcessExecution::getResponse() const
-{
-	return (_response);
 }
 
 int		ProcessExecution::getFdIn() const { return _pipeIn[1]; }

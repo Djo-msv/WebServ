@@ -30,7 +30,7 @@ class MymlParser
 		void	openFile(std::string path, std::map<std::string, std::ifstream *> file);
 		int		isDirectory(std::string path);
 
-		void	check();
+		void	buildTree();
 
 		// Error class
 		class WrongPerm : public std::runtime_error {

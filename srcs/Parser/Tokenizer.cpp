@@ -47,3 +47,23 @@ Tokenizer::Tokenizer(std::string &line, const std::string &name) : _indentLevel(
 
 Tokenizer::~Tokenizer(void)
 {}
+
+
+int		Tokenizer::getIndent(void)
+{
+	return (_indentLevel);
+}
+bool	Tokenizer::isDefine(void)
+{
+	return(_define);
+}
+
+bool	Tokenizer::isMemberOfaList(void)
+{
+	return (_memberOfaList);
+}
+
+bool	Tokenizer::isMemberOfaDictionary(void)
+{
+	return (_memberOfaDictionary);
+}

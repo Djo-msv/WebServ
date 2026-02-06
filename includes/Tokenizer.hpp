@@ -9,10 +9,12 @@ class Tokenizer
 		Tokenizer(std::string &line, const std::string &name);
 		~Tokenizer();
 
-		int	getIdentLevel();
+		int		getIndent();
 		bool	isDefine();
 		bool	isMemberOfaList();
 		bool	isMemberOfaDictionary();
+
+
 	
 	private :
 

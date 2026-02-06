@@ -8,21 +8,37 @@ MymlParser::MymlParser(char *path)
 	openFile(std::string(path), file);
 	for (std::map<std::string, std::ifstream *>::iterator it = file.begin(); it != file.end(); it++) /* iterate on every file */
 		readFile(it);
-	buildTree(_myml); /* create a tree resulting from the parsing */
+	buildTree(); /* create a tree resulting from the parsing */
 }
 
 MymlParser::~MymlParser(void)
 {}
 
-void	MymlParser::BuildTree(void)
+void	MymlParser::buildTree(void)
 {
-//	while _tokens
-//		if token define and indentation = prev indentation
-//			new branch (what ? idk for the moment
-//		if token list and (indentation = prev && prev != define)
-//			add last vector
-//		else if token list (indentation > prev && prev == define)
-//			new vector
+	Tokenizer	prevToken = *(_tokens.begin());
+
+	for (std::vector<Tokenizer>::iterator it = _tokens.begin(); it != _tokens.end(); it++) {
+		Tokenizer token = (*it);
+		if (token.getIndent() < prevToken.getIndent()) {
+//			searchLastEqualIndent(token);	
+		}
+		if ((it == _tokens.begin() && token.isDefine()) || (token.isDefine() &&
+				((token.getIndent() == prevToken.getIndent() && !prevToken.isDefine()) || 
+				(token.getIndent() > prevToken.getIndent() && prevToken.isDefine())))) {};
+			// new branch here
+		if (token.isMemberOfaList() && token.getIndent() > prevToken.getIndent() && prevToken.isDefine()) {
+			// new vector()
+		}
+		else if (token.isMemberOfaList() && (token.getIndent() == prevToken.getIndent() && !prevToken.isDefine())) {};
+			// add info to the last vector
+		if (token.isMemberOfaDictionary() && token.getIndent() > prevToken.getIndent() && prevToken.isDefine()) {
+			// new dictionary()
+		}
+		else if (token.isMemberOfaDictionary() && (token.getIndent() == prevToken.getIndent() && !prevToken.isDefine())) {};
+			// add info to the last dictionary
+		prevToken = token;
+	}
 }
 
 int	MymlParser::isDirectory(std::string path)

@@ -6,7 +6,7 @@ ClientSocket::~ClientSocket(void) {}
 
 //this func :: deletes the old_fd from our epoll map (except pipes, which are automatically deleted), adds the new one with flags
 //it then erases the <old_fd, csocket> from the sockets map and replaces it with <new_fd, csocket>
-void	ClientSocket::fd_switch(int old_fd, int new_fd, int flags)
+void	ClientSocket::epollFdSwitch(int old_fd, int new_fd, int flags)
 {
 	SocketIterator it = sockets.find(old_fd);
 	if (it == sockets.end())
@@ -90,13 +90,13 @@ void	ClientSocket::startExec()
 		setnonblocking(_exec.getFdOut());
 		try { _exec.startProcess(false, _request.getTarget(), _request.getEnv()); }
 		catch (std::exception &e) { throw ; }
-		fd_switch(_socketFd, _exec.getFdOut(), EPOLLIN | EPOLLET);
+		epollFdSwitch(_socketFd, _exec.getFdOut(), EPOLLIN | EPOLLET);
 	}
 	else {
 		_status = WaitExecWrite;
 		setnonblocking(_exec.getFdIn());
 		setnonblocking(_exec.getFdOut());
-		fd_switch(_socketFd, _exec.getFdIn(), EPOLLOUT | EPOLLET);
+		epollFdSwitch(_socketFd, _exec.getFdIn(), EPOLLOUT | EPOLLET);
 	}
 }
 
@@ -120,7 +120,7 @@ void	ClientSocket::execWrite()
 		catch (std::exception &e) { throw ; }
 		close(_exec.getFdIn());
 		_sendpos = 0;
-		fd_switch(_exec.getFdIn(), _exec.getFdOut(), EPOLLIN | EPOLLET);
+		epollFdSwitch(_exec.getFdIn(), _exec.getFdOut(), EPOLLIN | EPOLLET);
 		_status = WaitExecRead;
 	}
 }
@@ -133,7 +133,7 @@ void	ClientSocket::execRead()
 		_status = WaitExecRead;
 	else if (!size) { //read is done, appropriate _status/epoll switching and close
 		close(_exec.getFdOut());
-		fd_switch(_exec.getFdOut(), _socketFd, EPOLLOUT | EPOLLET);
+		epollFdSwitch(_exec.getFdOut(), _socketFd, EPOLLOUT | EPOLLET);
 		_status = WaitResponse;
 	}
 	else {

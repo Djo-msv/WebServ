@@ -65,6 +65,6 @@ class ClientSocket : public Socket
 		std::string			_processResponse;
 
 		int 	createSocket(ServerSocket &);
-		void	fd_switch(int old_fd, int new_fd, int flags);
+		void	epollFdSwitch(int old_fd, int new_fd, int flags);
 		void	startExec(); //handles the fd_switches, setnonblock and starting the execution (if read-only)
 };

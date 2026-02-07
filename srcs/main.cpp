@@ -109,23 +109,23 @@ void	manageRequests()
 			else {
 				ClientSocket *cSocket = dynamic_cast<ClientSocket *>(socketIterator->value);
 				try {
-				switch (cSocket->_status) {
-					case ClientSocket::WaitRequest:
-						pendingClientSockets.push_back(cSocket);
-						cSocket->_status = ClientSocket::ReadRequest;
-						break ;
-					case ClientSocket::WaitExecWrite:
-						cSocket->_status = ClientSocket::ExecWrite;
-						break ;
-					case ClientSocket::WaitExecRead:
-						cSocket->_status = ClientSocket::ExecRead;
-						break ;
-					case ClientSocket::WaitResponse:
-						cSocket->_status = ClientSocket::SendResponse;
-						break ;
-					default:
-						break ;
-				}
+					switch (cSocket->_status) {
+						case ClientSocket::WaitRequest:
+							pendingClientSockets.push_back(cSocket);
+							cSocket->_status = ClientSocket::ReadRequest;
+							break ;
+						case ClientSocket::WaitExecWrite:
+							cSocket->_status = ClientSocket::ExecWrite;
+							break ;
+						case ClientSocket::WaitExecRead:
+							cSocket->_status = ClientSocket::ExecRead;
+							break ;
+						case ClientSocket::WaitResponse:
+							cSocket->_status = ClientSocket::SendResponse;
+							break ;
+						default:
+							break ;
+					}
 				}
 				CATCH_AND_HANDLE(std::exception)
 			}

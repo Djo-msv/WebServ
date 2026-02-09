@@ -9,7 +9,7 @@
 #include <map>
 #include <fstream>
 #include <string>
-
+#include <stack>
 #include "MymlObject.hpp"
 
 class MymlParser

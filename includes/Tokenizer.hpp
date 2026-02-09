@@ -13,8 +13,6 @@ class Tokenizer
 		bool	isDefine();
 		bool	isMemberOfaList();
 		bool	isMemberOfaDictionary();
-
-
 	
 	private :
 

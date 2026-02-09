@@ -8,6 +8,7 @@ class MymlObject
 {
 	public :
 		MymlObject();
+		MymlObject(const std::string &value);
 		virtual ~MymlObject();
 
 		std::string getValue();
@@ -25,7 +26,14 @@ class MymlObject
 class MymlList : public MymlObject
 {
 	public :
+		MymlList();
+		~MymlList();
+
 		std::vector<MymlObject*>	getMymlList();
+
+		MymlObject *insertList();
+		MymlObject *insertDictionary();
+		void insertValue(std::string &value);
 
 	private :
 		std::vector<MymlObject*>	_list;
@@ -34,8 +42,15 @@ class MymlList : public MymlObject
 class MymlDictionary : public MymlObject
 {
 	public :
-		MymlObject getMymlDictionary();
-	
+		MymlDictionary();
+		~MymlDictionary();
+
+		std::map<std::string, MymlObject*> getMymlDictionary();
+
+		MymlObject *insertList(std::string &key);
+		MymlObject *insertDictionary(std::string &key);
+		void insertValue(std::string &key, std::string &value);
+
 	private :
-		std::map<std::string, MymlObject>	_dictionary;
+		std::map<std::string, MymlObject*>	_dictionary;
 };

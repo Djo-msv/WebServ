@@ -16,6 +16,7 @@ MymlParser::~MymlParser(void)
 
 void	MymlParser::buildTree(void)
 {
+	std::stack<MymlObject*>	stack;
 	Tokenizer	prevToken = *(_tokens.begin());
 
 	for (std::vector<Tokenizer>::iterator it = _tokens.begin(); it != _tokens.end(); it++) {
@@ -26,14 +27,13 @@ void	MymlParser::buildTree(void)
 		if ((it == _tokens.begin() && token.isDefine()) || (token.isDefine() &&
 				((token.getIndent() == prevToken.getIndent() && !prevToken.isDefine()) || 
 				(token.getIndent() > prevToken.getIndent() && prevToken.isDefine())))) {};
-			// new branch here
 		if (token.isMemberOfaList() && token.getIndent() > prevToken.getIndent() && prevToken.isDefine()) {
-			// new vector()
+			stack.push(stack.top()->insertList());
 		}
 		else if (token.isMemberOfaList() && (token.getIndent() == prevToken.getIndent() && !prevToken.isDefine())) {};
 			// add info to the last vector
 		if (token.isMemberOfaDictionary() && token.getIndent() > prevToken.getIndent() && prevToken.isDefine()) {
-			// new dictionary()
+			stack.push(stack.top()->insertDictionary(token.getKey()));
 		}
 		else if (token.isMemberOfaDictionary() && (token.getIndent() == prevToken.getIndent() && !prevToken.isDefine())) {};
 			// add info to the last dictionary

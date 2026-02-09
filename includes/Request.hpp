@@ -7,6 +7,7 @@
 # include <vector>
 # include <algorithm>
 # include <map>
+# include <ServerSocket.hpp>
 # include <socket_utils.hpp>
 
 #define CHUNKED -1
@@ -20,7 +21,6 @@ class Request
 
 		Request &operator=(const Request &other);
 		Request &operator+=(const char *buffer);
-
 
 		void	parse();
 		void	read() const;
@@ -62,4 +62,6 @@ class Request
 		void	headers_add(std::string line);
 		void	startline_check(std::string line);
 		void	adjust_exec();
+
+		std::string	seekFile(std::string &file, ServerConfig &serverConf);
 };

@@ -8,18 +8,12 @@ class MymlObject
 {
 	public :
 		MymlObject();
-		~MymlObject();
+		virtual ~MymlObject();
 
-		int	getAsInt();
-		std::string getAsString();
-
-		std::vector<MymlObject> getAsList();
-		std::map<std::string, MymlObject> getAsDictionary();
+		std::string getValue();
 		
-		const std::string getKey();
 	private :
-		std::string	value;
-		std::string key;
+		std::string	_value;
 		
 		// Error class
 		class WrongType : public std::runtime_error {
@@ -31,19 +25,17 @@ class MymlObject
 class MymlList : public MymlObject
 {
 	public :
-		std::vector<MymlObject>	getElements();
+		std::vector<MymlObject*>	getMymlList();
 
 	private :
-		std::vector<MymlObject>	list;
+		std::vector<MymlObject*>	_list;
 };
 
 class MymlDictionary : public MymlObject
 {
 	public :
-		MymlObject getMymlObject();
+		MymlObject getMymlDictionary();
 	
 	private :
-		std::map<std::string, MymlObject>	dictionary;
+		std::map<std::string, MymlObject>	_dictionary;
 };
-
-

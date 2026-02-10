@@ -24,6 +24,8 @@ class ServerConfig
         RequestFlag stringToRequestFlag(const std::string &method) const;
         bool isMethodAllowed(const std::string &location, RequestFlag method) const;
         std::string getCgiHandler(const std::string &extension) const;
+		std::string getRootFolder() const;
+		std::string getIndex() const;
 
     private:
         std::map<std::string, std::string>  cgiHandlers;

@@ -29,3 +29,7 @@ ServerConfig::RequestFlag ServerConfig::stringToRequestFlag(const std::string &m
     if (method == "DELETE") return DELETE;
     throw std::invalid_argument("Invalid HTTP method: " + method);
 }
+
+std::string ServerConfig::getRootFolder() const { return (rootFolder); }
+
+std::string ServerConfig::getIndex() const { return (index_file); }

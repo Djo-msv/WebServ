@@ -71,10 +71,13 @@ std::string	Request::seekFile(std::string &pathfile)
 	
 	**/
 
-	struct stat buf;
-	if (stat(pathfile.c_str(), &buf) == -1)
+	struct stat file_stat;
+	if (stat(pathfile.c_str(), &file_stat) == -1)
 		throw Request::FileNotFound();
 	
+	if (file_stat.st_mode & S_IRUSR)
+		return (pathfile);
+	throw (HttpError("Forbidden ?")); // ? 403 forbidden or 500 Internal Server error ?
 
 }
 
@@ -261,7 +264,4 @@ void Request::read() const
 Request::MissingData::MissingData() : std::out_of_range("data missing from request !") {}
 
 
-Request::FileNotFound::FileNotFound() : HttpError(std::string("404 Not Found"), std::string("srcs/error/404_default.html"), 404)
-{
-
-}
+Request::FileNotFound::FileNotFound() : HttpError(std::string("404 Not Found"), std::string("srcs/error/404_default.html"), 404) {}

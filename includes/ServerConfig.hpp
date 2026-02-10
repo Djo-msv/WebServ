@@ -25,6 +25,7 @@ class ServerConfig
         bool isMethodAllowed(const std::string &location, RequestFlag method) const;
         std::string getCgiHandler(const std::string &extension) const;
 		std::string getRootFolder() const;
+		std::string getExecFolder() const;
 		std::string getIndex() const;
 
     private:
@@ -32,6 +33,7 @@ class ServerConfig
         std::map<std::string, int>          requestsFlag;
         std::string                         index_file;
         std::string                         rootFolder;
+		std::string							execFolder;
     	sa_family_t                         sin_family;
         int                          		sin_port;
 };

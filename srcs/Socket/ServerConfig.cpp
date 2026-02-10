@@ -32,4 +32,6 @@ ServerConfig::RequestFlag ServerConfig::stringToRequestFlag(const std::string &m
 
 std::string ServerConfig::getRootFolder() const { return (rootFolder); }
 
+std::string ServerConfig::getExecFolder() const { return (execFolder); }
+
 std::string ServerConfig::getIndex() const { return (index_file); }

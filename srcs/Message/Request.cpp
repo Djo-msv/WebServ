@@ -60,15 +60,18 @@ void Request::parse()
 
 std::string	Request::seekFile(std::string &file, ServerConfig &serverConf)
 {
-	/*
-	 TODO vérifier l'existence et les permissions du fichier, donné, si le fichier donné est un code erreur ou index,
-	 * récupérer le fichier stocké dans serverConf sinon chercher dans le Workdir du serverConf en utilisant le path donné
-	 * le fichier n'existe pas ou n'est pas trouvé renvoyer fichier d'erreur du serverConf, (HttpError, "404 not found") 
-	 * si n'existe pas renvoyer défaut ("403 Forbiden"), si inaccessible renvoyer page HTML hard codé d'erreur de permission ("500 Internal Server Error"),
-	 * séparer nom de l'extension, récupérer le cgi depuis serverConf,
-	 * si pas de CGi ou d'extension renvoyer page brut avec exception spécial
+	/** 
+	* TODO vérifier l'existence et les permissions du fichier, donné, si le fichier donné est un code erreur ou index,
+	* * récupérer le fichier stocké dans serverConf sinon chercher dans le Workdir du serverConf en utilisant le path donné
+	* * le fichier n'existe pas ou n'est pas trouvé renvoyer fichier d'erreur du serverConf, (HttpError, "404 not found") 
+	* * si n'existe pas renvoyer défaut ("403 Forbiden"), si inaccessible renvoyer page HTML hard codé d'erreur de permission ("500 Internal Server Error"),
+	* * séparer nom de l'extension, récupérer le cgi depuis serverConf,
+	* * si pas de CGi ou d'extension renvoyer page brut avec exception spécial
 	
-	*/
+	**/
+
+	
+
 }
 
 /*    200 OK

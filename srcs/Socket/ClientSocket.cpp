@@ -182,11 +182,11 @@ int ClientSocket::createSocket(ServerSocket & serverSocket)
 }
 
 
-ClientSocket::GatewayTimeout::GatewayTimeout() : HttpError("HTTP/1.1 504 Gateway Time-out\r\n"
-														   "Content-length: 92\r\n"
-												    	   "Cache-Control: no-cache\r\n"
-													       "Content-Type: text/html\r\n"
-														   "\r\n"
-														   "<html><body><h1>504 Gateway Time-out</h1>\n"
-														   "The server didn't respond in time.\n"
-														   "</body></html>", 504) {}
+// ClientSocket::GatewayTimeout::GatewayTimeout() : HttpError("HTTP/1.1 504 Gateway Time-out\r\n"
+// 														   "Content-length: 92\r\n"
+// 												    	   "Cache-Control: no-cache\r\n"
+// 													       "Content-Type: text/html\r\n"
+// 														   "\r\n"
+// 														   "<html><body><h1>504 Gateway Time-out</h1>\n"
+// 														   "The server didn't respond in time.\n"
+// 														   "</body></html>", 504) {}

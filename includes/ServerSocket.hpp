@@ -18,6 +18,8 @@ class ServerSocket : public Socket
 		ServerSocket(ServerConfig, int epollInstance);
 		~ServerSocket();
 
+		ServerConfig getConfig() const;
+
 	private :
 		ServerConfig _config;	
 

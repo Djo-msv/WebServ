@@ -24,6 +24,8 @@ ServerSocket::ServerSocket(ServerConfig config, const int epollInstance) : Socke
 
 ServerSocket::~ServerSocket(void) {}
 
+ServerConfig ServerSocket::getConfig(void) const { return (_config); }
+
 sockaddr_in ServerSocket::setupSocketAddress(ServerConfig config)
 {
 	sockaddr_in serverAddress;

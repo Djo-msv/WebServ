@@ -12,8 +12,9 @@
 class ServerConfig
 {
     public:
-        ServerConfig(std::map<std::string, std::string> cgiHandlers, std::map<std::string, int> requestsFlag, std::string index_file, std::string rootFolder, std::string execFolder);
-        ~ServerConfig();
+        ServerConfig(std::map<std::string, std::string> cgiHandlers,
+			std::map<std::string, int> requestsFlag, std::string index_file,
+			std::string rootFolder, std::string execFolder);
 
 
         enum RequestFlag {

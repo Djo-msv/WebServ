@@ -7,6 +7,8 @@
 # include <vector>
 # include <algorithm>
 # include <map>
+# include <sys/stat.h>
+# include <HttpError.hpp>
 # include <ServerSocket.hpp>
 # include <socket_utils.hpp>
 
@@ -15,7 +17,7 @@
 class Request
 {
 	public:
-		Request(ServerConfig &ServerConfig);
+		Request(const ServerConfig &ServerConfig);
 		~Request();
 		Request(const Request &other);
 
@@ -39,6 +41,11 @@ class Request
 		class MissingData : public std::out_of_range {
 			public:
 				MissingData();
+		};
+
+		class FileNotFound : public HttpError {
+			public :
+				FileNotFound();
 		};
 	private:
 		ServerConfig	config;
@@ -65,7 +72,7 @@ class Request
 		void	adjust_exec();
 
 		std::string	extractCgi(std::string &file);
-		std::string	seekErrorFile(unsigned int error);
+		std::string	seekErrorFile(HttpError &error);
 
 
 		static std::string	seekFile(std::string &pathfile);

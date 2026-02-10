@@ -1,16 +1,16 @@
 #include "Request.hpp"
 
-Request::Request(const ServerConfig & config) : config(config), _env(NULL), _status(0), c_env(NULL), exec(false) {}
+Request::Request(ServerConfig &s) : _config(s), _env(NULL), _status(0), c_env(NULL), exec(false) {}
 
 Request::~Request() {if (_env) { delete[] _env; delete[] c_env; } }
 
-Request::Request(const Request &other) : config(other.config), _method(other._method), _target(other._target), _body(other._body), _query(other._query), _env(other._env), c_env(other.c_env), exec(other.exec) {}
+Request::Request(const Request &other) : _config(other._config), _method(other._method), _target(other._target), _body(other._body), _query(other._query), _env(other._env), c_env(other.c_env), exec(other.exec) {}
 
 Request& Request::operator=(const Request &other)
 {
 	if (this != &other)
 	{
-		config = other.config;
+		_config = other._config;
 		_method = other._method;
 		_query = other._query;
 		_target = other._target;
@@ -73,7 +73,7 @@ std::string	Request::seekFile(std::string &pathfile)
 
 	struct stat file_stat;
 	if (stat(pathfile.c_str(), &file_stat) == -1)
-		throw Request::FileNotFound();
+		throw FileNotFound();
 	
 	if (file_stat.st_mode & S_IRUSR)
 		return (pathfile);
@@ -120,32 +120,28 @@ void Request::parse_body()
 
 void Request::adjust_exec()
 {
-	//method check here against authorized in server at the location + adjusting for exec/get/post/delete
-	if (_target.substr(0, 9) == "/scripts/" || _target.substr(0, 8) == "scripts/")
+	exec = true;
+	//first we should add relevant variables :: cgi version, redirect status, query string, method request, etc.
+	headers.insert(std::pair<std::string, std::string>("REDIRECT_STATUS", "true"));
+	headers.insert(std::pair<std::string, std::string>("GATEWAY_INTERFACE", "CGI/1.1"));
+	std::string filename = _target;
+	if (_target.rfind('/') != std::string::npos)
+		filename = _target.substr(_target.rfind('/') + 1);
+	headers.insert(std::pair<std::string, std::string>("SCRIPT_FILENAME", filename));
+	headers.insert(std::pair<std::string, std::string>("REQUEST_METHOD", _method));
+	if (!_query.empty())
+		headers.insert(std::pair<std::string, std::string>("QUERY_STRING", _query));
+	//here creating the char * environment which we can use for execve, in two steps as previously established
+	_env = new std::string[headers.size()];
+	c_env = new const char*[headers.size() + 1];
+	size_t i = 0;
+	for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); it++)
 	{
-		exec = true;
-		//first we should add relevant variables :: cgi version, redirect status, query string, method request, etc.
-		headers.insert(std::pair<std::string, std::string>("REDIRECT_STATUS", "true"));
-		headers.insert(std::pair<std::string, std::string>("GATEWAY_INTERFACE", "CGI/1.1"));
-		std::string filename = _target;
-		if (_target.rfind('/') != std::string::npos)
-			filename = _target.substr(_target.rfind('/') + 1);
-		headers.insert(std::pair<std::string, std::string>("SCRIPT_FILENAME", filename));
-		headers.insert(std::pair<std::string, std::string>("REQUEST_METHOD", _method));
-		if (!_query.empty())
-			headers.insert(std::pair<std::string, std::string>("QUERY_STRING", _query));
-		//here creating the char * environment which we can use for execve, in two steps as previously established
-		_env = new std::string[headers.size()];
-		c_env = new const char*[headers.size() + 1];
-		size_t i = 0;
-		for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); it++)
-		{
-			_env[i] = it->first + "=" + it->second;
-			c_env[i] = _env[i].c_str();
-			i++;
-		}
-		c_env[i] = NULL;
+		_env[i] = it->first + "=" + it->second;
+		c_env[i] = _env[i].c_str();
+		i++;
 	}
+	c_env[i] = NULL;
 }
 
 void	Request::parse_header(std::string header)
@@ -226,11 +222,19 @@ void Request::startline_check(std::string line)
 	getline(l, current);
 	if (!current.empty() && !l.eof())
 		throw std::out_of_range("4"); //bad request (formatting)
-	this->adjust_exec();
+	//first : "/" to index
 	if (_target == "/")
-		_target = "/html/retry.html"; //future index
-	if (_target[0] != '.') //future path add, obv
-		_target = "." + _target;
+		_target = _config.getIndex();
+	//then : location v method
+	std::string location = _target.substr(0, _target.rfind("/"));
+	if (!_config.isMethodAllowed(location, _config.stringToRequestFlag(_method)))
+		throw std::out_of_range("5"); //method not supported
+	//then : check_exec (isExecFolder(filepath)) -> if yes, adjust
+	if (_config.getExecFolder() == location)
+		this->adjust_exec();
+	//then : add root
+	_target = _config.getRootFolder() + _target;
+	//next-up :: seek_file() on the full path, if error 404 catch then seekError
 }
 
 std::string Request::getTarget() const { return _target; }
@@ -262,6 +266,3 @@ void Request::read() const
 }
 
 Request::MissingData::MissingData() : std::out_of_range("data missing from request !") {}
-
-
-Request::FileNotFound::FileNotFound() : HttpError(std::string("404 Not Found"), std::string("srcs/error/404_default.html"), 404) {}

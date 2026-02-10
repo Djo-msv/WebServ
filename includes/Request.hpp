@@ -17,7 +17,7 @@
 class Request
 {
 	public:
-		Request(const ServerConfig &ServerConfig);
+		Request(ServerConfig &s);
 		~Request();
 		Request(const Request &other);
 
@@ -42,13 +42,13 @@ class Request
 			public:
 				MissingData();
 		};
-
+		
 		class FileNotFound : public HttpError {
 			public :
-				FileNotFound();
+				FileNotFound() : HttpError(std::string("could not find this file !")) {};
 		};
 	private:
-		ServerConfig	config;
+		ServerConfig	&_config;
 		std::string		_method;
 		std::string		_target;
 		std::string		_body;

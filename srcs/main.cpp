@@ -141,22 +141,25 @@ ServerConfig initConfig()
 {
 	std::map<std::string, std::string> cgiHandlers;
 	std::map<std::string, int> requestsFlag;
-	std::string index_file("index.html");
-	std::string rootFolder("~/data/");
-	std::string execFolder("/cgi/bin/");
+	std::string index_file("/html/retry.html");
+	std::string rootFolder(".");
+	std::string execFolder("/scripts");
 
 	cgiHandlers.insert(std::make_pair(".php", "/bin/php-cgi"));
-	requestsFlag.insert(std::make_pair("~/data/", ServerConfig::GET | ServerConfig::POST)); // 0 = Rien rajouter un | pour plus de flags
+	cgiHandlers.insert(std::make_pair(".py", "/usr/bin/python3"));
+	requestsFlag.insert(std::make_pair("/html", ServerConfig::GET));
+	requestsFlag.insert(std::make_pair("/scripts", ServerConfig::GET | ServerConfig::POST));// 0 = Rien rajouter un | pour plus de flags
+	return ServerConfig(cgiHandlers, requestsFlag, index_file, rootFolder, execFolder);
 }
 
 int	main(void)
 {
 	//TODO sera défini par la config (parser nécéssaire on verra pour définir sur quel standard partir)
-	int port = 7500;
-	
 	// AF_INET is used to allow ipv4 connection.
 	// SOCK_STREAM is to tell the socket to use TCP protocol
 	ServerConfig config = initConfig();
+	config.sin_family = AF_INET;
+	config.sin_port = 7500;
 	try
 	{
 		ServerSocket *socket = new ServerSocket(config, epollInstance);

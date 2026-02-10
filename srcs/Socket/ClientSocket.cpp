@@ -1,6 +1,6 @@
 #include "ClientSocket.hpp"
 
-ClientSocket::ClientSocket(ServerSocket &serverSocket, int _epoll, std::map<const int, Socket *> &_sockets) : Socket(createSocket(serverSocket)), _request(serverSocket.getConfig()), _status(WaitRequest),  _serverSocket(serverSocket), epollInstance(_epoll), sockets(_sockets) {}
+ClientSocket::ClientSocket(ServerSocket &serverSocket, int _epoll, std::map<const int, Socket *> &_sockets) : Socket(createSocket(serverSocket)), _status(WaitRequest),  _serverSocket(serverSocket), epollInstance(_epoll), sockets(_sockets), _request(Request(serverSocket.getConfig())) {}
 
 ClientSocket::~ClientSocket(void) {}
 

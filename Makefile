@@ -58,6 +58,7 @@ SRCS_FILES:=	main.cpp \
 				Execution/ProcessExecution.cpp \
 				Socket/ClientSocket.cpp \
 				Socket/ServerSocket.cpp \
+				Socket/ServerConfig.cpp \
 				Socket/Socket.cpp \
 				Socket/socket_utils.cpp \
 				Message/Request.cpp \

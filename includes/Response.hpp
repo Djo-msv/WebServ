@@ -3,6 +3,7 @@
 
 # include "Request.hpp"
 # include "ProcessExecution.hpp"
+# include <sys/stat.h>
 # include <fstream>
 
 class Response
@@ -14,7 +15,7 @@ class Response
 		std::string body;
 		bool exec; //is there an exec to run ? (makeResponse return)
 		
-		// void seekTarget(Request *req); //looking for target :: if non existent, redirects to 404
+		void seekTarget(Request *req); //looking for target :: if non existent, redirects to 404
 		void makeBody(); //reads the target file into a body string
 		void fix_error(std::string error); //takes status, adjusts target to the corresponding error_page
 	public:

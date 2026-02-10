@@ -6,9 +6,11 @@ class HttpError : public std::invalid_argument
 {
 	public :
 		HttpError(const std::string &what);
-		HttpError(const std::string &what, std::string &response);
+		HttpError(std::string what, std::string defaultFile, int errorCode);
 
-		std::string getResponse();
+		std::string	getDefaultFile() const;
+		int			getErrorCode() const;
 	private : 
-		std::string response;
+		std::string	defaultFile;
+		int			errorCode;
 };

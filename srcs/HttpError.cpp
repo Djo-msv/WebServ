@@ -1,7 +1,10 @@
 #include <HttpError.hpp>
 
-HttpError::HttpError(const std::string & what, std::string &response) : invalid_argument(what) , response(response) {}
+HttpError::HttpError(std::string what, std::string defaultFile, int errorCode) : invalid_argument(what), 
+	defaultFile(defaultFile), errorCode(errorCode) {}
 
-HttpError::HttpError(const std::string & what) : invalid_argument(what), response("") {}
+HttpError::HttpError(const std::string & what) : invalid_argument(what), defaultFile("") {}
 
-std::string HttpError::getResponse() {	return (response); }
+std::string HttpError::getDefaultFile() const { return (defaultFile); }
+
+int HttpError::getErrorCode() const { return (errorCode); }

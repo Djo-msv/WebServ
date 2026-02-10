@@ -12,8 +12,9 @@
 class ServerConfig
 {
     public:
-        ServerConfig(std::map<std::string, std::string> cgiHandlers, std::map<std::string, int> requestsFlag, std::string index_file, std::string rootFolder, sa_family_t sin_family, int sin_port);
+        ServerConfig(std::map<std::string, std::string> cgiHandlers, std::map<std::string, int> requestsFlag, std::string index_file, std::string rootFolder, std::string execFolder);
         ~ServerConfig();
+
 
         enum RequestFlag {
             GET = 1 << 0,
@@ -22,11 +23,14 @@ class ServerConfig
         };
 
         RequestFlag stringToRequestFlag(const std::string &method) const;
-        bool isMethodAllowed(const std::string &location, RequestFlag method) const;
+        bool isMethodAllowed(const std::string &location, int method) const; // Request flag conseillé mais pas forcé
         std::string getCgiHandler(const std::string &extension) const;
 		std::string getRootFolder() const;
 		std::string getExecFolder() const;
 		std::string getIndex() const;
+
+		sa_family_t                         sin_family;
+        int                          		sin_port;
 
     private:
         std::map<std::string, std::string>  cgiHandlers;
@@ -34,6 +38,4 @@ class ServerConfig
         std::string                         index_file;
         std::string                         rootFolder;
 		std::string							execFolder;
-    	sa_family_t                         sin_family;
-        int                          		sin_port;
 };

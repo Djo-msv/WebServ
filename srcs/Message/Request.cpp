@@ -1,15 +1,16 @@
 #include "Request.hpp"
 
-Request::Request() : _env(NULL), _status(0), c_env(NULL), exec(false) {}
+Request::Request(ServerConfig &config) : config(config), _env(NULL), _status(0), c_env(NULL), exec(false) {}
 
 Request::~Request() {if (_env) { delete[] _env; delete[] c_env; } }
 
-Request::Request(const Request &other) : _method(other._method), _target(other._target), _body(other._body), _query(other._query), _env(other._env), c_env(other.c_env), exec(other.exec) {}
+Request::Request(const Request &other) : config(other.config), _method(other._method), _target(other._target), _body(other._body), _query(other._query), _env(other._env), c_env(other.c_env), exec(other.exec) {}
 
 Request& Request::operator=(const Request &other)
 {
 	if (this != &other)
 	{
+		config = other.config;
 		_method = other._method;
 		_query = other._query;
 		_target = other._target;
@@ -58,7 +59,7 @@ void Request::parse()
 	catch (std::exception &e) {/*do a clear of header info if !_status here*/throw ;}
 }
 
-std::string	Request::seekFile(std::string &file, ServerConfig &serverConf)
+std::string	Request::seekFile(std::string &pathfile)
 {
 	/** 
 	* TODO vérifier l'existence et les permissions du fichier, donné, si le fichier donné est un code erreur ou index,
@@ -69,6 +70,7 @@ std::string	Request::seekFile(std::string &file, ServerConfig &serverConf)
 	* * si pas de CGi ou d'extension renvoyer page brut avec exception spécial
 	
 	**/
+
 
 	
 

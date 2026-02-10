@@ -1,9 +1,10 @@
 #include <ServerConfig.hpp>
 
-ServerConfig::ServerConfig(std::map<std::string, std::string> cgiHandlers, std::map<std::string, int> requestsFlag, std::string index_file, std::string rootFolder, sa_family_t sin_family, int sin_port)
-    : cgiHandlers(cgiHandlers), requestsFlag(requestsFlag), index_file(index_file), rootFolder(rootFolder), sin_family(sin_family), sin_port(sin_port) {}
+ServerConfig::ServerConfig(std::map<std::string, std::string> cgiHandlers, std::map<std::string, int> requestsFlag, 
+	std::string index_file, std::string rootFolder, std::string execFolder)
+    : cgiHandlers(cgiHandlers), requestsFlag(requestsFlag), index_file(index_file), rootFolder(rootFolder), execFolder(execFolder) {}
 
-bool ServerConfig::isMethodAllowed(const std::string &location, RequestFlag method) const
+bool ServerConfig::isMethodAllowed(const std::string &location, int method) const
 {
     std::map<std::string, int>::const_iterator it = requestsFlag.find(location);
     if (it != requestsFlag.end()) {

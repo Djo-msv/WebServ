@@ -15,7 +15,7 @@
 class Request
 {
 	public:
-		Request();
+		Request(ServerConfig &ServerConfig);
 		~Request();
 		Request(const Request &other);
 

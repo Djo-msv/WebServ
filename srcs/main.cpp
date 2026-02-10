@@ -134,6 +134,21 @@ void	manageRequests()
 	}
 }
 
+/**
+ * ! Fonction Temporaire a modifier une fois le parsing terminé
+*/
+ServerConfig initConfig()
+{
+	std::map<std::string, std::string> cgiHandlers;
+	std::map<std::string, int> requestsFlag;
+	std::string index_file("index.html");
+	std::string rootFolder("~/data/");
+	std::string execFolder("/cgi/bin/");
+
+	cgiHandlers.insert(std::make_pair(".php", "/bin/php-cgi"));
+	requestsFlag.insert(std::make_pair("~/data/", ServerConfig::GET | ServerConfig::POST)); // 0 = Rien rajouter un | pour plus de flags
+}
+
 int	main(void)
 {
 	//TODO sera défini par la config (parser nécéssaire on verra pour définir sur quel standard partir)
@@ -141,7 +156,7 @@ int	main(void)
 	
 	// AF_INET is used to allow ipv4 connection.
 	// SOCK_STREAM is to tell the socket to use TCP protocol
-	ServerConfig config = (ServerConfig) {port, AF_INET, "", ""};
+	ServerConfig config = initConfig();
 	try
 	{
 		ServerSocket *socket = new ServerSocket(config, epollInstance);

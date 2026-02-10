@@ -56,6 +56,36 @@ void Request::body_check(int diff)
 		throw std::out_of_range("8"); //missing data
 }
 
+void Request::chunk_parse()
+{
+	//okay, so the cycle should go ::
+		//readline (or find+substr, since that will be easier to work out)
+		//translate that hex string into a size_t
+		//substr that size from the string and add it to the new body string
+	std::string new_body;
+	while (!_body.empty())
+	{
+		std::string hex;
+		//here the find + substr >> hex
+		if (_body.find("\r\n") == std::string::npos)
+			throw std::out_of_range("9"); //bad formatting
+		hex = _body.substr(0, _body.find("\r\n"));
+		_body = _body.substr(_body.find("\r\n") + 2);
+		//here a check_hex for forbidden characters -> bad request
+		if (!check_hex(hex))
+			throw std::out_of_range("10"); //bad formatting
+		std::size_t size;
+		sscanf(s.c_str(), "%x", &size);
+		//then check new_body.length for given size_t size -> if under, missing data
+		if (size > _body.length())
+			throw std::out_of_range("11"); //missing data
+		//if equal/over, send substr into new_body
+		new_body += _body.substr(0, size);
+		//rinse-repeat
+	}
+	
+}
+
 void Request::parse_body()
 {
 	try {

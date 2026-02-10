@@ -41,6 +41,7 @@ class Request
 				MissingData();
 		};
 	private:
+		ServerConfig	config;
 		std::string		_method;
 		std::string		_target;
 		std::string		_body;
@@ -63,5 +64,10 @@ class Request
 		void	startline_check(std::string line);
 		void	adjust_exec();
 
-		std::string	seekFile(std::string &file, ServerConfig &serverConf);
+		std::string	extractCgi(std::string &file);
+		std::string	seekErrorFile(unsigned int error);
+
+
+		static std::string	seekFile(std::string &pathfile);
+
 };

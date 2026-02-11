@@ -48,14 +48,14 @@ class Request
 				FileNotFound() : HttpError(std::string("could not find this file !")) {};
 		};
 	private:
-		ServerConfig	&_config;
+		ServerConfig &	_config;
 		std::string		_method;
 		std::string		_target;
 		std::string		_body;
 		std::string		_request;
 		std::string		_query;
 		std::string		*_env;
-		int			_status;
+		int				_status;
 
 		const char		**c_env;
 		
@@ -70,11 +70,5 @@ class Request
 		void	headers_add(std::string line);
 		void	startline_check(std::string line);
 		void	adjust_exec();
-
-		std::string	extractCgi(std::string &file);
-		std::string	seekErrorFile(HttpError &error);
-
-
-		static std::string	seekFile(std::string &pathfile);
 
 };

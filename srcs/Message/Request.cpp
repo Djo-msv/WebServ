@@ -59,28 +59,6 @@ void Request::parse()
 	catch (std::exception &e) {/*do a clear of header info if !_status here*/throw ;}
 }
 
-std::string	Request::seekFile(std::string &pathfile)
-{
-	/** 
-	* TODO vérifier l'existence et les permissions du fichier, donné, si le fichier donné est un code erreur ou index,
-	* * récupérer le fichier stocké dans serverConf sinon chercher dans le Workdir du serverConf en utilisant le path donné
-	* * le fichier n'existe pas ou n'est pas trouvé renvoyer fichier d'erreur du serverConf, (HttpError, "404 not found") 
-	* * si n'existe pas renvoyer défaut ("403 Forbidden"), si inaccessible renvoyer page HTML hard codé d'erreur de permission ("500 Internal Server Error"),
-	* * séparer nom de l'extension, récupérer le cgi depuis serverConf,
-	* * si pas de CGi ou d'extension renvoyer page brut avec exception spécial
-	
-	**/
-
-	struct stat file_stat;
-	if (stat(pathfile.c_str(), &file_stat) == -1)
-		throw FileNotFound();
-	
-	if (file_stat.st_mode & S_IRUSR)
-		return (pathfile);
-	throw (HttpError("Forbidden ?")); // ? 403 forbidden or 500 Internal Server error ?
-
-}
-
 /*    200 OK
     400 Bad Request
 	403 Forbidden

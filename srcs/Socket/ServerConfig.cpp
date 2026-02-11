@@ -2,7 +2,7 @@
 
 ServerConfig::ServerConfig(std::map<std::string, std::string> cgiHandlers, std::map<std::string, int> requestsFlag, 
 	std::string index_file, std::string rootFolder, std::string execFolder)
-    : cgiHandlers(cgiHandlers), requestsFlag(requestsFlag), index_file(index_file), rootFolder(rootFolder), execFolder(execFolder) {}
+    : cgiExtensions(cgiHandlers), requestsFlag(requestsFlag), index_file(index_file), rootFolder(rootFolder), execFolder(execFolder) {}
 
 bool ServerConfig::isMethodAllowed(const std::string &location, int method) const
 {
@@ -14,10 +14,10 @@ bool ServerConfig::isMethodAllowed(const std::string &location, int method) cons
 }
 
 
-std::string ServerConfig::getCgiHandler(const std::string &extension) const
+std::string ServerConfig::getCgi(const std::string &extension) const
 {
-    std::map<std::string, std::string>::const_iterator it = cgiHandlers.find(extension);
-    if (it != cgiHandlers.end()) {
+    std::map<std::string, std::string>::const_iterator it = cgiExtensions.find(extension);
+    if (it != cgiExtensions.end()) {
         return it->value;
     }
     throw std::runtime_error("No CGI handler found for extension: " + extension);

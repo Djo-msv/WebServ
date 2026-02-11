@@ -188,17 +188,17 @@ void Request::startline_check(std::string line)
 		throw MissingData(); //indicates to return to read
 	getline(l, current, '\r');
 	if (current != "HTTP/1.1")
-		throw std::out_of_range("3"); //wrong http version -> unauthorized ? not provided ?
+		throw NotImplemented(); //wrong http version -> unauthorized ? not provided ?
 	getline(l, current);
 	if (!current.empty() && !l.eof())
-		throw std::out_of_range("4"); //bad request (formatting)
+		throw BadRequest(); //bad request (formatting)
 	//first : "/" to index
 	if (_target == "/")
 		_target = _config.getIndex();
 	//then : location v method
 	std::string location = _target.substr(0, _target.rfind("/"));
 	if (!_config.isMethodAllowed(location, _config.stringToRequestFlag(_method)))
-		throw std::out_of_range("5"); //method not supported
+		throw Forbidden(); //method not supported
 	//then : check_exec (isExecFolder(filepath)) -> if yes, adjust
 	if (_config.isExecFolder(location))
 		this->adjust_exec();

@@ -66,4 +66,5 @@ void Response::fix_error(HttpError &error)
 	//right now i do the default error page as a hard code
 	try { seekFile(_target); this->readFile(); }
 	catch (std::exception &e) { _target = ""; body += "<html><body><h1> A server error has occured internally !</h1></body></hmtl>"; }
+	//but later ::  try { _target = seekError(error); this->readFile(); } catch (InternalServerError &e) {_target = ""; _body = e.getDefaultFile();}
 }

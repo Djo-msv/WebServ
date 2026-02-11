@@ -23,6 +23,16 @@ class InternalServerError : public HttpError {
         InternalServerError() : HttpError("500 Internal Server Error", "~/html/errors/500_def.html", 500) {};
 };
 
+class NotImplemented : public HttpError {
+    public:
+        NotImplemented() : HttpError("501 Not Implemented", "~/html/errors/501_def.html", 501) {};
+};
+
+class BadRequest : public HttpError {
+    public:
+        BadRequest() : HttpError("400 Bad Request", "~/html/errors/400_def.html", 400) {};
+};
+
 
 /*
     200 OK

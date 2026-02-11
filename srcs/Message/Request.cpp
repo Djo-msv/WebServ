@@ -204,7 +204,9 @@ void Request::startline_check(std::string line)
 		this->adjust_exec();
 	//then : add root
 	_target = _config.getRootFolder() + _target;
-	//next-up :: seek_file() on the full path, if error 404 catch then seekError
+	//next-up :: seek_file() on the full path, if error catch then seekError (for now, throw)
+	try { seekFile(_target); }
+	catch (std::exception &e) { throw ; }
 }
 
 std::string Request::getTarget() const { return _target; }

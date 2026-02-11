@@ -27,14 +27,11 @@ Response &Response::operator+=(const char *buffer)
 
 bool Response::makeResponse(Request *req)
 {
-	try {
-		exec = req->isExec();
-		this->seekTarget(req);
-		//this if will now only come into effect if there is no exec || exec script can't be found (or execed ?)
-		if (!exec)
-			this->makeBody();
-	}
-	catch (std::exception &e) {throw ;}
+	exec = req->isExec();
+	_target = req->getTarget();
+	//this if will now only come into effect if there is no exec || exec script can't be found (or execed ?)
+	if (!exec)
+		this->readFile();
 	return exec;
 }
 
@@ -49,40 +46,24 @@ std::string Response::getResponse()
 	return msg;
 }
 
-void Response::seekTarget(Request *req)
+void Response::readFile()
 {
-	//check if file exists
-	struct stat buf;
-	if (stat(req->getTarget().c_str(), &buf) == -1)
-	{
-		this->fix_error("404 Not Found"); //update target and status accordingly
-		exec = false;
+	if (_target.empty()) //no body to make || body is from default
 		return ;
-	}
-	_target = req->getTarget();
-}
-
-void Response::makeBody()
-{
 	std::ifstream file(_target.c_str());
-	if (!file.is_open())
-	{
-		//later this will likely be more of a "forbidden" type error
-		body += "<html><body><h1>Error opening the file requested !</h1></body></hmtl>";
+	if (!file.is_open()) // should not happen ever at this point
 		return ;
-	}
 	std::stringstream buffer;
 	buffer << file.rdbuf();
 	file.close();
 	body += buffer.str();
 }
 
-void Response::fix_error(std::string error)
+void Response::fix_error(HttpError &error)
 {
-	//in the future i would check the error code against the map of server configed error files
-	//    (ex: if (server_errors.count(error.substr(0, 3))) { status = error; _target = server_errors.at(error.substr(0, 3); })
-	//if the specific error isn't a match, switch back to default error page
-	//for now it's just the error 404 basic stuff
-	status = error;
-	_target = "./html/error_404.html";
+	status = error.what();
+	_target = error.getDefaultFile();
+	//right now i do the default error page as a hard code
+	try { seekFile(_target); this->readFile(); }
+	catch (std::exception &e) { _target = ""; body += "<html><body><h1> A server error has occured internally !</h1></body></hmtl>"; }
 }

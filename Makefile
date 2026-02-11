@@ -62,6 +62,7 @@ SRCS_FILES:=	main.cpp \
 				Socket/Socket.cpp \
 				Socket/socket_utils.cpp \
 				Message/Request.cpp \
+				Message/request_utils.cpp \
 				Message/Response.cpp
 
 SRCS:=			$(addprefix $(SRC_DIR)/, $(SRCS_FILES))

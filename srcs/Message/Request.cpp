@@ -59,17 +59,6 @@ void Request::parse()
 	catch (std::exception &e) {/*do a clear of header info if !_status here*/throw ;}
 }
 
-/*    200 OK
-    400 Bad Request
-	403 Forbidden
-    404 Not Found
-	500 Internal Server Error
-    501 Not Implemented (method isn't allowed for this server/location, encoding isn't handled, etc.)
-    414 URI Too Long
-    301 Moved Permanently
-    204 No Content
-    411 Length Required (message body but no length provided) */
-
 void Request::body_check(size_t size_told, size_t real_size)
 {
 	if (real_size < size_told)

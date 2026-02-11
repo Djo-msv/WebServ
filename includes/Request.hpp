@@ -7,8 +7,8 @@
 # include <vector>
 # include <algorithm>
 # include <map>
-# include <sys/stat.h>
-# include <HttpError.hpp>
+# include <request_utils.hpp>
+# include <HttpErrors.hpp>
 # include <ServerSocket.hpp>
 # include <socket_utils.hpp>
 
@@ -42,11 +42,7 @@ class Request
 			public:
 				MissingData();
 		};
-		
-		class FileNotFound : public HttpError {
-			public :
-				FileNotFound() : HttpError(std::string("could not find this file !")) {};
-		};
+
 	private:
 		ServerConfig &	_config;
 		std::string		_method;

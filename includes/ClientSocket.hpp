@@ -11,7 +11,7 @@
 #define BUF_SIZE 1024
 
 #include <Socket.hpp>
-#include <HttpError.hpp>
+#include <HttpErrors.hpp>
 #include <ServerSocket.hpp>
 #include <ProcessExecution.hpp>
 #include <Request.hpp>
@@ -47,11 +47,6 @@ class ClientSocket : public Socket
 			Done//temporary, since we don't have request/response/exec .clear() functions yet
 		};
 		state				_status;
-
-		class GatewayTimeout : public HttpError {
-			public :
-				GatewayTimeout(); 
-		};
 
 	private :
 		ServerSocket &		_serverSocket;

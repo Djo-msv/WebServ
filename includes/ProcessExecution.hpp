@@ -15,7 +15,7 @@ class ProcessExecution
 		~ProcessExecution(); /* close both pipes in case of crash */
 	
 		void setupProcess(bool pipein);//for a proper setup -> write -> exec, attempt 1
-		void startProcess (bool pipein, std::string target, char **env); /* fork Process and exec CGI, and stock execve input/output fds */
+		void startProcess (bool pipein, std::string cgi, std::string target, char **env); /* fork Process and exec CGI, and stock execve input/output fds */
 		
 		int		getFdIn() const;
 		int		getFdOut() const;
@@ -24,7 +24,6 @@ class ProcessExecution
 		int			_pipeIn[2]; /* execve input */
 		int			_pipeOut[2]; /* execve output */
 		int			_pid; /* Process pid */
-		const std::string cgi; //future this will be sent to startProcess() directly
 
 		void		closeFds();
 		

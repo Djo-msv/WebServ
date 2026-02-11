@@ -88,6 +88,9 @@ void Request::parse_body()
 void Request::adjust_exec()
 {
 	exec = true;
+	//looking for cgi executable file
+	try { _cgi = extractCgi(_target, _config); }
+	catch (std::exception &e) { throw ; }
 	//first we should add relevant variables :: cgi version, redirect status, query string, method request, etc.
 	headers.insert(std::pair<std::string, std::string>("REDIRECT_STATUS", "true"));
 	headers.insert(std::pair<std::string, std::string>("GATEWAY_INTERFACE", "CGI/1.1"));
@@ -197,7 +200,7 @@ void Request::startline_check(std::string line)
 	if (!_config.isMethodAllowed(location, _config.stringToRequestFlag(_method)))
 		throw std::out_of_range("5"); //method not supported
 	//then : check_exec (isExecFolder(filepath)) -> if yes, adjust
-	if (_config.getExecFolder() == location)
+	if (_config.isExecFolder(location))
 		this->adjust_exec();
 	//then : add root
 	_target = _config.getRootFolder() + _target;
@@ -215,6 +218,8 @@ char **Request::getEnv() const { return (char **)c_env; }
 bool Request::isExec() const { return exec; }
 
 std::string Request::getBody() const { return _body; }
+
+std::string Request::getCgi() const { return _cgi; }
 
 void Request::read() const
 {

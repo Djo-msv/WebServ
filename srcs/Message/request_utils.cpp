@@ -15,7 +15,7 @@ std::string	seekFile(std::string &pathfile)
 
 	struct stat file_stat;
 	if (stat(pathfile.c_str(), &file_stat) == -1)
-		throw Request::FileNotFound();
+		throw FileNotFound();
 	
 	if (file_stat.st_mode & S_IRUSR)
 		return (pathfile);

@@ -28,7 +28,7 @@ class ServerConfig
         bool isMethodAllowed(const std::string &location, int method) const; // Request flag conseillé mais pas forcé
         std::string getCgi(const std::string &extension) const;
 		std::string getRootFolder() const;
-		std::string getExecFolder() const;
+		bool isExecFolder(std::string location) const;
 		std::string getIndex() const;
 
 		sa_family_t                         sin_family;

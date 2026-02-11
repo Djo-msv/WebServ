@@ -88,7 +88,7 @@ void	ClientSocket::startExec()
 	if (!body) {
 		_status = WaitExecRead;
 		setnonblocking(_exec.getFdOut());
-		try { _exec.startProcess(false, _request.getTarget(), _request.getEnv()); }
+		try { _exec.startProcess(false, _request.getCgi(), _request.getTarget(), _request.getEnv()); }
 		catch (std::exception &e) { throw ; }
 		epollFdSwitch(_socketFd, _exec.getFdOut(), EPOLLIN | EPOLLET);
 	}
@@ -116,7 +116,7 @@ void	ClientSocket::execWrite()
 			_sendpos += size;
 	}
 	else { //write is done, start up the process appropriate _status/epoll switching and close
-		try { _exec.startProcess(true, _request.getTarget(), _request.getEnv()); }
+		try { _exec.startProcess(true, _request.getCgi(), _request.getTarget(), _request.getEnv()); }
 		catch (std::exception &e) { throw ; }
 		close(_exec.getFdIn());
 		_sendpos = 0;

@@ -1,6 +1,6 @@
 #include "ProcessExecution.hpp"
 
-ProcessExecution::ProcessExecution(void) : _pid(0), cgi("/usr/bin/python3")
+ProcessExecution::ProcessExecution(void) : _pid(0)
 {
 	_pipeOut[0] = -1;
 	_pipeOut[1] = -1;
@@ -32,7 +32,7 @@ void ProcessExecution::setupProcess(bool pipein)
 	}
 }
 #include <cstdlib>
-void ProcessExecution::startProcess(bool pipein, std::string target, char **env) /* fork Process and exec CGI, and stock execve in/out fds */
+void ProcessExecution::startProcess(bool pipein, std::string cgi, std::string target, char **env) /* fork Process and exec CGI, and stock execve in/out fds */
 {
 	const char **args = new const char*[3];
 	args[0] = cgi.c_str();

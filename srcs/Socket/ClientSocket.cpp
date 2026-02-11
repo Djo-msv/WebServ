@@ -48,8 +48,8 @@ void	ClientSocket::readRequest(void)
 	}
 	else if (size == 0)
 	{
-		//TODO disconnect from client, maybe create specific exception
-		std::cout << "Client disconnected" << std::endl;
+		std::cout << "Client " << _socketFd << " disconnected" << std::endl;
+		_status = Done;
 		return ;
 	}
 	_request += buffer;
@@ -71,10 +71,11 @@ void	ClientSocket::parseRequest()
 		_status = ReadRequest;
 		//do the timeout specification here
 	}
-	catch (HttpError &e) //where am i catching this from ??
+	catch (HttpError &e) //catching any parsing errors here, then _status = WaitResponse, with correct fd_switch
 	{
-		_processResponse = e.what();
-		_status = SendResponse;
+		_response.fix_error(e);
+		_status = WaitResponse;
+		epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
 	}
 	catch (std::exception &e) { throw; }
 }
@@ -88,7 +89,7 @@ void	ClientSocket::startExec()
 	if (!body) {
 		_status = WaitExecRead;
 		setnonblocking(_exec.getFdOut());
-		try { _exec.startProcess(false, _request.getTarget(), _request.getEnv()); }
+		try { _exec.startProcess(false, _request.getCgi(), _request.getTarget(), _request.getEnv()); }
 		catch (std::exception &e) { throw ; }
 		epollFdSwitch(_socketFd, _exec.getFdOut(), EPOLLIN | EPOLLET);
 	}
@@ -116,7 +117,7 @@ void	ClientSocket::execWrite()
 			_sendpos += size;
 	}
 	else { //write is done, start up the process appropriate _status/epoll switching and close
-		try { _exec.startProcess(true, _request.getTarget(), _request.getEnv()); }
+		try { _exec.startProcess(true, _request.getCgi(), _request.getTarget(), _request.getEnv()); }
 		catch (std::exception &e) { throw ; }
 		close(_exec.getFdIn());
 		_sendpos = 0;
@@ -180,7 +181,6 @@ int ClientSocket::createSocket(ServerSocket & serverSocket)
 	std::cout << "create socket : " << cSocketFd << std::endl;
 	return (cSocketFd);
 }
-
 
 // ClientSocket::GatewayTimeout::GatewayTimeout() : HttpError("HTTP/1.1 504 Gateway Time-out\r\n"
 // 														   "Content-length: 92\r\n"

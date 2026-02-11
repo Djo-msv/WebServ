@@ -42,6 +42,6 @@ std::string ServerConfig::getErrorFile(int errorCode) const
 
 std::string ServerConfig::getRootFolder() const { return (rootFolder); }
 
-std::string ServerConfig::getExecFolder() const { return (execFolder); }
+bool ServerConfig::isExecFolder(std::string location) const { return (execFolder == location); }
 
 std::string ServerConfig::getIndex() const { return (index_file); }

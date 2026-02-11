@@ -7,10 +7,12 @@
 # include <vector>
 # include <algorithm>
 # include <map>
-# include <request_utils.hpp>
-# include <HttpErrors.hpp>
+# include <sys/stat.h>
+# include <HttpError.hpp>
 # include <ServerSocket.hpp>
 # include <socket_utils.hpp>
+# include <request_utils.hpp>
+# include <HttpErrors.hpp>
 
 #define CHUNKED -1
 
@@ -31,6 +33,7 @@ class Request
 		std::string	getMethod() const;
 		std::string	getQuery() const;
 		std::string	getBody() const;
+		std::string	getCgi() const;
 		
 		char	**getEnv() const;
 		
@@ -42,10 +45,11 @@ class Request
 			public:
 				MissingData();
 		};
-
+	
 	private:
 		ServerConfig &	_config;
 		std::string		_method;
+		std::string		_cgi;
 		std::string		_target;
 		std::string		_body;
 		std::string		_request;

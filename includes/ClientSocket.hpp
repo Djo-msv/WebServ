@@ -44,7 +44,7 @@ class ClientSocket : public Socket
 			ExecRead,
 			WaitResponse,
 			SendResponse,
-			Done//temporary, since we don't have request/response/exec .clear() functions yet
+			Done //close connection
 		};
 		state				_status;
 

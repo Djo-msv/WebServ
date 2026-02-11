@@ -30,6 +30,10 @@ class ServerConfig
 		std::string getRootFolder() const;
 		std::string getExecFolder() const;
 		std::string getIndex() const;
+        std::string getErrorFile(int errorCode) const;
+
+        struct sockaddr_in					sin;
+        socklen_t							sin_len;
 
 		sa_family_t                         sin_family;
         int                          		sin_port;
@@ -37,6 +41,7 @@ class ServerConfig
     private:
         std::map<std::string, std::string>  cgiExtensions;
         std::map<std::string, int>          requestsFlag;
+        std::map<int, std::string>          errorFiles;
         std::string                         index_file;
         std::string                         rootFolder;
 		std::string							execFolder;

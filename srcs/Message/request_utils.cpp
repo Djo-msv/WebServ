@@ -15,11 +15,11 @@ std::string	seekFile(std::string &pathfile)
 
 	struct stat file_stat;
 	if (stat(pathfile.c_str(), &file_stat) == -1)
-		throw Request::FileNotFound();
+		throw FileNotFound();
 	
 	if (file_stat.st_mode & S_IRUSR)
 		return (pathfile);
-	throw (HttpError("Forbidden ?")); // ? 403 forbidden or 500 Internal Server error ?
+	throw Forbidden();
 
 }
 
@@ -33,5 +33,29 @@ std::string	extractCgi(std::string &file, ServerConfig &config)
 	try {
 		return config.getCgi(extension);
 	}
-	catch (std::runtime_error &e) { throw ; }
+	catch (const std::invalid_argument &e) { throw InternalServerError(); }
+}
+
+
+/**
+ * Renvoie le chemin du fichier d'erreur à afficher, en cherchant d'abord dans la config du server, puis dans les fichiers d'erreur par défaut
+ * Si aucun fichier d'erreur n'est trouvé, une InternalServerError est renvoyé
+*/
+std::string	seekErrorFile(HttpError error, ServerConfig &config)
+{
+    std::string pathfile;
+    try {
+        pathfile = config.getErrorFile(error.getErrorCode());
+        return seekFile(pathfile);
+    } catch(const HttpError &e) {
+        pathfile = error.getDefaultFile();
+        if (error.getErrorCode() == 500)
+            throw InternalServerError();
+        try {
+            return seekFile(pathfile);
+        } catch(const HttpError& e) {
+            throw InternalServerError();
+        }
+        
+    }
 }

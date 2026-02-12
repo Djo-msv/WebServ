@@ -43,7 +43,7 @@ void Request::parse()
 	std::size_t headerEnd = _request.find("\r\n\r\n");
 
 	if (headerEnd == std::string::npos)
-		throw MissingData(); //indicates a return to read
+		throw MissingData();
 	if (headerEnd + 4 == _request.size())
 		header = _request;
 	else
@@ -53,16 +53,26 @@ void Request::parse()
 	}
 	try {
 		this->parse_header(header);
-		_status = 1; //headers are parsed with no error, on next go only the body will need to be further parsed
+		_status = 1; //headers are parsed with no error
 		this->parse_body();
 	}
-	catch (std::exception &e) {/*do a clear of header info if !_status here*/throw ;}
+	catch (std::exception &e) {
+		if (!_status) {
+			//in the future this will be a call to the Request::clear() function
+			headers.clear();
+			delete[] _env;
+			delete[] c_env;
+			_env = NULL;
+			c_env = NULL;
+		}
+		throw ;
+	}
 }
 
 void Request::body_check(size_t size_told, size_t real_size)
 {
 	if (real_size < size_told)
-		throw MissingData(); //indicates a return to read
+		throw MissingData();
 	if (real_size > size_told)
 		_body = _body.substr(0, size_told);
 }
@@ -70,17 +80,10 @@ void Request::body_check(size_t size_told, size_t real_size)
 void Request::parse_body()
 {
 	try {
-		switch (this->getSize()) {
-			case CHUNKED:
-				//this->chunk_parse(); //future chunked parse with getline to size->substr loop()
-				break ;
-			case 0:
-				if (!_body.empty())
-					throw MissingData(); //indicates a return to read
-				break ;
-			default:
-				this->body_check(this->getSize(), _body.size());
-		}
+		if (this->getSize() == CHUNKED)
+			_body = chunk_parse(_body);
+		else
+			this->body_check(this->getSize(), _body.size());
 	}
 	catch (std::exception &e) { throw ; }
 }
@@ -162,7 +165,7 @@ int Request::getSize() const
 {
 	if (headers.count("CONTENT_LENGTH"))
 		return atoi((headers.at("CONTENT_LENGTH")).c_str());
-	if (headers.count("TRANSFER_ENCODING"))
+	if (headers.count("TRANSFER_ENCODING") && headers.at("TRANSFER_ENCODING").find("chunked") != std::string::npos)
 		return CHUNKED;
 	return 0;
 }
@@ -174,37 +177,35 @@ void Request::startline_check(std::string line)
 	getline(l, current, ' ');
 	_method = current;
 	if (l.eof())
-		throw MissingData(); //indicates to return to read
+		throw MissingData();
 	getline(l, current, ' ');
 	_target = current;
 	//check if target has a query
 	if (_target.find("?") != std::string::npos)
 	{
 		_query = _target.substr(_target.find("?") + 1);
-		//check query for the key=value&key=value standard ?
 		_target = _target.substr(0, _target.find("?"));
 	}
 	if (l.eof())
-		throw MissingData(); //indicates to return to read
+		throw MissingData();
 	getline(l, current, '\r');
 	if (current != "HTTP/1.1")
 		throw NotImplemented(); //wrong http version -> unauthorized ? not provided ?
 	getline(l, current);
 	if (!current.empty() && !l.eof())
-		throw BadRequest(); //bad request (formatting)
-	//first : "/" to index
+		throw BadRequest();
+	//"/" to index
 	if (_target == "/")
 		_target = _config.getIndex();
-	//then : location v method
+	//location v method
 	std::string location = _target.substr(0, _target.rfind("/"));
 	if (!_config.isMethodAllowed(location, _config.stringToRequestFlag(_method)))
-		throw Forbidden(); //method not supported
-	//then : check_exec (isExecFolder(filepath)) -> if yes, adjust
+		throw Forbidden(); //method not supported (NotImplemented ? check needed)
+	//check_exec, adjust
 	if (_config.isExecFolder(location))
 		this->adjust_exec();
-	//then : add root
+	//add root
 	_target = _config.getRootFolder() + _target;
-	//next-up :: seek_file() on the full path, if error catch then seekError (for now, throw)
 	try { seekFile(_target); }
 	catch (std::exception &e) { throw ; }
 }

@@ -58,3 +58,46 @@ std::string	seekErrorFile(HttpError error, ServerConfig &config)
         }
     }
 }
+
+//a simple check for hexadecimal numbers (relevant to chunk_parse)
+static bool check_hex(std::string hex)
+{
+	if (hex.empty())
+		return false;
+	for (std::string::iterator it = hex.begin(); it != hex.end(); it++)
+	{
+		*it = std::toupper(*it);
+		if (!isdigit(*it) && (*it < 'A' || *it > 'F'))
+			return false;
+	}
+	return true;
+}
+
+//parsing of chunked body (ex :: hex+\r\n+chunk+...+0\r\n)
+std::string chunk_parse(std::string _body)
+{
+	if (_body.empty())
+		throw Request::MissingData();
+	std::string new_body;
+	unsigned int size = 0;
+	while (!_body.empty())
+	{
+		std::size_t pos = _body.find("\r\n");
+		if (pos == std::string::npos)
+			throw BadRequest();
+		std::string hex = _body.substr(0, pos);
+		_body = _body.substr(pos + 2);
+		if (!check_hex(hex))
+			throw BadRequest();
+		sscanf(hex.c_str(), "%x", &size);
+		if (!size)
+			break ;
+		if (size > _body.length())
+			throw Request::MissingData();
+		new_body += _body.substr(0, size);
+		_body = _body.substr(size);
+	}
+	if (size)
+		throw Request::MissingData();
+	return new_body;
+}

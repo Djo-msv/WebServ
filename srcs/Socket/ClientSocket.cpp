@@ -18,6 +18,17 @@ void	ClientSocket::epollFdSwitch(int old_fd, int new_fd, int flags)
 	epoll_add(epollInstance, new_fd, flags);
 }
 
+//new function for error handling :: makes error response, switches status, updates epoll fd
+void	ClientSocket::ErrorHandling(HttpError &e, bool exec)
+{
+	_response.fix_error(e, _serverSocket.getConfig());
+	_status = WaitResponse;
+	if (exec)
+		epollFdSwitch(_exec.getFdIn(), _socketFd, EPOLLOUT | EPOLLET);
+	else
+		epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
+}
+
 /**
  * * reads into Client Socket and put result into buffer.
  * ! If read return -1 we check if the socket is still valid with getsockname,
@@ -71,12 +82,7 @@ void	ClientSocket::parseRequest()
 		_status = ReadRequest;
 		//do the timeout specification here
 	}
-	catch (HttpError &e) //catching any parsing errors here, then _status = WaitResponse, with correct fd_switch
-	{
-		_response.fix_error(e);
-		_status = WaitResponse;
-		epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
-	}
+	catch (HttpError &e) { ErrorHandling(e, false); }
 	catch (std::exception &e) { throw; }
 }
 
@@ -85,12 +91,12 @@ void	ClientSocket::startExec()
 {
 	bool body = !(_request.getBody().empty());
 	try { _exec.setupProcess(body); }
-	catch (std::exception &e) { throw ; }
+	catch (HttpError &e) { ErrorHandling(e, false); return ; }
 	if (!body) {
 		_status = WaitExecRead;
 		setnonblocking(_exec.getFdOut());
 		try { _exec.startProcess(false, _request.getCgi(), _request.getTarget(), _request.getEnv()); }
-		catch (std::exception &e) { throw ; }
+		catch (HttpError &e) { ErrorHandling(e, false); return ; }
 		epollFdSwitch(_socketFd, _exec.getFdOut(), EPOLLIN | EPOLLET);
 	}
 	else {
@@ -118,7 +124,7 @@ void	ClientSocket::execWrite()
 	}
 	else { //write is done, start up the process appropriate _status/epoll switching and close
 		try { _exec.startProcess(true, _request.getCgi(), _request.getTarget(), _request.getEnv()); }
-		catch (std::exception &e) { throw ; }
+		catch (HttpError &e) { ErrorHandling(e, true); return ; }
 		close(_exec.getFdIn());
 		_sendpos = 0;
 		epollFdSwitch(_exec.getFdIn(), _exec.getFdOut(), EPOLLIN | EPOLLET);

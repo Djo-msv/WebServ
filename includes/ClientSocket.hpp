@@ -61,5 +61,6 @@ class ClientSocket : public Socket
 
 		int 	createSocket(ServerSocket &);
 		void	epollFdSwitch(int old_fd, int new_fd, int flags);
+		void	ErrorHandling(HttpError &e, bool exec); //pretty self-explanatory
 		void	startExec(); //handles the fd_switches, setnonblock and starting the execution (if read-only)
 };

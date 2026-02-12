@@ -3,6 +3,8 @@
 # include <unistd.h>
 # include <errno.h>
 # include <socket_utils.hpp>
+# include <HttpErrors.hpp>
+#include <cstdlib>
 #ifndef BUF_SIZE
 # define BUF_SIZE 1024
 #endif
@@ -26,18 +28,4 @@ class ProcessExecution
 		int			_pid; /* Process pid */
 
 		void		closeFds();
-		
-		// Error class
-		class PipeError : public std::runtime_error {
-			public :
-				PipeError(const std::string msg) : std::runtime_error(msg) {}
-		};
-		class ForkError : public std::runtime_error {
-			public :
-				ForkError(const std::string msg) : std::runtime_error(msg) {}
-		};
-		class ExecError : public std::runtime_error {
-			public :
-				ExecError(const std::string msg) : std::runtime_error(msg) {}
-		};
 };

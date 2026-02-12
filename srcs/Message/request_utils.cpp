@@ -47,15 +47,14 @@ std::string	seekErrorFile(HttpError error, ServerConfig &config)
     try {
         pathfile = config.getErrorFile(error.getErrorCode());
         return seekFile(pathfile);
-    } catch(const HttpError &e) {
-        pathfile = error.getDefaultFile();
+    }
+    catch(const HttpError &e) {
         if (error.getErrorCode() == 500)
             throw InternalServerError();
-        try {
-            return seekFile(pathfile);
-        } catch(const HttpError& e) {
+        pathfile = error.getDefaultFile();
+        try {  return seekFile(pathfile); }
+        catch(const HttpError& e) {
             throw InternalServerError();
         }
-        
     }
 }

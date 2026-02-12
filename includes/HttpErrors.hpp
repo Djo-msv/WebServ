@@ -20,7 +20,7 @@ class Forbidden : public HttpError {
 
 class InternalServerError : public HttpError {
     public :
-        InternalServerError() : HttpError("500 Internal Server Error", "~/html/errors/500_def.html", 500) {};
+        InternalServerError() : HttpError("500 Internal Server Error", "<html><body><h1>A server error has occured internally !</h1></body></hmtl>", 500) {};
 };
 
 class NotImplemented : public HttpError {

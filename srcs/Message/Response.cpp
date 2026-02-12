@@ -43,6 +43,7 @@ std::string Response::getResponse()
 		msg += "HTTP/1.1 " + status + "\r\n" + "Content-Type: text/html\r\nContent-Length: " + ft_itoa(body.length() - 2) + "\r\n";
 		msg += body;
 	}
+	std::cout << "sending :: \n" << msg << std::endl << std::endl;
 	return msg;
 }
 
@@ -59,12 +60,9 @@ void Response::readFile()
 	body += buffer.str();
 }
 
-void Response::fix_error(HttpError &error)
+void Response::fix_error(HttpError &error, ServerConfig &s)
 {
 	status = error.what();
-	_target = error.getDefaultFile();
-	//right now i do the default error page as a hard code
-	try { seekFile(_target); this->readFile(); }
-	catch (std::exception &e) { _target = ""; body += "<html><body><h1> A server error has occured internally !</h1></body></hmtl>"; }
-	//but later ::  try { _target = seekError(error); this->readFile(); } catch (InternalServerError &e) {_target = ""; _body = e.getDefaultFile();}
+	try { _target = seekErrorFile(error, s); this->readFile(); }
+	catch (InternalServerError &e) {status = e.what(); _target = ""; body = e.getDefaultFile();}
 }

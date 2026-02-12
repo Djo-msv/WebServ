@@ -20,7 +20,7 @@ std::string ServerConfig::getCgi(const std::string &extension) const
     if (it != cgiExtensions.end()) {
         return it->value;
     }
-    throw std::invalid_argument("No CGI handler found for extension: " + extension);
+    throw NotImplemented();//std::invalid_argument("No CGI handler found for extension: " + extension);
 }
 
 ServerConfig::RequestFlag ServerConfig::stringToRequestFlag(const std::string &method) const
@@ -28,7 +28,7 @@ ServerConfig::RequestFlag ServerConfig::stringToRequestFlag(const std::string &m
     if (method == "GET") return GET;
     if (method == "POST") return POST;
     if (method == "DELETE") return DELETE;
-    throw std::invalid_argument("Invalid HTTP method: " + method);
+    throw NotImplemented();//std::invalid_argument("Invalid HTTP method: " + method);
 }
 
 std::string ServerConfig::getErrorFile(int errorCode) const
@@ -37,7 +37,7 @@ std::string ServerConfig::getErrorFile(int errorCode) const
     if (it != errorFiles.end()) {
         return it->value;
     }
-    throw std::invalid_argument("No error file found");
+    throw FileNotFound();
 }
 
 std::string ServerConfig::getRootFolder() const { return (rootFolder); }

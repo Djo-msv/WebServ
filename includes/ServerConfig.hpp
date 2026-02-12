@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <stdexcept>
+#include <HttpErrors.hpp>
 
 # define value second
 # define key first

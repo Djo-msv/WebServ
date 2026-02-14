@@ -23,9 +23,10 @@ class Response
 		Response(const Response &other);
 		Response &operator=(const Response &other);
 		Response &operator+=(const char *buffer);
-		void fix_error(HttpError &error, ServerConfig &s); //takes status, adjusts target to the corresponding error_page
+		void fix_error(HttpError &error, ServerConfig &s); //for error return, adjusts status + body
 		bool makeResponse(Request *req); //distribution
 		std::string getResponse(); //result
+		void clear();
 };
 
 #endif

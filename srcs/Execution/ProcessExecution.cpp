@@ -10,6 +10,15 @@ ProcessExecution::ProcessExecution(void) : _pid(0)
 
 ProcessExecution::~ProcessExecution(void) {}
 
+void ProcessExecution::clear(void)
+{
+	_pipeOut[0] = -1;
+	_pipeOut[1] = -1;
+	_pipeIn[0] = -1;
+	_pipeIn[1] = -1;
+	_pid = 0;
+}
+
 void ProcessExecution::setupProcess(bool pipein)
 {
 	if (pipe(_pipeOut))

@@ -31,6 +31,35 @@ Request &Request::operator+=(const char *buffer)
 	return *this;
 }
 
+void Request::clear()
+{
+	_method = "";
+	_cgi = "";
+	_target = "";
+	_body = "";
+	_request = "";
+	_query = "";
+	if (_env)
+	{
+		delete[] _env;
+		delete[] c_env;
+		_env = NULL;
+		c_env = NULL;
+	}
+	_status = 0;
+	exec = false;
+	headers.clear();
+}
+
+bool Request::keepAlive() const
+{
+	//i think we assume keep alive, but will double check
+	//think if that's the logic we should probably switch this bool around to a CloseConnection() bool
+	if (headers.count("CONNECTION") && headers.at("CONNECTION") == "close")
+		return false;
+	return true;
+}
+
 void Request::parse()
 {
 	if (_status) //headers already parsed on a previous run, _env created etc.
@@ -57,14 +86,8 @@ void Request::parse()
 		this->parse_body();
 	}
 	catch (std::exception &e) {
-		if (!_status) {
-			//in the future this will be a call to the Request::clear() function
-			headers.clear();
-			delete[] _env;
-			delete[] c_env;
-			_env = NULL;
-			c_env = NULL;
-		}
+		if (!_status)
+			this->clear();
 		throw ;
 	}
 }

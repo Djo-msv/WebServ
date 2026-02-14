@@ -21,6 +21,8 @@ class ProcessExecution
 		
 		int		getFdIn() const;
 		int		getFdOut() const;
+		
+		void	clear(void);
 
 	private :
 		int			_pipeIn[2]; /* execve input */

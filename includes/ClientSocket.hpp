@@ -33,6 +33,8 @@ class ClientSocket : public Socket
 		void	execRead();
 		//sends response in buffers, currently closes connection in the future .clear() on all objects
 		void sendResponse();
+		//to switch from SendResponse back to WaitRequest, resets all variables and epoll_mods to EPOLLIN
+		void reset();
 
 		enum state {
 			WaitRequest,
@@ -57,8 +59,6 @@ class ClientSocket : public Socket
 		ProcessExecution		_exec;
 		Response			_response;
 		
-		std::string			_processResponse;
-
 		int 	createSocket(ServerSocket &);
 		void	epollFdSwitch(int old_fd, int new_fd, int flags);
 		void	ErrorHandling(HttpError &e, bool exec); //pretty self-explanatory

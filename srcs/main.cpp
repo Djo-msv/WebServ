@@ -34,17 +34,14 @@ void handleError(const char* msg)
 	for (SocketIterator it = sockets.begin(); it != sockets.end(); ++it)
 		delete it->value;
 	close(epollInstance);
-    std::cerr << msg << std::endl;
+        std::cerr << msg << std::endl;
 	exit(1);
 }
 
 //this function now does the reads + fd_switches (obv once the parsing is separate the switch-case will be post parsing instead of readrequest
 void	managePendingClients()
 {	
-	if (pendingClientSockets.empty())
-		return ;
 	for (std::deque<ClientSocket *>::iterator it = pendingClientSockets.begin(); it != pendingClientSockets.end(); ++it) {
-		bool done = (*it == pendingClientSockets.back());
 		ClientSocket *cSocket = *it;
 		try {
 			switch (cSocket->_status) {
@@ -66,16 +63,16 @@ void	managePendingClients()
 				case ClientSocket::Done:
 					std::cout << "closing connection with socket : " << cSocket->getSocketFd() << std::endl;
 					it = pendingClientSockets.erase(it);
-					sockets.erase(sockets.find(cSocket->getSocketFd())); //temp also
-					epoll_del(epollInstance, cSocket->getSocketFd(), EPOLLOUT); //temp also
+					sockets.erase(sockets.find(cSocket->getSocketFd()));
+					epoll_del(epollInstance, cSocket->getSocketFd(), EPOLLOUT);
 					delete cSocket;
-					if (done)
+					if (it == pendingClientSockets.end())
 						return ;
 					break ;
 				default:
 					break ;
 			}
-		} CATCH_AND_HANDLE(std::exception)//catch(const std::exception& e){ throw; }
+		} CATCH_AND_HANDLE(std::exception)
 	}
 }
 
@@ -99,35 +96,32 @@ void	manageRequests()
 			ServerSocket *sSocket = dynamic_cast<ServerSocket *>(socketIterator->value);
 			if (sSocket != NULL) {
 				ClientSocket *cSocket = new ClientSocket(*sSocket, epollInstance, sockets);
-				//adding the client to sockets + epoll
+				//adding the client to sockets + epoll + pendingList
 				if (!sockets.count(cSocket->getSocketFd())) {
 					epoll_add(epollInstance, cSocket->getSocketFd(), EPOLLIN | EPOLLET);
 					sockets.insert(std::make_pair(cSocket->getSocketFd(), 
 							cSocket));
+					pendingClientSockets.push_back(cSocket);
 				}
 			}
 			else {
 				ClientSocket *cSocket = dynamic_cast<ClientSocket *>(socketIterator->value);
-				try {
-					switch (cSocket->_status) {
-						case ClientSocket::WaitRequest:
-							pendingClientSockets.push_back(cSocket);
-							cSocket->_status = ClientSocket::ReadRequest;
-							break ;
-						case ClientSocket::WaitExecWrite:
-							cSocket->_status = ClientSocket::ExecWrite;
-							break ;
-						case ClientSocket::WaitExecRead:
-							cSocket->_status = ClientSocket::ExecRead;
-							break ;
-						case ClientSocket::WaitResponse:
-							cSocket->_status = ClientSocket::SendResponse;
-							break ;
-						default:
-							break ;
-					}
+				switch (cSocket->_status) {
+					case ClientSocket::WaitRequest:
+						cSocket->_status = ClientSocket::ReadRequest;
+						break ;
+					case ClientSocket::WaitExecWrite:
+						cSocket->_status = ClientSocket::ExecWrite;
+						break ;
+					case ClientSocket::WaitExecRead:
+						cSocket->_status = ClientSocket::ExecRead;
+						break ;
+					case ClientSocket::WaitResponse:
+						cSocket->_status = ClientSocket::SendResponse;
+						break ;
+					default:
+						break ;
 				}
-				CATCH_AND_HANDLE(std::exception)
 			}
 		}
 		managePendingClients();
@@ -148,7 +142,7 @@ ServerConfig initConfig()
 	cgiHandlers.insert(std::make_pair(".php", "/bin/php-cgi"));
 	cgiHandlers.insert(std::make_pair(".py", "/usr/bin/python3"));
 	requestsFlag.insert(std::make_pair("/html", ServerConfig::GET));
-	requestsFlag.insert(std::make_pair("/scripts", ServerConfig::GET | ServerConfig::POST));// 0 = Rien rajouter un | pour plus de flags
+	requestsFlag.insert(std::make_pair("/scripts", ServerConfig::GET | ServerConfig::POST));// 0 = Rien, rajouter un | pour plus de flags
 	return ServerConfig(cgiHandlers, requestsFlag, index_file, rootFolder, execFolder);
 }
 

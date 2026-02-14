@@ -2,7 +2,7 @@
 
 ClientSocket::ClientSocket(ServerSocket &serverSocket, int _epoll, std::map<const int, Socket *> &_sockets) : Socket(createSocket(serverSocket)), _status(WaitRequest),  _serverSocket(serverSocket), epollInstance(_epoll), sockets(_sockets), _request(Request(serverSocket.getConfig())) {}
 
-ClientSocket::~ClientSocket(void) {}
+ClientSocket::~ClientSocket(void) { std::cout << "deleting client of socket :: " << _socketFd << std::endl; }
 
 //this func :: deletes the old_fd from our epoll map (except pipes, which are automatically deleted), adds the new one with flags
 //it then erases the <old_fd, csocket> from the sockets map and replaces it with <new_fd, csocket>
@@ -45,12 +45,12 @@ void	ClientSocket::readRequest(void)
 	{
 		/**
 		 * *	getsockname returns 0 on successful connection to the socket.
-		 * *	we check that the socket is still valid if it this it means we 
+		 * *	we check that the socket is still valid ; if it is we 
 		 * * 	read all available data
 		*/
 		struct sockaddr addr;
 		socklen_t size = sizeof(addr);
-		if (!getsockname(_socketFd, &addr, &size)) //reading done (so far) here the status change from read->parse;
+		if (!getsockname(_socketFd, &addr, &size)) //reading done (so far)
 			_status = ParseRequest;
 		else
 			throw std::runtime_error("an error occured while reading into client : '" + \
@@ -163,10 +163,23 @@ void ClientSocket::sendResponse()
 		else
 			_sendpos += size;
 	}
-	else { //write is done, appropriate _status/epoll switching and close
+	else { //write is done, reset for next request or close the connection
 		_sendpos = 0;
-		_status = Done; //temporary, in the future we'll do a .clear() on all objects and switch back to WaitRequest
+		if (_request.keepAlive())
+			this->reset();
+		else
+			_status = Done;
 	}
+}
+
+void ClientSocket::reset()
+{
+	std::cout << "resetting connection socket " << _socketFd << std::endl << std::endl;
+	_request.clear();
+	_response.clear();
+	_exec.clear();
+	epoll_mod(epollInstance, _socketFd, EPOLLIN | EPOLLET);
+	_status = WaitRequest;
 }
 
 int ClientSocket::createSocket(ServerSocket & serverSocket)

@@ -28,6 +28,7 @@ class Request
 
 		void	parse();
 		void	read() const;
+		void	clear();
 		
 		std::string	getTarget() const;
 		std::string	getMethod() const;
@@ -38,6 +39,7 @@ class Request
 		char	**getEnv() const;
 		
 		bool	isExec() const;
+		bool	keepAlive() const;
 		
 		int 		getSize() const;
 		

@@ -52,7 +52,7 @@ std::string Response::getResponse()
 		msg += "HTTP/1.1 " + status + "\r\n" + "Content-Type: text/html\r\nContent-Length: " + ft_itoa(body.length() - 2) + "\r\n";
 		msg += body;
 	}
-	std::cout << "sending :: \n" << msg << std::endl << std::endl;
+	//std::cout << "sending :: \n" << msg << std::endl << std::endl;
 	return msg;
 }
 

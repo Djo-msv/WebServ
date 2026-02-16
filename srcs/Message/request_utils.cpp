@@ -33,7 +33,7 @@ std::string	extractCgi(std::string &file, ServerConfig &config)
 	try {
 		return config.getCgi(extension);
 	}
-	catch (const std::invalid_argument &e) { throw InternalServerError(); }
+	catch (const std::exception &e) { throw ; }
 }
 
 
@@ -100,4 +100,39 @@ std::string chunk_parse(std::string _body)
 	if (size)
 		throw Request::MissingData();
 	return new_body;
+}
+
+//checks a key for alnum (-)
+bool check_key(std::string key) //wip, as im actually unsure what the authorized formatting is
+{
+	for (std::string::iterator it = key.begin(); it != key.end(); it++)
+	{
+		if (!isalpha(*it) && *it != '-')
+			return false;
+	}
+	return true;
+}
+
+//checks for alnum (, ) and trims the whitespaces
+bool check_val(std::string &val) //wip, as im actually unsure what the authorized formatting is
+{
+	size_t pos1 = 0;
+	for (std::string::iterator it = val.begin(); it != val.end(); it++) {
+		if (!isspace(*it))
+			break ;
+		pos1++;
+	}
+	if (pos1 == val.length())
+		return false;
+	val = val.substr(pos1);
+	std::string::iterator cut;
+	for (std::string::iterator it = val.begin(); it != val.end(); it++) {
+		if (!isspace(*it))
+			cut = it;
+	}
+	if (*cut == ',')
+		return false;
+	if (cut != val.end() -1)
+		val.erase(cut, val.end());
+	return true;
 }

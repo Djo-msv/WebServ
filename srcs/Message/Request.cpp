@@ -54,7 +54,7 @@ void Request::clear()
 bool Request::keepAlive() const
 {
 	//i think we assume keep alive, but will double check
-	//think if that's the logic we should probably switch this bool around to a CloseConnection() bool
+	//think if that's the logic we should probably switch this bool around to a CloseConnection() bool for better readability
 	if (headers.count("CONNECTION") && headers.at("CONNECTION") == "close")
 		return false;
 	return true;
@@ -150,6 +150,8 @@ void	Request::parse_header(std::string header)
 		while (!s.eof())
 		{
 			std::getline(s, line, '\n');
+			if (line.empty() || line == "\r")
+				break ;
 			this->headers_add(line);
 		}
 	}
@@ -165,23 +167,23 @@ void Request::headers_add(std::string line)
 	std::getline(s, key, ':');
 	std::getline(s, val, '\r');
 	if (key.empty() || val.empty())
-		return ;
-	try {
-		//here checking the a-num values
-		//check_key(key); -> that'll be the header parsing error
-		if (val[0] == ' ')
-			val.erase(val.begin());
-		//turning 'Content-Length' into 'CONTENT_LENGTH' for future environment and lack of case-conflict
-		std::transform(key.begin(), key.end(), key.begin(), ::toupper);
-		size_t n = key.find('-');
-		while (n != std::string::npos)
-		{
-			key[n] = '_';
-			n = key.find('-');
-		}
-		headers.insert(std::pair<std::string, std::string>(key, val));
+		throw BadRequest();
+	//checking for a-num values (-)
+	if (!check_key(key))
+		throw BadRequest();// bad key formatting
+	//checking for a-num (, ) + trims whitespaces
+	if (!check_val(val))
+		throw BadRequest();// also ? bad value formatting, i guess
+	
+	//turning 'Content-Length' into 'CONTENT_LENGTH' for future environment and lack of case-conflict
+	std::transform(key.begin(), key.end(), key.begin(), ::toupper);
+	size_t n = key.find('-');
+	while (n != std::string::npos)
+	{
+		key[n] = '_';
+		n = key.find('-');
 	}
-	catch (std::exception &e) {throw;}
+	headers.insert(std::pair<std::string, std::string>(key, val));
 }
 
 int Request::getSize() const
@@ -200,22 +202,22 @@ void Request::startline_check(std::string line)
 	getline(l, current, ' ');
 	_method = current;
 	if (l.eof())
-		throw MissingData();
+		throw BadRequest();
 	getline(l, current, ' ');
 	_target = current;
 	//check if target has a query
-	if (_target.find("?") != std::string::npos)
+	if (_target.find('?') != std::string::npos)
 	{
-		_query = _target.substr(_target.find("?") + 1);
-		_target = _target.substr(0, _target.find("?"));
+		_query = _target.substr(_target.find('?') + 1);
+		_target = _target.substr(0, _target.find('?'));
 	}
 	if (l.eof())
-		throw MissingData();
+		throw BadRequest();
 	getline(l, current, '\r');
 	if (current != "HTTP/1.1")
 		throw NotImplemented(); //wrong http version -> unauthorized ? not provided ?
 	getline(l, current);
-	if (!current.empty() && !l.eof())
+	if (!current.empty())// && !l.eof()) -> unnecessary, i think
 		throw BadRequest();
 	//"/" to index
 	if (_target == "/")

@@ -9,6 +9,9 @@ ServerSocket::ServerSocket(ServerConfig config, const int epollInstance) : Socke
 
 	setnonblocking(_socketFd);
 	sockaddr_in serverAddress = setupSocketAddress(_config);
+	//this allows us to bypass the "address already in use" warning and just re-bind it
+	int yes = 1;
+	setsockopt(_socketFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes);
 	
 	if (bind(_socketFd, (struct sockaddr*) &serverAddress, sizeof(serverAddress)) == -1)
 		throw BindError("Error while binding adress to the server socket. Error code : " + std::string(strerror(errno)));

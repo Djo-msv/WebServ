@@ -1,6 +1,6 @@
 #include "ClientSocket.hpp"
 
-ClientSocket::ClientSocket(ServerSocket &serverSocket, int _epoll, std::map<const int, Socket *> &_sockets) : Socket(createSocket(serverSocket)), _status(WaitRequest),  _serverSocket(serverSocket), epollInstance(_epoll), sockets(_sockets), _request(Request(serverSocket.getConfig())) {}
+ClientSocket::ClientSocket(ServerSocket &serverSocket, int _epoll, std::map<const int, Socket *> &_sockets) : Socket(createSocket(serverSocket)), _status(WaitRequest),  _serverSocket(serverSocket), epollInstance(_epoll), sockets(_sockets), _request(Request(serverSocket.getConfig())), _sendpos(0) {}
 
 ClientSocket::~ClientSocket(void) { std::cout << "deleting client of socket :: " << _socketFd << std::endl; }
 
@@ -110,7 +110,6 @@ void	ClientSocket::startExec()
 //new cgi write
 void	ClientSocket::execWrite()
 {
-	static size_t _sendpos = 0;
 	std::string body = _request.getBody();
 	size_t size = body.length() - _sendpos;
 	if (size > BUF_SIZE)
@@ -151,7 +150,6 @@ void	ClientSocket::execRead()
 
 void ClientSocket::sendResponse()
 {
-	static size_t _sendpos = 0;
 	std::string msg = _response.getResponse();
 	size_t size = msg.length() - _sendpos;
 	if (size > BUF_SIZE)
@@ -180,6 +178,7 @@ void ClientSocket::reset()
 	_exec.clear();
 	epoll_mod(epollInstance, _socketFd, EPOLLIN | EPOLLET);
 	_status = WaitRequest;
+	_sendpos = 0;
 }
 
 int ClientSocket::createSocket(ServerSocket & serverSocket)

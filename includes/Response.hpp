@@ -17,6 +17,7 @@ class Response
 		bool exec; //is there an exec to run ? (makeResponse return)
 		
 		void readFile(); //if target, reads the target file into a body string
+		void chunkBody(); //chunks body, by BUF_SIZE
 	public:
 		Response();
 		~Response();

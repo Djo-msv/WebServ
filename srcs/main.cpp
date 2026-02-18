@@ -142,6 +142,7 @@ ServerConfig initConfig()
 	cgiHandlers.insert(std::make_pair(".php", "/bin/php-cgi"));
 	cgiHandlers.insert(std::make_pair(".py", "/usr/bin/python3"));
 	requestsFlag.insert(std::make_pair("/html", ServerConfig::GET));
+	requestsFlag.insert(std::make_pair("/img", ServerConfig::GET));
 	requestsFlag.insert(std::make_pair("/scripts", ServerConfig::GET | ServerConfig::POST));// 0 = Rien, rajouter un | pour plus de flags
 	return ServerConfig(cgiHandlers, requestsFlag, index_file, rootFolder, execFolder);
 }

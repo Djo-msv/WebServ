@@ -226,13 +226,17 @@ void Request::startline_check(std::string line)
 	std::string location = _target.substr(0, _target.rfind("/"));
 	if (!_config.isMethodAllowed(location, _config.stringToRequestFlag(_method)))
 		throw Forbidden(); //method not supported (NotImplemented ? check needed)
+	//add root
+	if (_target[0] != '/')
+		_target = "/" + _target;
+	_target = _config.getRootFolder() + _target;
+	//error 404 catch
+	try { seekFile(_target); }
+	catch (std::exception &e) { throw ; }
 	//check_exec, adjust
 	if (_config.isExecFolder(location))
 		this->adjust_exec();
-	//add root
-	_target = _config.getRootFolder() + _target;
-	try { seekFile(_target); }
-	catch (std::exception &e) { throw ; }
+	//in future, here will be the Accept: header check through the <extension ; media type> map, on an else
 }
 
 std::string Request::getTarget() const { return _target; }

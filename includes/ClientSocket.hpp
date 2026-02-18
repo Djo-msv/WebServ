@@ -8,7 +8,7 @@
 #include <cstring>
 #include <signal.h>
 
-#define BUF_SIZE 1024
+#define BUF_SIZE 10000//1024
 
 #include <Socket.hpp>
 #include <HttpErrors.hpp>
@@ -58,6 +58,7 @@ class ClientSocket : public Socket
 		Request				_request;
 		ProcessExecution		_exec;
 		Response			_response;
+		size_t _sendpos;
 		
 		int 	createSocket(ServerSocket &);
 		void	epollFdSwitch(int old_fd, int new_fd, int flags);

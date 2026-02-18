@@ -49,11 +49,47 @@ std::string Response::getResponse()
 	//classic recipe here for a static webpage response
 	if (msg.empty())
 	{
-		msg += "HTTP/1.1 " + status + "\r\n" + "Content-Type: text/html\r\nContent-Length: " + ft_itoa(body.length() - 2) + "\r\n";
+		msg += "HTTP/1.1 " + status + "\r\nContent-Type: text/html";
+		msg += "\r\nTransfer-Encoding: chunked\r\n";
+		this->chunkBody();
 		msg += body;
 	}
-	//std::cout << "sending :: \n" << msg << std::endl << std::endl;
 	return msg;
+}
+
+std::string toHex(size_t num)
+{
+	std::string res;
+	static std::string hex = "0123456789ABCDEF";
+	if (num == 0)
+		return "\r\n0\r\n";
+	while (num) {
+		res = "a" + res;
+		res[0] = hex[num % 16];
+		num /= 16;
+	}
+	res = "\r\n" + res + "\r\n";
+	return res;
+}
+
+void Response::chunkBody()
+{
+	//here, we chunk by 1024
+	std::vector<std::string> ensemble;
+	size_t pos = 0;
+	while (pos != body.size())
+	{
+		size_t size = body.length() - pos;
+		if (BUF_SIZE < size)
+			size = BUF_SIZE;
+		ensemble.push_back(toHex(size));
+		ensemble.push_back(body.substr(pos, size));
+		pos += size;
+	}
+	body = "";
+	for (std::vector<std::string>::iterator it = ensemble.begin(); it != ensemble.end(); it++)
+		body += *it;
+	body += "\r\n0\r\n\r\n";
 }
 
 void Response::readFile()

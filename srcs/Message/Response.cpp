@@ -49,9 +49,16 @@ std::string Response::getResponse()
 	//classic recipe here for a static webpage response
 	if (msg.empty())
 	{
-		msg += "HTTP/1.1 " + status + "\r\nContent-Type: text/html";
-		msg += "\r\nTransfer-Encoding: chunked\r\n";
-		this->chunkBody();
+		msg += "HTTP/1.1 " + status + "\r\nContent-Type: ";
+		if (_target.find(".html") != std::string::npos)
+			msg += "text/html";
+		else
+			msg += "image/png";
+		msg += "\r\n";//Transfer-Encoding: chunked\r\n";
+		if (_target.find(".gz") != std::string::npos)
+			msg += "Content-Encoding: gzip\r\n";
+		msg += "Content-Length: " + ft_itoa(body.size() - 2) + "\r\n";
+		//this->chunkBody();
 		msg += body;
 	}
 	return msg;

@@ -1,7 +1,9 @@
 #pragma once
 
-# include <iostream>
 # include <string>
+typedef std::basic_string<unsigned char> ustring;
+
+# include <iostream>
 # include <sstream>
 # include <exception>
 # include <vector>
@@ -24,8 +26,8 @@ class Request
 		Request(const Request &other);
 
 		Request &operator=(const Request &other);
-		Request &operator+=(const char *buffer);
 
+		void	add(const unsigned char *buffer, size_t size);
 		void	parse();
 		void	read() const;
 		void	clear();
@@ -33,7 +35,7 @@ class Request
 		std::string	getTarget() const;
 		std::string	getMethod() const;
 		std::string	getQuery() const;
-		std::string	getBody() const;
+		unsigned char	*getBody() const;
 		std::string	getCgi() const;
 		
 		char	**getEnv() const;
@@ -41,7 +43,7 @@ class Request
 		bool	isExec() const;
 		bool	keepAlive() const;
 		
-		int 		getSize() const;
+		ssize_t 		getSize() const;
 		
 		class MissingData : public std::out_of_range {
 			public:
@@ -50,27 +52,28 @@ class Request
 	
 	private:
 		ServerConfig &	_config;
+		
+		ustring			_request;
+		ustring			_body;
+
 		std::string		_method;
 		std::string		_cgi;
 		std::string		_target;
-		std::string		_body;
-		std::string		_request;
 		std::string		_query;
 		std::string		*_env;
 		int				_status;
 
 		const char		**c_env;
-		
+		unsigned char *c_body;
+
 		bool 			exec;
 
 		std::map<std::string, std::string> headers;
-		//Server who received the request
-		
+
 		void	parse_header(std::string header);
-		void	parse_body();
-		void	body_check(size_t size_told, size_t real_size);
-		void	headers_add(std::string line);
 		void	startline_check(std::string line);
 		void	adjust_exec();
-
+		void	headers_add(std::string line);
+		void	parse_body();
+		void	body_check(size_t size_told, size_t real_size);
 };

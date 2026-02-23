@@ -21,7 +21,7 @@ void	ClientSocket::epollFdSwitch(int old_fd, int new_fd, int flags)
 //new function for error handling :: makes error response, switches status, updates epoll fd
 void	ClientSocket::ErrorHandling(HttpError &e, bool exec)
 {
-	_response.fix_error(e, _serverSocket.getConfig());
+	_response.makeErrorResponse(e, _serverSocket.getConfig());
 	_status = WaitResponse;
 	if (exec)
 		epollFdSwitch(_exec.getFdIn(), _socketFd, EPOLLOUT | EPOLLET);
@@ -37,9 +37,9 @@ void	ClientSocket::ErrorHandling(HttpError &e, bool exec)
 */
 void	ClientSocket::readRequest(void)
 {
-	char	buffer[BUF_SIZE];
+	unsigned char	buffer[BUF_SIZE + 1];
 
-	std::memset(buffer, 0, BUF_SIZE);
+	std::memset(buffer, 0, BUF_SIZE + 1);
 	ssize_t	size = ::read(_socketFd, buffer, BUF_SIZE);
 	if (size == -1)
 	{
@@ -63,7 +63,7 @@ void	ClientSocket::readRequest(void)
 		_status = Done;
 		return ;
 	}
-	_request += buffer;
+	_request.add(buffer, size);
 }
 
 void	ClientSocket::parseRequest()
@@ -89,7 +89,7 @@ void	ClientSocket::parseRequest()
 //starting the execution process here (write or exec + read)
 void	ClientSocket::startExec()
 {
-	bool body = !(_request.getBody().empty());
+	bool body = _request.getBody();
 	try { _exec.setupProcess(body); }
 	catch (HttpError &e) { ErrorHandling(e, false); return ; }
 	if (!body) {
@@ -110,13 +110,12 @@ void	ClientSocket::startExec()
 //new cgi write
 void	ClientSocket::execWrite()
 {
-	std::string body = _request.getBody();
-	size_t size = body.length() - _sendpos;
+	unsigned char *body = _request.getBody();
+	ssize_t size = _request.getSize() - _sendpos;
 	if (size > BUF_SIZE)
 		size = BUF_SIZE;
 	if (size) {
-		std::string snd = body.substr(_sendpos, size);
-		if (write(_exec.getFdIn(), snd.c_str(), size) == -1)
+		if (write(_exec.getFdIn(), (&body[_sendpos]), size) == -1)
 			_status = WaitExecWrite;
 		else
 			_sendpos += size;
@@ -133,7 +132,7 @@ void	ClientSocket::execWrite()
 
 void	ClientSocket::execRead()
 {
-	char buffer[BUF_SIZE +1];
+	unsigned char buffer[BUF_SIZE];
 	ssize_t size = read(_exec.getFdOut(), buffer, BUF_SIZE);
 	if (size < 0)
 		_status = WaitExecRead;
@@ -142,21 +141,18 @@ void	ClientSocket::execRead()
 		epollFdSwitch(_exec.getFdOut(), _socketFd, EPOLLOUT | EPOLLET);
 		_status = WaitResponse;
 	}
-	else {
-		buffer[size] = '\0';
-		_response += buffer;
-	}
+	else
+		_response.add(buffer, size);
 }
 
 void ClientSocket::sendResponse()
 {
-	std::string msg = _response.getResponse();
-	size_t size = msg.length() - _sendpos;
+	unsigned char *msg = _response.getResponse();
+	size_t size = _response.getSize() - _sendpos;
 	if (size > BUF_SIZE)
 		size = BUF_SIZE;
 	if (size) {
-		std::string snd = msg.substr(_sendpos, size);
-		if (write(_socketFd, snd.c_str(), size) == -1)
+		if (write(_socketFd, (&msg[_sendpos]), size) == -1)
 			_status = WaitResponse;
 		else
 			_sendpos += size;

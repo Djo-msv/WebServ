@@ -1,44 +1,63 @@
 #include "Request.hpp"
 
-Request::Request(ServerConfig &s) : _config(s), _env(NULL), _status(0), c_env(NULL), exec(false) {}
+Request::Request(ServerConfig &s) : _config(s), _env(NULL), _status(0), c_env(NULL), c_body(NULL), exec(false) {}
 
-Request::~Request() {if (_env) { delete[] _env; delete[] c_env; } }
+Request::~Request() {if (_env) { delete[] _env; delete[] c_env; } if (c_body) { delete[] c_body;} }
 
-Request::Request(const Request &other) : _config(other._config), _method(other._method), _target(other._target), _body(other._body), _query(other._query), _env(other._env), c_env(other.c_env), exec(other.exec) {}
+Request::Request(const Request &other) : _config(other._config), _request(other._request), _body(other._body), \
+					_method(other._method), _cgi(other._cgi), _target(other._target), \
+					_query(other._query), _env(other._env), c_env(other.c_env), \
+					c_body(other.c_body), exec(other.exec) {}
 
 Request& Request::operator=(const Request &other)
 {
 	if (this != &other)
 	{
 		_config = other._config;
+		_request = other._request;
+		_body = other._body;
 		_method = other._method;
+		_cgi = other._cgi;
 		_query = other._query;
 		_target = other._target;
 		exec = other.exec;
-		_body = other._body;
-		c_env = other.c_env;
+		if (_env) {
+			delete[] c_env;
+			delete[] _env;
+		}
+		if (c_body)
+			delete[] c_body;
 		_env = other._env;
+		c_env = other.c_env;
+		c_body = other.c_body;
+		headers.clear();
+		for (std::map<std::string, std::string>::const_iterator it = other.headers.begin(); it != other.headers.end(); it++)
+			headers.insert(*it);
 	}
 	return *this;
 }
 
-Request &Request::operator+=(const char *buffer)
+//replaces the += overload for non-NULL terminated buffers
+void Request::add(const unsigned char *buffer, size_t size)
 {
+	ustring &ref = _request;
 	if (_status)
-		_body += buffer;
-	else
-		_request += buffer;
-	return *this;
+		ref = _body;
+	for (size_t i = 0; i != size; i++)
+		ref.push_back(buffer[i]);
 }
-
+//clear func, self exp
 void Request::clear()
 {
-	_method = "";
-	_cgi = "";
-	_target = "";
-	_body = "";
-	_request = "";
-	_query = "";
+	_request.clear();
+	_body.clear();
+	if (c_body)
+		delete[] c_body;
+	c_body = NULL;
+	_method.clear();
+	_cgi.clear();
+	_target.clear();
+	_query.clear();
 	if (_env)
 	{
 		delete[] _env;
@@ -51,6 +70,8 @@ void Request::clear()
 	headers.clear();
 }
 
+		// public getters
+
 bool Request::keepAlive() const
 {
 	//i think we assume keep alive, but will double check
@@ -60,6 +81,30 @@ bool Request::keepAlive() const
 	return true;
 }
 
+std::string Request::getTarget() const { return _target; }
+
+std::string Request::getMethod() const { return _method; }
+
+std::string Request::getQuery() const { return _query; }
+
+char **Request::getEnv() const { return (char **)c_env; }
+
+bool Request::isExec() const { return exec; }
+
+unsigned char *Request::getBody() const { return c_body; }
+
+std::string Request::getCgi() const { return _cgi; }
+
+ssize_t Request::getSize() const
+{
+	if (headers.count("CONTENT_LENGTH"))
+		return (ssize_t)atol((headers.at("CONTENT_LENGTH")).c_str());
+	if (headers.count("TRANSFER_ENCODING") && headers.at("TRANSFER_ENCODING") == "chunked")
+		return CHUNKED;
+	return 0;
+}
+
+//big parse distribution
 void Request::parse()
 {
 	if (_status) //headers already parsed on a previous run, _env created etc.
@@ -69,15 +114,15 @@ void Request::parse()
 		return ;
 	}
 	std::string header;
-	std::size_t headerEnd = _request.find("\r\n\r\n");
+	std::size_t headerEnd = _request.find((unsigned char *)"\r\n\r\n");
 
 	if (headerEnd == std::string::npos)
 		throw MissingData();
 	if (headerEnd + 4 == _request.size())
-		header = _request;
+		header = (char *)(_request.c_str());
 	else
 	{
-		header = _request.substr(0, headerEnd);
+		header = (char *)(_request.substr(0, headerEnd).c_str());
 		_body = _request.substr(headerEnd + 4);
 	}
 	try {
@@ -92,53 +137,9 @@ void Request::parse()
 	}
 }
 
-void Request::body_check(size_t size_told, size_t real_size)
-{
-	if (real_size < size_told)
-		throw MissingData();
-	if (real_size > size_told)
-		_body = _body.substr(0, size_told);
-}
 
-void Request::parse_body()
-{
-	try {
-		if (this->getSize() == CHUNKED)
-			_body = chunk_parse(_body);
-		else
-			this->body_check(this->getSize(), _body.size());
-	}
-	catch (std::exception &e) { throw ; }
-}
 
-void Request::adjust_exec()
-{
-	exec = true;
-	//looking for cgi executable file
-	try { _cgi = extractCgi(_target, _config); }
-	catch (std::exception &e) { throw ; }
-	//first we should add relevant variables :: cgi version, redirect status, query string, method request, etc.
-	headers.insert(std::pair<std::string, std::string>("REDIRECT_STATUS", "true"));
-	headers.insert(std::pair<std::string, std::string>("GATEWAY_INTERFACE", "CGI/1.1"));
-	std::string filename = _target;
-	if (_target.rfind('/') != std::string::npos)
-		filename = _target.substr(_target.rfind('/') + 1);
-	headers.insert(std::pair<std::string, std::string>("SCRIPT_FILENAME", filename));
-	headers.insert(std::pair<std::string, std::string>("REQUEST_METHOD", _method));
-	if (!_query.empty())
-		headers.insert(std::pair<std::string, std::string>("QUERY_STRING", _query));
-	//here creating the char * environment which we can use for execve, in two steps as previously established
-	_env = new std::string[headers.size()];
-	c_env = new const char*[headers.size() + 1];
-	size_t i = 0;
-	for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); it++)
-	{
-		_env[i] = it->first + "=" + it->second;
-		c_env[i] = _env[i].c_str();
-		i++;
-	}
-	c_env[i] = NULL;
-}
+		//private parsing functions, in chronological order ::
 
 void	Request::parse_header(std::string header)
 {
@@ -156,43 +157,6 @@ void	Request::parse_header(std::string header)
 		}
 	}
 	catch (std::exception &e) {throw ;}
-}
-
-void Request::headers_add(std::string line)
-{
-	std::stringstream s(line);
-	std::string key;
-	std::string val;
-	
-	std::getline(s, key, ':');
-	std::getline(s, val, '\r');
-	if (key.empty() || val.empty())
-		throw BadRequest();
-	//checking for a-num values (-)
-	if (!check_key(key))
-		throw BadRequest();// bad key formatting
-	//checking for a-num (, ) + trims whitespaces
-	if (!check_val(val))
-		throw BadRequest();// also ? bad value formatting, i guess
-	
-	//turning 'Content-Length' into 'CONTENT_LENGTH' for future environment and lack of case-conflict
-	std::transform(key.begin(), key.end(), key.begin(), ::toupper);
-	size_t n = key.find('-');
-	while (n != std::string::npos)
-	{
-		key[n] = '_';
-		n = key.find('-');
-	}
-	headers.insert(std::pair<std::string, std::string>(key, val));
-}
-
-int Request::getSize() const
-{
-	if (headers.count("CONTENT_LENGTH"))
-		return atoi((headers.at("CONTENT_LENGTH")).c_str());
-	if (headers.count("TRANSFER_ENCODING") && headers.at("TRANSFER_ENCODING").find("chunked") != std::string::npos)
-		return CHUNKED;
-	return 0;
 }
 
 void Request::startline_check(std::string line)
@@ -239,20 +203,99 @@ void Request::startline_check(std::string line)
 	//in future, here will be the Accept: header check through the <extension ; media type> map, on an else
 }
 
-std::string Request::getTarget() const { return _target; }
+void Request::adjust_exec()
+{
+	exec = true;
+	//looking for cgi executable file
+	try { _cgi = extractCgi(_target, _config); }
+	catch (std::exception &e) { throw ; }
+	//first we should add relevant variables :: cgi version, redirect status, query string, method request, etc.
+	headers.insert(std::pair<std::string, std::string>("REDIRECT_STATUS", "true"));
+	headers.insert(std::pair<std::string, std::string>("GATEWAY_INTERFACE", "CGI/1.1"));
+	std::string filename = _target;
+	if (_target.rfind('/') != std::string::npos)
+		filename = _target.substr(_target.rfind('/') + 1);
+	headers.insert(std::pair<std::string, std::string>("SCRIPT_FILENAME", filename));
+	headers.insert(std::pair<std::string, std::string>("REQUEST_METHOD", _method));
+	if (!_query.empty())
+		headers.insert(std::pair<std::string, std::string>("QUERY_STRING", _query));
+	//here creating the char * environment which we can use for execve, in two steps as previously established
+	_env = new std::string[headers.size()];
+	c_env = new const char*[headers.size() + 1];
+	size_t i = 0;
+	for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); it++)
+	{
+		_env[i] = it->first + "=" + it->second;
+		c_env[i] = _env[i].c_str();
+		i++;
+	}
+	c_env[i] = NULL;
+}
 
-std::string Request::getMethod() const { return _method; }
+void Request::headers_add(std::string line)
+{
+	std::stringstream s(line);
+	std::string key;
+	std::string val;
+	
+	std::getline(s, key, ':');
+	std::getline(s, val, '\r');
+	if (key.empty() || val.empty())
+		throw BadRequest();
+	//checking for a-num values (-)
+	if (!check_key(key))
+		throw BadRequest();// bad key formatting
+	//checking for a-num (, ) + trims whitespaces
+	if (!check_val(val))
+		throw BadRequest();// also ? bad value formatting, i guess
+	
+	//turning 'Content-Length' into 'CONTENT_LENGTH' for future environment and lack of case-conflict
+	std::transform(key.begin(), key.end(), key.begin(), ::toupper);
+	size_t n = key.find('-');
+	while (n != std::string::npos)
+	{
+		key[n] = '_';
+		n = key.find('-');
+	}
+	headers.insert(std::pair<std::string, std::string>(key, val));
+}
 
-std::string Request::getQuery() const { return _query; }
+void Request::parse_body()
+{
+	try {
+		if (this->getSize() == CHUNKED) {
+			//un-chunk the body
+			_body = chunk_parse(_body);
+			//adjust size headers accordingly (in case of cgi)
+			headers.erase(headers.find("TRANSFER_ENCODING"));
+			headers.insert(std::pair<std::string, std::string>("CONTENT_LENGTH", ft_itoa(_body.size())));
+		}
+		else
+			this->body_check(this->getSize(), _body.size());
+		//create the unsigned char body to send to the cgi program (or download pure ?)
+		if (_body.size()) {
+			c_body = new unsigned char[_body.size()];
+			size_t i = 0;
+			while (i < _body.size()) {
+				c_body[i] = _body.at(i);
+				i++;
+			}
+		}
+	}
+	catch (std::exception &e) { throw ; }
+}
 
-char **Request::getEnv() const { return (char **)c_env; }
+//is the body the size given in header ?
+void Request::body_check(size_t size_told, size_t real_size)
+{
+	if (real_size < size_told)
+		throw MissingData();
+	if (real_size > size_told)
+		_body = _body.substr(0, size_told);
+}
 
-bool Request::isExec() const { return exec; }
 
-std::string Request::getBody() const { return _body; }
-
-std::string Request::getCgi() const { return _cgi; }
-
+//error checking only
 void Request::read() const
 {
 	std::cout << "this request ";
@@ -266,7 +309,10 @@ void Request::read() const
 		for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); it++)
 			std::cout << it->first << "; " << it->second << std::endl;
 	}
-	std::cout << "and the body" << std::endl << _body << std::endl;
+	std::cout << "and the body, in body.txt\n";
+	int fd = open("body.txt", O_WRONLY);
+	write(fd, c_body, _body.size());
+	close(fd);
 }
 
 Request::MissingData::MissingData() : std::out_of_range("data missing from request !") {}

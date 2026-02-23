@@ -8,7 +8,7 @@
 #include <cstring>
 #include <signal.h>
 
-#define BUF_SIZE 10000//1024
+#define BUF_SIZE 1024
 
 #include <Socket.hpp>
 #include <HttpErrors.hpp>

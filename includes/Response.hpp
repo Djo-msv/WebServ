@@ -6,28 +6,43 @@
 # include <HttpErrors.hpp>
 # include <sys/stat.h>
 # include <fstream>
+# include <vector>
+# include <fcntl.h>
+# include <unistd.h>
 
 class Response
 {
-	private:
-		std::string _target; //target file to return
-		std::string msg; //full HTTP message ready to send
-		std::string status; //status code
-		std::string body;
-		bool exec; //is there an exec to run ? (makeResponse return)
-		
-		void readFile(); //if target, reads the target file into a body string
-		void chunkBody(); //chunks body, by BUF_SIZE
 	public:
 		Response();
 		~Response();
 		Response(const Response &other);
+		
 		Response &operator=(const Response &other);
-		Response &operator+=(const char *buffer);
-		void fix_error(HttpError &error, ServerConfig &s); //for error return, adjusts status + body
+		
+		void add(const unsigned char *buffer, size_t size); //adds the buffer to the body (cgi read response)
 		bool makeResponse(Request *req); //distribution
-		std::string getResponse(); //result
+		void makeErrorResponse(HttpError &error, ServerConfig &s); //for immediate error return, adjusts status + body
 		void clear();
+
+		//getters
+		unsigned char *getResponse(); //result
+		size_t getSize() const;
+	
+	private:
+		std::string _target; //target file to return
+		std::string _status; //status code
+		std::string _headers; //HTTP headers
+		
+		ustring _body;
+		
+		unsigned char *_msg;
+		
+		bool exec; //is there an exec to run ? (makeResponse return)
+		size_t sizer;
+		
+		void readFile(); //if target, reads the target file into a body string
+		void makeMsg();
+		void chunkBody(); //chunks body, by BUF_SIZE
 };
 
 #endif

@@ -85,28 +85,9 @@ bool Response::makeResponse(Request *req)
 
 void Response::makeErrorResponse(HttpError &error, ServerConfig &s)
 {
-<<<<<<< HEAD
 	_status = error.what();
 	try { _target = seekErrorFile(error, s); this->readFile(); }
 	catch (InternalServerError &e) {_status = e.what(); _target = ""; this->add((unsigned char *)(e.getDefaultFile().c_str()), e.getDefaultFile().size());}
-=======
-	//classic recipe here for a static webpage response
-	if (msg.empty())
-	{
-		msg += "HTTP/1.1 " + status + "\r\nContent-Type: ";
-		if (_target.find(".html") != std::string::npos)
-			msg += "text/html";
-		else
-			msg += "image/png";
-		msg += "\r\n";//Transfer-Encoding: chunked\r\n";
-		if (_target.find(".gz") != std::string::npos)
-			msg += "Content-Encoding: gzip\r\n";
-		msg += "Content-Length: " + ft_itoa(body.size() - 2) + "\r\n";
-		//this->chunkBody();
-		msg += body;
-	}
-	return msg;
->>>>>>> a02195b081267ccc35bab63cce335bbd6b7a506f
 }
 
 		//private message-making functions, in chronological order

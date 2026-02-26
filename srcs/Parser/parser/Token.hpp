@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 // Comment token
 #define HASH				0
 

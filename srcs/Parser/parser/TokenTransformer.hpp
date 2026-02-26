@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vector>
+#include <list>
 
 #include "Token.hpp"
 
@@ -12,17 +12,17 @@
 class TokenTransformer
 {
 	public :
-		TokenTransformer(std::vector<Token> &tokens);
+		TokenTransformer(std::list<Token> &tokens);
 		~TokenTransformer();
 
 	private :
 		uint8_t	_status;
 		
-		void	commentRemover(std::vector<Token> &it);
-		void	indentationTransformer(std::vector<Token> &it);
-		void	quoteTransformer(std::vector<Token> &it);
-		void	castTransformer(std::vector<Token> &it);
-		void	stringTransformer(std::vector<Token> &it);
+		void	remover(std::list<Token> &tokens, std::list<Token>::iterator &it);
+		void	indentationTransformer(std::list<Token>::iterator &it);
+		void	quoteTransformer(std::list<Token>::iterator &it);
+		void	castTransformer(std::list<Token>::iterator &it);
+		void	stringTransformer(std::list<Token>::iterator &it);
 
 		class BadParsing : public std::runtime_error {
 			public :

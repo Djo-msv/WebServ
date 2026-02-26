@@ -1,9 +1,9 @@
 #include "TokenTransformer.hpp"
 
-void	TokenTransformer::TokenTransformer(std::vector<Token> &tokens) _status(0)
+TokenTransformer::TokenTransformer(std::list<Token> &tokens) : _status(0)
 {
-	for (std::vector<Token>::iterator it = tokens.begin(); it != tokens.end(); it++) {
-		commentRemover(it);
+	for (std::list<Token>::iterator it = tokens.begin(); it != tokens.end(); it++) {
+		remover(tokens, it);
 		indentationTransformer(it);
 		quoteTransformer(it);
 		castTransformer(it);
@@ -11,20 +11,35 @@ void	TokenTransformer::TokenTransformer(std::vector<Token> &tokens) _status(0)
 	}
 }
 
-void	TokenTransformer::TokenTransformer::~TokenTransformer(void)
+TokenTransformer::~TokenTransformer(void)
 {}
 
-void	TokenTransformer::commentRemover(std::vector<Token> &it)
+void	TokenTransformer::remover(std::list<Token> &tokens, std::list<Token>::iterator &it)
+{
+	// remove commant
+	if ((*it)._type == HASH)
+		it = tokens.erase(it);
+
+	// remove backspace
+	if ((*it)._type == END_OF_LINE) {
+		if (it == tokens.begin())
+				it = tokens.erase(it);
+		std::list<Token>::iterator end = it;
+		it++;
+		if ((*it)._type == END_OF_LINE)
+			it = tokens.erase(it);
+		it = end;
+	}
+}
+
+void	TokenTransformer::indentationTransformer(std::list<Token>::iterator &it)
 {}
 
-void	TokenTransformer::indentationTransformer(std::vector<Token> &it)
+void	TokenTransformer::quoteTransformer(std::list<Token>::iterator &it)
 {}
 
-void	TokenTransformer::quoteTransformer(std::vector<Token> &it)
+void	TokenTransformer::castTransformer(std::list<Token>::iterator &it)
 {}
 
-void	TokenTransformer::castTransformer(std::vector<Token> &it)
-{}
-
-void	TokenTransformer::stringTransformer(std::vector<Token> &it)
+void	TokenTransformer::stringTransformer(std::list<Token>::iterator &it)
 {}

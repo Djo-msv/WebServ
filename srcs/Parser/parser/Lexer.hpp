@@ -1,11 +1,11 @@
 #pragma once
 
-#include <vector>
+#include <list>
 #include "Tokenizer.hpp"
 
 class Lexer
 {
 	public :
-		Lexer(std::vector<Token> &tokens);
+		Lexer(std::list<Token> &tokens);
 		~Lexer();
 };

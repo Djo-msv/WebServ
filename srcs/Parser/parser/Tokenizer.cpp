@@ -3,10 +3,10 @@
 Tokenizer::Tokenizer(void)
 {}
 
-Tokenizer::Tokenizer(std::string &file, std::vector<Token> &tokens)
+Tokenizer::Tokenizer(std::string &file, std::list<Token> &tokens)
 {
 	/* list of all function for first layer tokenizer */
-	void (Tokenizer::*functions[]) (std::string &, std::vector<Token> &) = 
+	void (Tokenizer::*functions[]) (std::string &, std::list<Token> &) = 
 		{
 			&Tokenizer::coment,
 			&Tokenizer::basicToken,
@@ -35,7 +35,7 @@ Tokenizer::Tokenizer(std::string &file, std::vector<Token> &tokens)
 Tokenizer::~Tokenizer()
 {}
 
-void	Tokenizer::coment(std::string &file, std::vector<Token> &tokens)
+void	Tokenizer::coment(std::string &file, std::list<Token> &tokens)
 {
 	if (file[0] == '#') {
 		std::string::iterator it;
@@ -46,7 +46,7 @@ void	Tokenizer::coment(std::string &file, std::vector<Token> &tokens)
 	}
 }
 
-void	Tokenizer::complexToken(std::string &file, std::vector<Token> &tokens)
+void	Tokenizer::complexToken(std::string &file, std::list<Token> &tokens)
 {
 	std::string::iterator it = file.begin();
 	
@@ -68,7 +68,7 @@ void	Tokenizer::complexToken(std::string &file, std::vector<Token> &tokens)
 		file.erase(file.begin(), it);
 }
 
-void	Tokenizer::basicToken(std::string &file, std::vector<Token> &tokens)
+void	Tokenizer::basicToken(std::string &file, std::list<Token> &tokens)
 {
 	std::string::iterator it = file.begin();
 
@@ -110,7 +110,7 @@ void	Tokenizer::basicToken(std::string &file, std::vector<Token> &tokens)
 		file.erase(file.begin(), it);
 }
 
-void	Tokenizer::typeOfValue(std::string &file, std::vector<Token> &tokens)
+void	Tokenizer::typeOfValue(std::string &file, std::list<Token> &tokens)
 {
 	std::string::iterator it = file.begin();
 
@@ -156,7 +156,7 @@ void	Tokenizer::typeOfValue(std::string &file, std::vector<Token> &tokens)
 		file.erase(file.begin(), it);
 }
 
-void	Tokenizer::castOfValue(std::string &file, std::vector<Token> &tokens)
+void	Tokenizer::castOfValue(std::string &file, std::list<Token> &tokens)
 {
 	std::string::iterator it = file.begin();
 	
@@ -184,7 +184,7 @@ void	Tokenizer::castOfValue(std::string &file, std::vector<Token> &tokens)
 		file.erase(file.begin(), it);
 }
 
-void	Tokenizer::alias(std::string &file, std::vector<Token> &tokens)
+void	Tokenizer::alias(std::string &file, std::list<Token> &tokens)
 {
 	std::string::iterator it = file.begin();
 	
@@ -205,7 +205,7 @@ void	Tokenizer::alias(std::string &file, std::vector<Token> &tokens)
 		file.erase(file.begin(), it);
 }
 
-void	Tokenizer::escapeValue(std::string &file, std::vector<Token> &tokens)
+void	Tokenizer::escapeValue(std::string &file, std::list<Token> &tokens)
 {
 	std::string::iterator it = file.begin();
 	
@@ -220,7 +220,7 @@ void	Tokenizer::escapeValue(std::string &file, std::vector<Token> &tokens)
 		file.erase(file.begin(), it);
 }
 
-void	Tokenizer::specialValue(std::string &file, std::vector<Token> &tokens)
+void	Tokenizer::specialValue(std::string &file, std::list<Token> &tokens)
 {
 	std::string::iterator it = file.begin();
 	

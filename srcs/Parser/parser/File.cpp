@@ -2,10 +2,10 @@
 
 File::File(const std::string &path)
 {
-	std::vector<std::ifstream *> fileFd;
+	std::list<std::ifstream *> fileFd;
 
 	openFiles(path, fileFd);
-	for(std::vector<std::ifstream *>::iterator it = fileFd.begin(); it != fileFd.end(); it++)
+	for(std::list<std::ifstream *>::iterator it = fileFd.begin(); it != fileFd.end(); it++)
 		readFile(*it);
 }
 
@@ -21,7 +21,7 @@ int File::isDirectory(const std::string &path)
 	return S_ISDIR(statbuf.st_mode);
 }
 
-void File::openFiles(const std::string &path, std::vector<std::ifstream *> &fileFd)
+void File::openFiles(const std::string &path, std::list<std::ifstream *> &fileFd)
 {
 	if (isDirectory(path)) {
 		DIR	*dir;
@@ -64,7 +64,7 @@ void	File::readFile(std::ifstream *fileFd)
 }
 
 
-std::vector<std::string> File::getFile(void)
+std::list<std::string> File::getFile(void)
 {
 	return (_files);
 }

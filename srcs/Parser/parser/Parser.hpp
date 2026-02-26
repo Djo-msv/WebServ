@@ -5,6 +5,7 @@
 #include "Tokenizer.hpp"
 #include "File.hpp"
 #include "Lexer.hpp"
+#include "TokenTransformer.hpp"
 
 class Parser
 {
@@ -13,5 +14,5 @@ class Parser
 		~Parser();
 
 	private :
-		std::vector<Token> _tokens;
+		std::list<Token> _tokens;
 };

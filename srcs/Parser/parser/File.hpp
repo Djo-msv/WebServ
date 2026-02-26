@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iostream>
-#include <vector>
+#include <list>
 #include <sys/stat.h>
 #include <dirent.h>
 #include <fstream>
@@ -16,12 +16,12 @@ class File
 		File(const std::string &path);
 		~File();
 
-		std::vector<std::string> getFile();
+		std::list<std::string> getFile();
 	
 	private :
-		std::vector<std::string> _files;
+		std::list<std::string> _files;
 
 		int		isDirectory(const std::string &path);
-		void	openFiles(const std::string &path, std::vector<std::ifstream *> &file);
+		void	openFiles(const std::string &path, std::list<std::ifstream *> &file);
 		void	readFile(std::ifstream *fileFd);
 };

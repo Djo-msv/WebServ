@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <cstdint>
-#include <vector>
+#include <list>
 
 #include "Token.hpp"
 
@@ -14,18 +14,18 @@ class Tokenizer
 {
 	public :
 		Tokenizer();
-		Tokenizer(std::string &file, std::vector<Token> &tokens);
+		Tokenizer(std::string &file, std::list<Token> &tokens);
 		~Tokenizer();
 
 	private :
-		void	coment(std::string &file, std::vector<Token> &tokens);
-		void	basicToken(std::string &file, std::vector<Token> &tokens);
-		void	complexToken(std::string &file, std::vector<Token> &tokens);
-		void	typeOfValue(std::string &file, std::vector<Token> &tokens);
-		void	castOfValue(std::string &file, std::vector<Token> &tokens);
-		void	alias(std::string &file, std::vector<Token> &tokens);
-		void	escapeValue(std::string &file, std::vector<Token> &tokens);
-		void	specialValue(std::string &file, std::vector<Token> &tokens);
+		void	coment(std::string &file, std::list<Token> &tokens);
+		void	basicToken(std::string &file, std::list<Token> &tokens);
+		void	complexToken(std::string &file, std::list<Token> &tokens);
+		void	typeOfValue(std::string &file, std::list<Token> &tokens);
+		void	castOfValue(std::string &file, std::list<Token> &tokens);
+		void	alias(std::string &file, std::list<Token> &tokens);
+		void	escapeValue(std::string &file, std::list<Token> &tokens);
+		void	specialValue(std::string &file, std::list<Token> &tokens);
 
 		class BadParsing : public std::runtime_error {
 			public :

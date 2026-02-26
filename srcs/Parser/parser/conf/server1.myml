@@ -1,0 +1,12 @@
+server : &default
+    - value
+    - value
+    - dictionary :
+        key : "value \n" 
+        key : ' value'
+		key : 123
+		key : 12.3
+		key : !!str 12.3
+    - value
+
+server : *default

@@ -8,7 +8,18 @@ MymlParser::MymlParser(char *path)
 	openFile(std::string(path), file);
 	for (std::map<std::string, std::ifstream *>::iterator it = file.begin(); it != file.end(); it++) /* iterate on every file */
 		readFile(it);
-	buildTree(); /* create a tree resulting from the parsing */
+//	buildTree(); /* create a tree resulting from the parsing */
+	
+	for (std::vector<Tokenizer>::iterator it = _tokens.begin(); it != _tokens.end(); it++) {
+		Tokenizer token = (*it);
+
+		for (std::vector<std::string>::iterator it = token.getTokens().begin(); it != token.getTokens().end(); it++)
+			std::cout << (*it);
+		std::cout << std::endl << "Identatation : " << token.getIndent() << std::endl <<
+			"is Define : " << token.isDefine() << std::endl <<
+			"is member of a list : " << token.isMemberOfaList() << std::endl <<
+			"is member of a directory : " << token.isMemberOfaDictionary() << std::endl << std::endl;
+	}
 }
 
 MymlParser::~MymlParser(void)
@@ -28,12 +39,12 @@ void	MymlParser::buildTree(void)
 				((token.getIndent() == prevToken.getIndent() && !prevToken.isDefine()) || 
 				(token.getIndent() > prevToken.getIndent() && prevToken.isDefine())))) {};
 		if (token.isMemberOfaList() && token.getIndent() > prevToken.getIndent() && prevToken.isDefine()) {
-			stack.push(stack.top()->insertList());
+//			stack.push(stack.top()->insertList());
 		}
 		else if (token.isMemberOfaList() && (token.getIndent() == prevToken.getIndent() && !prevToken.isDefine())) {};
 			// add info to the last vector
 		if (token.isMemberOfaDictionary() && token.getIndent() > prevToken.getIndent() && prevToken.isDefine()) {
-			stack.push(stack.top()->insertDictionary(token.getKey()));
+//			stack.push(stack.top()->insertDictionary(token.getKey()));
 		}
 		else if (token.isMemberOfaDictionary() && (token.getIndent() == prevToken.getIndent() && !prevToken.isDefine())) {};
 			// add info to the last dictionary
@@ -50,7 +61,7 @@ int	MymlParser::isDirectory(std::string path)
    return S_ISDIR(statbuf.st_mode);
 }
 
-void MymlParser::openFile(std::string path, std::map<std::string, std::ifstream *> file)
+void MymlParser::openFile(std::string path, std::map<std::string, std::ifstream *> &file)
 {
 	if (isDirectory(path)) {
 		DIR	*dir;
@@ -66,11 +77,12 @@ void MymlParser::openFile(std::string path, std::map<std::string, std::ifstream 
 		std::string name(path, path.rfind('/') + 1, path.size());
 	
 		if (name.find(".myml") == name.size() - 5 && name.size() >= 5) {
-			std::ifstream f;
+			std::ifstream *f = new std::ifstream();
 
-			f.open(path.c_str());
-			if (f.is_open()) {
-				file.insert(file.end(), std::pair<std::string, std::ifstream *>(name, &f));
+			std::cout << "open file at " << path << std::endl;
+			f->open(path.c_str());
+			if (f->is_open()) {
+				file.insert(file.end(), std::pair<std::string, std::ifstream *>(name, f));
 			}
 		}
 		else
@@ -82,8 +94,13 @@ void	MymlParser::readFile(std::map<std::string, std::ifstream *>::iterator file)
 {
 	std::string	line;
 
-	while (std::getline(*(file->second), line)) /* read each line inside file */
+	std::cout << "file " << file->first << " was read" << std::endl;
+
+	while (std::getline(*(file->second), line)) {/* read each line inside file */
+		std::cout << line << std::endl;
 		_tokens.insert(_tokens.end(), Tokenizer(line, file->first)); /* cuts the line into tokens and defines its depth level */
+	}
 	file->second->close();
+	delete file->second;
 }
 

@@ -13,6 +13,10 @@ class Tokenizer
 		bool	isDefine();
 		bool	isMemberOfaList();
 		bool	isMemberOfaDictionary();
+		bool	isString();
+
+		std::vector<std::string>	getTokens();
+
 	
 	private :
 
@@ -20,6 +24,7 @@ class Tokenizer
 		bool	_define;
 		bool	_memberOfaList;
 		bool	_memberOfaDictionary;
+		bool	_string;
 
 		std::string	_name;
 		

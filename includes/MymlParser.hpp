@@ -27,7 +27,7 @@ class MymlParser
 		void	addList();
 		void	addDictionary();
 		void	readFile(std::map<std::string, std::ifstream *>::iterator file);
-		void	openFile(std::string path, std::map<std::string, std::ifstream *> file);
+		void	openFile(std::string path, std::map<std::string, std::ifstream *> &file);
 		int		isDirectory(std::string path);
 
 		void	buildTree();

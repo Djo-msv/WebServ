@@ -51,6 +51,7 @@ class MymlDictionary : public MymlObject
 		MymlObject *insertDictionary(std::string &key);
 		void insertValue(std::string &key, std::string &value);
 
+	
 	private :
 		std::map<std::string, MymlObject*>	_dictionary;
 };

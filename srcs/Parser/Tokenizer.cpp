@@ -23,12 +23,13 @@ Tokenizer::Tokenizer(std::string &line, const std::string &name) : _indentLevel(
 		for (itPars = it; std::isalnum(*itPars); itPars++) {};
 		/* add word inside tokens */
 		if (it != itPars) {
-			std::string	token(line, line.begin() - it, line.begin() - itPars);
+			std::string	token(line, it - line.begin(), itPars - line.begin());
 			_tokens.insert(_tokens.end(), token);
 			if (_define == true) {
 				_memberOfaDictionary = true;
 				_define = false;
 			}
+			it = itPars;
 		}
 
 		/* check if its dictionary or an define */
@@ -66,4 +67,9 @@ bool	Tokenizer::isMemberOfaList(void)
 bool	Tokenizer::isMemberOfaDictionary(void)
 {
 	return (_memberOfaDictionary);
+}
+
+std::vector<std::string>	Tokenizer::getTokens(void)
+{
+	return (_tokens);
 }

@@ -20,7 +20,7 @@
 class ClientSocket : public Socket
 {
 	public :
-		ClientSocket(ServerSocket &serverSocket, int _epoll, std::map<const int, Socket *> &_sockets);
+		ClientSocket(ServerSocket &serverSocket, int _epoll, std::map<const int, Socket *> &_sockets, std::map<std::string, std::string> &_mime);
 		~ClientSocket();
 
 		//untouched readRequest(), now with adequate status-update
@@ -54,6 +54,7 @@ class ClientSocket : public Socket
 		ServerSocket &		_serverSocket;
 		const int epollInstance;
 		std::map<const int, Socket *> &sockets;
+		std::map<std::string, std::string> &mime;
 		
 		Request				_request;
 		ProcessExecution		_exec;

@@ -1,6 +1,6 @@
 #include "ClientSocket.hpp"
 
-ClientSocket::ClientSocket(ServerSocket &serverSocket, int _epoll, std::map<const int, Socket *> &_sockets) : Socket(createSocket(serverSocket)), _status(WaitRequest),  _serverSocket(serverSocket), epollInstance(_epoll), sockets(_sockets), _request(Request(serverSocket.getConfig())), _sendpos(0) {}
+ClientSocket::ClientSocket(ServerSocket &serverSocket, int _epoll, std::map<const int, Socket *> &_sockets, std::map<std::string, std::string> &_mime) : Socket(createSocket(serverSocket)), _status(WaitRequest),  _serverSocket(serverSocket), epollInstance(_epoll), sockets(_sockets), mime(_mime), _request(Request(serverSocket.getConfig())), _sendpos(0) {}
 
 ClientSocket::~ClientSocket(void) { std::cout << "deleting client of socket :: " << _socketFd << std::endl; }
 
@@ -69,7 +69,7 @@ void	ClientSocket::readRequest(void)
 void	ClientSocket::parseRequest()
 {
 	try {
-		_request.parse();
+		_request.parse(mime);
 		//based on response :: exec/no exec
 		if (_response.makeResponse(&_request))
 			this->startExec();
@@ -147,7 +147,7 @@ void	ClientSocket::execRead()
 
 void ClientSocket::sendResponse()
 {
-	unsigned char *msg = _response.getResponse();
+	unsigned char *msg = _response.getResponse(mime);
 	size_t size = _response.getSize() - _sendpos;
 	if (size > BUF_SIZE)
 		size = BUF_SIZE;

@@ -105,7 +105,7 @@ ssize_t Request::getSize() const
 }
 
 //big parse distribution
-void Request::parse()
+void Request::parse(std::map<std::string, std::string> &mime)
 {
 	if (_status) //headers already parsed on a previous run, _env created etc.
 	{
@@ -113,6 +113,8 @@ void Request::parse()
 		catch (std::exception &e) { throw ; }
 		if (exec)
 			this->create_env();
+		else
+			this->mime_check(mime);
 		return ;
 	}
 	std::string header;
@@ -133,6 +135,8 @@ void Request::parse()
 		this->parse_body();
 		if (exec)
 			this->create_env();
+		else
+			this->mime_check(mime);
 	}
 	catch (std::exception &e) {
 		if (!_status)
@@ -257,6 +261,28 @@ void Request::headers_add(std::string line)
 	if (key != "CONTENT_LENGTH" && key != "CONTENT_TYPE")
 		key = "HTTP_" + key;
 	headers.insert(std::pair<std::string, std::string>(key, val));
+}
+
+void Request::mime_check(std::map<std::string, std::string> &mime)
+{
+	if (!headers.count("HTTP_ACCEPT"))
+		return ; //no accept header, not sure what that would mean for me but i assume just no checking
+	if (_target.rfind('.') == std::string::npos)
+		throw NotImplemented(); //i think ? this is all very murky territory, needs testing - maybe BadRequest ?
+	std::string extension = _target.substr(_target.rfind('.'));
+	if (!mime.count(extension))
+		throw NotImplemented(); //again, guessing here
+	extension = mime.at(extension);
+	std::stringstream line(headers.at("HTTP_ACCEPT"));
+	while (!line.eof()) {
+		std::string type;
+		getline(line, type, ',');
+		if (type.empty())
+			break ;
+		if (type == extension)
+			return ;
+	}
+	throw NotImplemented(); //again, guessing at the error
 }
 
 void Request::parse_body()

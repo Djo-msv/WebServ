@@ -28,7 +28,7 @@ class Request
 		Request &operator=(const Request &other);
 
 		void	add(const unsigned char *buffer, size_t size);
-		void	parse();
+		void	parse(std::map<std::string, std::string> &mime);
 		void	read() const;
 		void	clear();
 		
@@ -74,6 +74,7 @@ class Request
 		void	startline_check(std::string line);
 		void	adjust_exec();
 		void	headers_add(std::string line);
+		void	mime_check(std::map<std::string, std::string> &mime);
 		void	parse_body();
 		void	body_check(size_t size_told, size_t real_size);
 		void	create_env();

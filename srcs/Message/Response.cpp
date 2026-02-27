@@ -49,19 +49,19 @@ void Response::add(const unsigned char *buffer, size_t size)
 
 size_t Response::getSize() const { return sizer; }
 
-unsigned char *Response::getResponse()
+unsigned char *Response::getResponse(std::map<std::string, std::string> &mime)
 {
 	//classic recipe here for a static webpage response
 	if (_msg == NULL)
 	{
 		if (!exec) {
 			_headers += "HTTP/1.1 " + _status + "\r\nContent-Type: ";
-			bool gz = (_target.rfind('.') != std::string::npos && _target.substr(_target.rfind('.')) == ".gz");
-			if (!gz)
-				_headers += "text/html";
+			if (_target.rfind('.') == std::string::npos || !mime.count(_target.substr(_target.rfind('.'))))
+				_headers += "*/*"; //or like, unknown ? i guess ?
 			else
-				_headers += "image/png";
+				_headers += mime.at(_target.substr(_target.rfind('.')));
 			_headers += "\r\nTransfer-Encoding: chunked\r\n";
+			bool gz = (_target.rfind('.') != std::string::npos && _target.substr(_target.rfind('.')) == ".gz");
 			if (gz)
 				_headers += "Content-Encoding: gzip\r\n";
 			this->chunkBody();
@@ -89,6 +89,8 @@ void Response::makeErrorResponse(HttpError &error, ServerConfig &s)
 	try { _target = seekErrorFile(error, s); this->readFile(); }
 	catch (InternalServerError &e) {_status = e.what(); _target = ""; this->add((unsigned char *)(e.getDefaultFile().c_str()), e.getDefaultFile().size());}
 }
+
+
 
 		//private message-making functions, in chronological order
 

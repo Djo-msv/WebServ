@@ -25,7 +25,7 @@ class Response
 		void clear();
 
 		//getters
-		unsigned char *getResponse(); //result
+		unsigned char *getResponse(std::map<std::string, std::string> &mime); //result
 		size_t getSize() const;
 	
 	private:

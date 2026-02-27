@@ -17,6 +17,7 @@
         handleError(e.what()); \
 	}
 
+std::map<std::string, std::string> mime;
 std::map<const int, Socket *>	sockets;
 std::deque<ClientSocket *>		pendingClientSockets;
 const int 						epollInstance = epoll_create(1);
@@ -95,7 +96,7 @@ void	manageRequests()
 			};
 			ServerSocket *sSocket = dynamic_cast<ServerSocket *>(socketIterator->value);
 			if (sSocket != NULL) {
-				ClientSocket *cSocket = new ClientSocket(*sSocket, epollInstance, sockets);
+				ClientSocket *cSocket = new ClientSocket(*sSocket, epollInstance, sockets, mime);
 				//adding the client to sockets + epoll + pendingList
 				if (!sockets.count(cSocket->getSocketFd())) {
 					epoll_add(epollInstance, cSocket->getSocketFd(), EPOLLIN | EPOLLET);
@@ -128,6 +129,16 @@ void	manageRequests()
 	}
 }
 
+void initMime()
+{
+	mime.insert(std::pair<std::string, std::string>(".html", "text/html"));
+	mime.insert(std::pair<std::string, std::string>(".png", "image/png"));
+	mime.insert(std::pair<std::string, std::string>(".jpg", "image/jpeg"));
+	mime.insert(std::pair<std::string, std::string>(".txt", "text/plain"));
+	//incorrect, but useful for testing for now
+	mime.insert(std::pair<std::string, std::string>(".gz", "image/png"));
+}
+
 /**
  * ! Fonction Temporaire a modifier une fois le parsing terminé
 */
@@ -152,6 +163,7 @@ int	main(void)
 	// AF_INET is used to allow ipv4 connection.
 	// SOCK_STREAM is to tell the socket to use TCP protocol
 	ServerConfig config = initConfig();
+	initMime();
 	config.sin_family = AF_INET;
 	config.sin_port = 7500;
 	try

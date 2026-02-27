@@ -147,7 +147,7 @@ ServerConfig initConfig()
 	std::map<std::string, std::string> cgiHandlers;
 	std::map<std::string, int> requestsFlag;
 	std::string index_file("/html/retry.html");
-	std::string rootFolder(".");
+	std::string rootFolder("./server00");
 	std::string execFolder("/scripts");
 
 	cgiHandlers.insert(std::make_pair(".py", "/usr/bin/python3"));

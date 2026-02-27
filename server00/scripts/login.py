@@ -3,8 +3,8 @@ warnings.filterwarnings('ignore')
 import cgi, cgitb
 
 form = cgi.FieldStorage()
-name = form.getvalue("username")
-password = form.getvalue("password")
+name = form.getfirst("username", "name")
+password = form.getfirst("password", "pwd")
 filename = "./logs/logins/" + name
 
 def success():

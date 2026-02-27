@@ -76,4 +76,5 @@ class Request
 		void	headers_add(std::string line);
 		void	parse_body();
 		void	body_check(size_t size_told, size_t real_size);
+		void	create_env();
 };

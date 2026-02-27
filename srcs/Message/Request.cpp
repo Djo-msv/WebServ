@@ -111,6 +111,8 @@ void Request::parse()
 	{
 		try { this->parse_body(); }
 		catch (std::exception &e) { throw ; }
+		if (exec)
+			this->create_env();
 		return ;
 	}
 	std::string header;
@@ -129,6 +131,8 @@ void Request::parse()
 		this->parse_header(header);
 		_status = 1; //headers are parsed with no error
 		this->parse_body();
+		if (exec)
+			this->create_env();
 	}
 	catch (std::exception &e) {
 		if (!_status)
@@ -219,17 +223,10 @@ void Request::adjust_exec()
 	headers.insert(std::pair<std::string, std::string>("REQUEST_METHOD", _method));
 	if (!_query.empty())
 		headers.insert(std::pair<std::string, std::string>("QUERY_STRING", _query));
-	//here creating the char * environment which we can use for execve, in two steps as previously established
-	_env = new std::string[headers.size()];
-	c_env = new const char*[headers.size() + 1];
-	size_t i = 0;
-	for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); it++)
-	{
-		_env[i] = it->first + "=" + it->second;
-		c_env[i] = _env[i].c_str();
-		i++;
+	if (getenv("PATH")) {
+		std::string path = getenv("PATH");
+		headers.insert(std::pair<std::string, std::string>("PATH", path));
 	}
-	c_env[i] = NULL;
 }
 
 void Request::headers_add(std::string line)
@@ -257,6 +254,8 @@ void Request::headers_add(std::string line)
 		key[n] = '_';
 		n = key.find('-');
 	}
+	if (key != "CONTENT_LENGTH" && key != "CONTENT_TYPE")
+		key = "HTTP_" + key;
 	headers.insert(std::pair<std::string, std::string>(key, val));
 }
 
@@ -292,6 +291,21 @@ void Request::body_check(size_t size_told, size_t real_size)
 		throw MissingData();
 	if (real_size > size_told)
 		_body = _body.substr(0, size_told);
+}
+
+void Request::create_env()
+{
+	//here creating the char * environment which we can use for execve, in two steps as previously established
+	_env = new std::string[headers.size()];
+	c_env = new const char*[headers.size() + 1];
+	size_t i = 0;
+	for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); it++)
+	{
+		_env[i] = it->first + "=" + it->second;
+		c_env[i] = _env[i].c_str();
+		i++;
+	}
+	c_env[i] = NULL;
 }
 
 

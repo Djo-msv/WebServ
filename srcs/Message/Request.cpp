@@ -113,6 +113,8 @@ void Request::parse(std::map<std::string, std::string> &mime)
 		catch (std::exception &e) { throw ; }
 		if (exec)
 			this->create_env();
+		else if (_method == "DELETE")
+			throw DeleteRequest(_target);
 		else
 			this->mime_check(mime);
 		return ;
@@ -135,14 +137,17 @@ void Request::parse(std::map<std::string, std::string> &mime)
 		this->parse_body();
 		if (exec)
 			this->create_env();
+		else if (_method == "DELETE")
+			throw DeleteRequest(_target);
 		else
 			this->mime_check(mime);
 	}
-	catch (std::exception &e) {
+	catch (MissingData &e) {
 		if (!_status)
 			this->clear();
 		throw ;
 	}
+	catch (std::exception &e) { throw ; }
 }
 
 
@@ -356,3 +361,5 @@ void Request::read() const
 }
 
 Request::MissingData::MissingData() : std::out_of_range("data missing from request !") {}
+
+Request::DeleteRequest::DeleteRequest(std::string target) : std::out_of_range(target.c_str()) {}

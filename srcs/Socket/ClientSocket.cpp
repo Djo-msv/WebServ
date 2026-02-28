@@ -82,8 +82,29 @@ void	ClientSocket::parseRequest()
 		_status = ReadRequest;
 		//do the timeout specification here
 	}
+	//could do a catch here for my delete method ? like, a specific exception with just the file name attached
+	//that would do something similar to a HTTP_error catch 
+	//by attempting a delete on the file, std::ustring msg = "header vide",_response.add(msg.c_str(), msg.size())
+	//and pivoting to response immediately
+	catch (Request::DeleteRequest &e) { this->deleteFile(e.what()); }
 	catch (HttpError &e) { ErrorHandling(e, false); }
 	catch (std::exception &e) { throw; }
+}
+
+//function for the DELETE method exception :: delete file
+void	ClientSocket::deleteFile(const char *filename)
+{
+	InternalServerError e;
+	if (std::remove(filename))
+		ErrorHandling(e, false);
+	else {
+		//here we handle the pivot into response
+		ustring response = (unsigned char *)"HTTP/1.1 204 No Content\r\n\r\n";
+		_response.add(response.c_str(), response.size());
+		_response.makeMsg();
+		_status = WaitResponse;
+		epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
+	}
 }
 
 //starting the execution process here (write or exec + read)

@@ -146,13 +146,14 @@ ServerConfig initConfig()
 {
 	std::map<std::string, std::string> cgiHandlers;
 	std::map<std::string, int> requestsFlag;
-	std::string index_file("/html/retry.html");
+	std::string index_file("/html/index.html");
 	std::string rootFolder("./server00");
 	std::string execFolder("/scripts");
 
 	cgiHandlers.insert(std::make_pair(".py", "/usr/bin/python3"));
 	requestsFlag.insert(std::make_pair("/html", ServerConfig::GET));
 	requestsFlag.insert(std::make_pair("/img", ServerConfig::GET));
+	requestsFlag.insert(std::make_pair("/uploads", ServerConfig::DELETE));
 	requestsFlag.insert(std::make_pair("/scripts", ServerConfig::GET | ServerConfig::POST));// 0 = Rien, rajouter un | pour plus de flags
 	return ServerConfig(cgiHandlers, requestsFlag, index_file, rootFolder, execFolder);
 }

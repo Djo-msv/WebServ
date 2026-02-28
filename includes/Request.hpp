@@ -49,6 +49,11 @@ class Request
 			public:
 				MissingData();
 		};
+		
+		class DeleteRequest : public std::out_of_range {
+			public:
+				DeleteRequest(std::string target);
+		};
 	
 	private:
 		ServerConfig &	_config;

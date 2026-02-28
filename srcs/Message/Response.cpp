@@ -90,6 +90,26 @@ void Response::makeErrorResponse(HttpError &error, ServerConfig &s)
 	catch (InternalServerError &e) {_status = e.what(); _target = ""; this->add((unsigned char *)(e.getDefaultFile().c_str()), e.getDefaultFile().size());}
 }
 
+void Response::makeMsg()
+{
+	sizer = _body.size();
+	if (!exec && !_headers.empty())
+		sizer += _headers.size();
+	_msg = new unsigned char[sizer];
+	size_t pos = 0;
+	if (!exec && !_headers.empty()) {
+		for (std::string::iterator it = _headers.begin(); it != _headers.end(); it++) {
+			_msg[pos] = *it;
+			pos++;
+		}
+	}
+	for (ustring::iterator it = _body.begin(); it != _body.end(); it++) {
+		_msg[pos] = *it;
+		pos++;
+	}
+	std::cout << "here the body in response :: \n" << (char *)_body.c_str() << std::endl;
+}
+
 
 
 		//private message-making functions, in chronological order
@@ -145,23 +165,4 @@ void Response::chunkBody()
 	for (std::vector<ustring>::iterator it = ensemble.begin(); it != ensemble.end(); it++)
 		_body += *it;
 	_body += end;
-}
-
-void Response::makeMsg()
-{
-	sizer = _body.size();
-	if (!exec)
-		sizer += _headers.size();
-	_msg = new unsigned char[sizer];
-	size_t pos = 0;
-	if (!exec) {
-		for (std::string::iterator it = _headers.begin(); it != _headers.end(); it++) {
-			_msg[pos] = *it;
-			pos++;
-		}
-	}
-	for (ustring::iterator it = _body.begin(); it != _body.end(); it++) {
-		_msg[pos] = *it;
-		pos++;
-	}
 }

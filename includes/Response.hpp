@@ -22,6 +22,7 @@ class Response
 		void add(const unsigned char *buffer, size_t size); //adds the buffer to the body (cgi read response)
 		bool makeResponse(Request *req); //distribution
 		void makeErrorResponse(HttpError &error, ServerConfig &s); //for immediate error return, adjusts status + body
+		void makeMsg();//response is ready for sending, make the final message
 		void clear();
 
 		//getters
@@ -41,7 +42,6 @@ class Response
 		size_t sizer;
 		
 		void readFile(); //if target, reads the target file into a body string
-		void makeMsg();
 		void chunkBody(); //chunks body, by BUF_SIZE
 };
 

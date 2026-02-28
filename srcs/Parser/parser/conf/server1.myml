@@ -1,12 +1,16 @@
-server : &default
+
+#test
+
+
+server : &default # Commentaire fourbe
     - value
     - value
     - dictionary :
         key : "value \n" 
-        key : ' value'
-		key : 123
-		key : 12.3
-		key : !!str 12.3
+        key : ' value\'
+        key : 123
+        key : 12.3
+        key : !!str 12.3
     - value
 
 #best comment that ever lived

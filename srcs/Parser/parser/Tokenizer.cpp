@@ -53,7 +53,7 @@ void	Tokenizer::complexToken(std::string &file, std::list<Token> &tokens)
 	switch (file[0]) {
 		case '\t':
 			for (; *it == '\t'; it++) {};
-			tokens.insert(tokens.end(), Token{std::string(file, 0, it - file.begin()), INDENTATION, 0});
+			tokens.insert(tokens.end(), Token{std::string(file, 0, it - file.begin()), SPACE, 0});
 			break;
 		case 32:
 			for (; *it == 32; it++) {};

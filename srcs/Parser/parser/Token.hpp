@@ -1,6 +1,8 @@
 #pragma once
 
 #include <iostream>
+#include <cstdint>
+#include <cstring>
 
 // Comment token
 #define HASH				0

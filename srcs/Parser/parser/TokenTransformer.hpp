@@ -4,9 +4,11 @@
 
 #include "Token.hpp"
 
-#define NULL_STATUS 0
+#define NULL_STATUE 0
 #define SINGLE_QUOTE_STATUE 1
 #define DOUBLE_QUOTE_STATUE 2
+#define NEW_LINE 3
+#define STOP_LINE 4
 
 
 class TokenTransformer
@@ -20,9 +22,8 @@ class TokenTransformer
 		
 		void	remover(std::list<Token> &tokens, std::list<Token>::iterator &it);
 		void	indentationTransformer(std::list<Token>::iterator &it);
-		void	quoteTransformer(std::list<Token>::iterator &it);
+		void	quoteTransformer(std::list<Token> &tokens, std::list<Token>::iterator &it);
 		void	castTransformer(std::list<Token>::iterator &it);
-		void	stringTransformer(std::list<Token>::iterator &it);
 
 		class BadParsing : public std::runtime_error {
 			public :

@@ -31,8 +31,6 @@
 #define STRING_CAST			17
 #define INTEGER_CAST		18
 #define FLOAT_CAST			19
-#define DOUBLE_CAST			20
-#define BOOL_CAST			21
 
 // alias
 #define AMPERSTAND			22

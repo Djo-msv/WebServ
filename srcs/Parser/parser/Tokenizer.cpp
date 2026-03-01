@@ -172,14 +172,6 @@ void	Tokenizer::castOfValue(std::string &file, std::list<Token> &tokens)
 		it += 7;
 		tokens.insert(tokens.end(), Token{std::string(file, 0, it - file.begin()), FLOAT_CAST, 0});
 	}
-	else if (file.rfind("!!double", 0) == 0) {
-		it += 8;
-		tokens.insert(tokens.end(), Token{std::string(file, 0, it - file.begin()), DOUBLE_CAST, 0});
-	}
-	else if (file.rfind("!!bool", 0) == 0) {
-		it += 6;
-		tokens.insert(tokens.end(), Token{std::string(file, 0, it - file.begin()), BOOL_CAST, 0});
-	}
 	if (it != file.begin())
 		file.erase(file.begin(), it);
 }

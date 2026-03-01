@@ -7,8 +7,7 @@ TokenTransformer::TokenTransformer(std::list<Token> &tokens) : _status(STOP_LINE
 
 		indentationTransformer(it);
 		quoteTransformer(tokens, it);
-		castTransformer(it);
-		stringTransformer(it);
+		castTransformer(tokens, it);
 		remover(tokens, it);
 		if (tmp == it)
 			it++;
@@ -95,7 +94,9 @@ void	TokenTransformer::quoteTransformer(std::list<Token> &tokens, std::list<Toke
 	}
 	if (_status == DOUBLE_QUOTE_STATUE) {
 		if ((*it)._type == END_OF_LINE || (*it)._type == END_OF_FILE)
+		{
 			throw BadParsing(value);
+		}
 		if ((*it)._type == BACK_SLASH) {
 			if ((*it)._token == "\\n")
 				value += '\n';
@@ -114,5 +115,29 @@ void	TokenTransformer::quoteTransformer(std::list<Token> &tokens, std::list<Toke
 	}
 }
 
-void	TokenTransformer::castTransformer(std::list<Token>::iterator &it)
-{}
+void	TokenTransformer::castTransformer(std::list<Token> &tokens, std::list<Token>::iterator &it)
+{
+	if ((*it)._type == STRING_CAST) {
+		it = tokens.erase(it);
+		if ((*it)._type != END_OF_LINE && (*it)._type != END_OF_FILE)
+			(*it)._type = STRING;
+		else
+			throw BadParsing((*it)._token);
+	}
+	if ((*it)._type == INTEGER_CAST) {
+		it = tokens.erase(it);
+		if ((*it)._type != END_OF_LINE && (*it)._type != END_OF_FILE) {
+			(*it)._token.erase((*it)._token.find((*it)._token));
+			(*it)._type = INTEGER;
+		}
+		else
+			throw BadParsing((*it)._token);
+	}
+	if ((*it)._type == FLOAT_CAST) {
+		it = tokens.erase(it);
+		if ((*it)._type != END_OF_LINE && (*it)._type != END_OF_FILE)
+			(*it)._type = FLOAT;
+		else
+			throw BadParsing((*it)._token);
+	}
+}

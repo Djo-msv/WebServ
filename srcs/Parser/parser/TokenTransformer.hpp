@@ -23,7 +23,7 @@ class TokenTransformer
 		void	remover(std::list<Token> &tokens, std::list<Token>::iterator &it);
 		void	indentationTransformer(std::list<Token>::iterator &it);
 		void	quoteTransformer(std::list<Token> &tokens, std::list<Token>::iterator &it);
-		void	castTransformer(std::list<Token>::iterator &it);
+		void	castTransformer(std::list<Token> &tokens, std::list<Token>::iterator &it);
 
 		class BadParsing : public std::runtime_error {
 			public :

@@ -6,7 +6,7 @@ Parser::Parser(const std::string &path)
 	std::list<std::string> filesvalue = files.getFile();
 	
 	if (filesvalue.empty()) {
-		std::cout << "no files fond at :" << path << std::endl;
+		std::cout << "no files found at :" << path << std::endl;
 		return ;
 	}
 	for (std::list<std::string>::iterator it = filesvalue.begin(); it != filesvalue.end(); it++)

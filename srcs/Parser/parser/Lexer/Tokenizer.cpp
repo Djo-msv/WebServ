@@ -41,7 +41,7 @@ void	Tokenizer::coment(std::string &file, std::list<Token> &tokens)
 		std::string::iterator it;
 
 		for (it = file.begin(); it != file.end() && (*it) != '\n'; it++) {}
-		tokens.insert(tokens.end(), Token{std::string(file, 0, it - file.begin()), HASH});
+		tokens.insert(tokens.end(), Token{std::string(file, 0, it - file.begin()), HASH, 0});
 		file.erase(file.begin(), it);
 	}
 }

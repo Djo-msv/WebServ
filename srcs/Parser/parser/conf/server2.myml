@@ -2,7 +2,7 @@
 list : [PHP, Perl, Python]
 
 server2 :
-	- value1
+	- key : value1
 	- value2
 	- dictionary :
 		key : value1

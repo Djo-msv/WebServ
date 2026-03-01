@@ -7,7 +7,7 @@ Parser::Parser(const std::string &path)
 	
 	if (filesvalue.empty()) {
 		std::cout << "no files fond at :" << path << std::endl;
-		exit(1);
+		return ;
 	}
 	for (std::list<std::string>::iterator it = filesvalue.begin(); it != filesvalue.end(); it++)
 		Tokenizer(*it, _tokens);
@@ -17,7 +17,7 @@ Parser::Parser(const std::string &path)
 	catch (const std::runtime_error &e) {
 		std::cout << e.what() << std::endl;
 		_tokens.clear();
-		exit(1);
+		return ;
 	}
 	Lexer print(_tokens);
 }

@@ -6,7 +6,7 @@ server : &default # Commentaire fourbe
     - value
     - value
     - dictionary :
-        key : "value \n 
+        key : "value \n" 
         key : ' value\'
         key : 123
         key : 12.3

@@ -1,9 +1,9 @@
 #include <iostream>
 #include <cstring>
 
-#include "File.hpp"
-#include "Tokenizer.hpp"
-#include "Parser.hpp"
+#include "Lexer/File.hpp"
+#include "Lexer/Tokenizer.hpp"
+#include "Lexer/Parser.hpp"
 
 int	main(int argc, char **argv)
 {

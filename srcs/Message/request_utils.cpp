@@ -1,18 +1,8 @@
 #include <request_utils.hpp>
 
-
+//checks if file exists and if we have read permission
 std::string	seekFile(std::string &pathfile)
 {
-	/** 
-	* TODO vérifier l'existence et les permissions du fichier, donné, si le fichier donné est un code erreur ou index,
-	* * récupérer le fichier stocké dans serverConf sinon chercher dans le Workdir du serverConf en utilisant le path donné
-	* * le fichier n'existe pas ou n'est pas trouvé renvoyer fichier d'erreur du serverConf, (HttpError, "404 not found") 
-	* * si n'existe pas renvoyer défaut ("403 Forbidden"), si inaccessible renvoyer page HTML hard codé d'erreur de permission ("500 Internal Server Error"),
-	* * séparer nom de l'extension, récupérer le cgi depuis serverConf,
-	* * si pas de CGi ou d'extension renvoyer page brut avec exception spécial
-	
-	**/
-
 	struct stat file_stat;
 	if (stat(pathfile.c_str(), &file_stat) == -1)
 		throw FileNotFound();
@@ -23,7 +13,7 @@ std::string	seekFile(std::string &pathfile)
 
 }
 
-
+//returns the correct cgi executable for the file type (for example, file == "input.py" will return "usr/bin/python3"
 std::string	extractCgi(std::string &file, ServerConfig &config)
 {
 	std::string extension;
@@ -115,8 +105,8 @@ bool check_key(std::string key) //wip, as im actually unsure what the authorized
 	return true;
 }
 
-//checks for alnum (, ) and trims the whitespaces
-bool check_val(std::string &val) //wip, as im actually unsure what the authorized formatting is
+//trims the whitespaces
+bool check_val(std::string &val)
 {
 	size_t pos1 = 0;
 	for (std::string::iterator it = val.begin(); it != val.end(); it++) {
@@ -132,8 +122,6 @@ bool check_val(std::string &val) //wip, as im actually unsure what the authorize
 		if (!isspace(*it))
 			cut = it;
 	}
-	if (*cut == ',')
-		return false;
 	if (cut != val.end() -1)
 		val.erase(cut, val.end());
 	return true;

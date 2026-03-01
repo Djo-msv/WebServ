@@ -90,6 +90,8 @@ void Response::makeErrorResponse(HttpError &error, ServerConfig &s)
 	catch (InternalServerError &e) {_status = e.what(); _target = ""; this->add((unsigned char *)(e.getDefaultFile().c_str()), e.getDefaultFile().size());}
 }
 
+		//allocating the (unsigned char*) message to return 
+
 void Response::makeMsg()
 {
 	sizer = _body.size();
@@ -107,7 +109,6 @@ void Response::makeMsg()
 		_msg[pos] = *it;
 		pos++;
 	}
-	std::cout << "here the body in response :: \n" << (char *)_body.c_str() << std::endl;
 }
 
 

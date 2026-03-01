@@ -111,10 +111,10 @@ void Request::parse(std::map<std::string, std::string> &mime)
 	{
 		try { this->parse_body(); }
 		catch (std::exception &e) { throw ; }
+		if (_method == "DELETE")
+			throw DeleteRequest(_target);
 		if (exec)
 			this->create_env();
-		else if (_method == "DELETE")
-			throw DeleteRequest(_target);
 		else
 			this->mime_check(mime);
 		return ;
@@ -135,10 +135,10 @@ void Request::parse(std::map<std::string, std::string> &mime)
 		this->parse_header(header);
 		_status = 1; //headers are parsed with no error
 		this->parse_body();
+		if (_method == "DELETE")
+			throw DeleteRequest(_target);
 		if (exec)
 			this->create_env();
-		else if (_method == "DELETE")
-			throw DeleteRequest(_target);
 		else
 			this->mime_check(mime);
 	}
@@ -222,7 +222,7 @@ void Request::adjust_exec()
 	//looking for cgi executable file
 	try { _cgi = extractCgi(_target, _config); }
 	catch (std::exception &e) { throw ; }
-	//first we should add relevant variables :: cgi version, redirect status, query string, method request, etc.
+	//adding relevant variables :: cgi version, redirect status, query string, method request, etc.
 	headers.insert(std::pair<std::string, std::string>("REDIRECT_STATUS", "true"));
 	headers.insert(std::pair<std::string, std::string>("GATEWAY_INTERFACE", "CGI/1.1"));
 	std::string filename = _target;
@@ -251,9 +251,9 @@ void Request::headers_add(std::string line)
 	//checking for a-num values (-)
 	if (!check_key(key))
 		throw BadRequest();// bad key formatting
-	//checking for a-num (, ) + trims whitespaces
+	//checking for an empty value + trimming whitespaces
 	if (!check_val(val))
-		throw BadRequest();// also ? bad value formatting, i guess
+		throw BadRequest();// value is empty
 	
 	//turning 'Content-Length' into 'CONTENT_LENGTH' for future environment and lack of case-conflict
 	std::transform(key.begin(), key.end(), key.begin(), ::toupper);

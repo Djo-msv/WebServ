@@ -4,6 +4,8 @@ ServerConfig::ServerConfig(std::map<std::string, std::string> cgiHandlers, std::
 	std::string index_file, std::string rootFolder, std::string execFolder)
     : cgiExtensions(cgiHandlers), requestsFlag(requestsFlag), index_file(index_file), rootFolder(rootFolder), execFolder(execFolder) {}
 
+ServerConfig::~ServerConfig() {}
+
 bool ServerConfig::isMethodAllowed(const std::string &location, int method) const
 {
     std::map<std::string, int>::const_iterator it = requestsFlag.find(location);

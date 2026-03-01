@@ -1,6 +1,10 @@
 #include "ClientSocket.hpp"
 
-ClientSocket::ClientSocket(ServerSocket &serverSocket, int _epoll, std::map<const int, Socket *> &_sockets, std::map<std::string, std::string> &_mime) : Socket(createSocket(serverSocket)), _status(WaitRequest),  _serverSocket(serverSocket), epollInstance(_epoll), sockets(_sockets), mime(_mime), _request(Request(serverSocket.getConfig())), _sendpos(0) {}
+ClientSocket::ClientSocket(ServerSocket &serverSocket, int _epoll, std::map<const int, Socket *> &_sockets, \
+				std::map<std::string, std::string> &_mime) : Socket(createSocket(serverSocket)), \
+										_status(WaitRequest),  _serverSocket(serverSocket), \
+										epollInstance(_epoll), sockets(_sockets), mime(_mime), \
+										_request(Request(serverSocket.getConfig())), _sendpos(0) {}
 
 ClientSocket::~ClientSocket(void) { std::cout << "deleting client of socket :: " << _socketFd << std::endl; }
 
@@ -82,10 +86,6 @@ void	ClientSocket::parseRequest()
 		_status = ReadRequest;
 		//do the timeout specification here
 	}
-	//could do a catch here for my delete method ? like, a specific exception with just the file name attached
-	//that would do something similar to a HTTP_error catch 
-	//by attempting a delete on the file, std::ustring msg = "header vide",_response.add(msg.c_str(), msg.size())
-	//and pivoting to response immediately
 	catch (Request::DeleteRequest &e) { this->deleteFile(e.what()); }
 	catch (HttpError &e) { ErrorHandling(e, false); }
 	catch (std::exception &e) { throw; }

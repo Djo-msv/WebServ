@@ -34,6 +34,11 @@ void	TokenTransformer::remover(std::list<Token> &tokens, std::list<Token>::itera
 	// remove commant
 	if ((*it)._type == HASH)
 		it = tokens.erase(it);
+
+	// remove unused space
+	if ((*it)._type == SPACE && _status == NULL_STATUE) {
+		it = tokens.erase(it); 
+	}
 }
 
 void	TokenTransformer::indentationTransformer(std::list<Token>::iterator &it)

@@ -34,7 +34,7 @@ Lexer::Lexer(std::list<Token> &tokens)
 		if ((*it)._type == END_OF_FILE)
 			std::cout << "=====================================================" << std::endl;
 		else
-			std::cout << types.at((int)(*it)._type) << "[" << (*it)._token << "]" << std::endl;
+			std::cout << (int)(*it)._type << "[" << (*it)._token << "]";
 	}
 }
 

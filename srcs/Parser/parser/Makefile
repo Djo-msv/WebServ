@@ -1,5 +1,5 @@
 CC=c++
-FLAGS=-Wall -Werror -Wextra #-std=c++98
+FLAGS=-Wall -Werror -Wextra -std=c++98
 NAME=parsingYml
 SRCS=Lexer/File.cpp \
 	Lexer/Parser.cpp \

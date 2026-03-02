@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iostream>
-#include <cstdint>
+#include <stdint.h>
 #include <list>
 
 #include "Token.hpp"

@@ -10,12 +10,10 @@ MymlObject::MymlObject(const std::string &value) : _value(value)
 MymlObject::~MymlObject(void)
 {}
 
-std::string	MymlObject::getValue(void)
-{
-	return (_value);
-}
+MymlObject::~MymlObject(const std::string &value) : _value(value)
+{}
 
-MymlList::MymlList(void)
+MymlList::MymlList(const std::string &key) : _key(key)
 {}
 
 MymlList::~MymlList(void)
@@ -30,66 +28,22 @@ MymlPair::MymlPair(std::string &key, std::string &value) :: _pair(std::pair<std:
 MymlPair::~MymlPair(void)
 {}
 
-MymlDictionary::MymlDictionary(void)
+MymlDictionary::MymlDictionary(const std::string &key) : _key(key)
 {}
 
 MymlDictionary::~MymlDictionary(void)
 {
 	for (std::map<std::string, MymlObject*>::iterator it = _dictionary.begin(); it != _dictionary.end(); it++)
-		delete (*it).second;
+		delete it->second;
 }
 
-std::list<MymlObject*>	MymlList::getMymlList(void)
+void	MymlList::insert(const MymlObject *value)
 {
-	return (_list);
+	_list.insert(_list.end(), value);
 }
 
-std::map<std::string, MymlObject*> MymlDictionary::getMymlDictionary(void)
-{
-	return (_dictionary);
-}
 
-std::pair<std::string, std::string> MymlPair::getMymlPair(void)
+void	MymlDictionary::insert(const std::pair<std::string, MymlObject *> value)
 {
-	return (_pair);
-}
-
-MymlObject	*MymlList::insertList()
-{
-	MymlList *obj = new MymlList();
-	_list.push_back(obj);
-	return (obj);
-}
-
-MymlObject	*MymlList::insertDictionary()
-{
-	MymlDictionary *obj = new MymlDictionary();
-	_list.push_back(obj);
-	return (obj);
-}
-
-void	MymlList::insertValue(std::string &value)
-{
-	MymlObject *obj = new MymlObject(value);
-	_list.push_back(obj);
-}
-
-MymlObject	*MymlDictionary::insertList(std::string &key)
-{
-	MymlList *obj = new MymlList();
-	_dictionary.insert(std::pair<std::string, MymlObject*>(key, obj));
-	return (obj);
-}
-
-MymlObject	*MymlDictionary::insertDictionary(std::string &key)
-{
-	MymlDictionary *obj = new MymlDictionary();
-	_dictionary.insert(std::pair<std::string, MymlObject*>(key, obj));
-	return (obj);
-}
-
-void	MymlDictionary::insertValue(std::string &key, std::string &value)
-{
-	MymlObject *obj = new MymlObject(value);
-	_dictionary.insert(std::pair<std::string, MymlObject*>(key, obj));
+	_dictionary.insert(_dictonary.end(), value);
 }

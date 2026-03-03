@@ -6,9 +6,10 @@ SRCS=Lexer/File.cpp \
 	Lexer/Tokenizer.cpp \
 	Lexer/TokenTransformer.cpp \
 	Lexer/Lexer.cpp \
-	main.cpp
-	#Tree/MymlObject.cpp \
-	#Tree/MymlTree.cpp \
+	main.cpp \
+	Tree/MymlObject.cpp \
+	Tree/MymlTree.cpp \
+	Tree/treeUtils.cpp \
 	#Lexer/Lexer.cpp \
 	#Lexer/TokenTransformer.cpp \
 all: $(NAME)

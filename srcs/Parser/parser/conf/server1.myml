@@ -12,6 +12,7 @@ server : &default # Commentaire fourbe
         key : 12.3
         key : !!str 12.3
     - value
+		-value
 
 #best comment that ever lived
 

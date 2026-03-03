@@ -11,8 +11,6 @@ class MymlObject
 		MymlObject(const std::string &value);
 		virtual ~MymlObject();
 
-		std::string getValue();
-		
 	private :
 		std::string	_value;
 		
@@ -38,15 +36,10 @@ class MymlPair :public MymlObject
 class MymlList : public MymlObject
 {
 	public :
-		MymlList();
+		MymlList(const ::std::string &key);
 		~MymlList();
 
-		std::list<MymlObject*>	getMymlList();
-
-		MymlObject *insertList();
-		MymlObject *insertDictionary();
-		void insertValue(std::string &value);
-
+		void insert(const MymlObject *value);
 	private :
 		std::string				_key;
 		std::list<MymlObject*>	_list;
@@ -55,16 +48,15 @@ class MymlList : public MymlObject
 class MymlDictionary : public MymlObject
 {
 	public :
-		MymlDictionary();
+		MymlDictionary(const std::string &key);
 		~MymlDictionary();
 
 		std::map<std::string, MymlObject*> getMymlDictionary();
 
-		MymlObject *insertList(std::string &key);
-		MymlObject *insertDictionary(std::string &key);
-		void insertValue(std::string &key, std::string &value);
+		void insert(const std::pair<std::string, MymlObject *> value);
 
 	
 	private :
+		std::string							_key;
 		std::map<std::string, MymlObject*>	_dictionary;
 };

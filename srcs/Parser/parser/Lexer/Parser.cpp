@@ -1,4 +1,5 @@
 #include "Parser.hpp"
+#include "../Tree/MymlTree.hpp"
 
 Parser::Parser(const std::string &path)
 {
@@ -20,6 +21,14 @@ Parser::Parser(const std::string &path)
 		return ;
 	}
 	Lexer print(_tokens);
+	try {
+		MymlTree	tree(_tokens);
+	}
+	catch (const std::runtime_error &e) {
+		std::cout << "error :" << e.what() << std::endl;
+		_tokens.clear();
+		return ;
+	}
 }
 
 Parser::~Parser()

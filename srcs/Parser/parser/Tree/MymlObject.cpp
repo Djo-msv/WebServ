@@ -10,8 +10,15 @@ MymlObject::MymlObject(const std::string &value) : _value(value)
 MymlObject::~MymlObject(void)
 {}
 
-MymlObject::~MymlObject(const std::string &value) : _value(value)
-{}
+void MymlObject::insert(MymlObject *value)
+{
+	(void) value;
+}
+
+void MymlObject::insert(const std::pair<std::string, MymlObject *> value)
+{
+	(void) value;
+}
 
 MymlList::MymlList(const std::string &key) : _key(key)
 {}
@@ -22,7 +29,7 @@ MymlList::~MymlList(void)
 		delete (*it);
 }
 
-MymlPair::MymlPair(std::string &key, std::string &value) :: _pair(std::pair<std::string, std::string>(key, value))
+MymlPair::MymlPair(std::string &key, std::string &value) : _pair(std::pair<std::string, std::string>(key, value))
 {}
 
 MymlPair::~MymlPair(void)
@@ -37,7 +44,7 @@ MymlDictionary::~MymlDictionary(void)
 		delete it->second;
 }
 
-void	MymlList::insert(const MymlObject *value)
+void	MymlList::insert(MymlObject *value)
 {
 	_list.insert(_list.end(), value);
 }
@@ -45,5 +52,5 @@ void	MymlList::insert(const MymlObject *value)
 
 void	MymlDictionary::insert(const std::pair<std::string, MymlObject *> value)
 {
-	_dictionary.insert(_dictonary.end(), value);
+	_dictionary.insert(_dictionary.end(), value);
 }

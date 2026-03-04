@@ -7,7 +7,7 @@ bool	isValue(std::list<Token>::iterator it)
 	return (false);
 }
 
-bool	isDictonary(std::list<Token>::iterator it)
+bool	isDictionary(std::list<Token>::iterator it)
 {
 	if (it->_type == STRING) {
 		it ++;
@@ -26,4 +26,5 @@ size_t	nbSpace(std::list<Token>::iterator &it)
 		it++;
 		return (level);
 	}
+	return (0);
 }

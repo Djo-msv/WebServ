@@ -14,6 +14,7 @@ MymlTree::MymlTree(std::list<Token> &tokens) : _root("root")
 				if (isValue(it)) { // is pair
 					value = it->_token;
 					for(;it->_type != INDENTATION && it->_type == END_OF_LINE; it++){};
+					std::cout << "pair" << std::endl;
 					_root.insert(new MymlPair(key, value));	
 				}
 				else { // is list or dictionary
@@ -48,6 +49,7 @@ MymlObject *MymlTree::parseListArg(std::list<Token>::iterator &begin, std::list<
 		if (isValue(it)) { // is pair
 			value = it->_token;
 			for(;it->_type != INDENTATION && it->_type == END_OF_LINE; it++){};
+			std::cout << std::string(level, ' ') << "pair" << std::endl;
 			return (new MymlPair(key, value));	
 		}
 		else { // is list or dictionary
@@ -57,6 +59,7 @@ MymlObject *MymlTree::parseListArg(std::list<Token>::iterator &begin, std::list<
 	}
 	// is value
 	for(;begin->_type != INDENTATION && begin->_type == END_OF_LINE; begin++){};
+	std::cout << std::string(level, ' ') << "value" << std::endl;
 	return (new MymlObject(key)); // !
 }
 
@@ -80,11 +83,13 @@ std::pair<std::string, MymlObject*> MymlTree::parseDictionaryArg(std::list<Token
 		if (isValue(it)) { // is dictionary value
 			value = it->_token;
 			for(;it->_type != INDENTATION && it->_type == END_OF_LINE; it++){};
+			std::cout << std::string(level, ' ') << "value" << std::endl;
 			obj = std::pair<std::string, MymlObject*>(key, new MymlObject(value));
 			return (obj);
 		}
 		else if (it->_type == END_OF_LINE) { // is list or dictionary
 			for(;begin->_type != INDENTATION && begin->_type == END_OF_LINE; begin++){};
+			std::cout << std::string(level, ' ') << "list" << std::endl;
 			obj = std::pair<std::string, MymlObject*>(key, define(begin, key, level));
 			return (obj);
 		}
@@ -100,6 +105,7 @@ std::pair<std::string, MymlObject*> MymlTree::parseDictionaryArg(std::list<Token
 **/
 MymlObject *MymlTree::parseList(const std::string &key, std::list<Token>::iterator &begin, size_t level)
 {
+	std::cout << std::string(level, ' ') << "list" << std::endl;
 	MymlObject *list = new MymlList(key);
 	std::list<Token>::iterator	it = begin;
 
@@ -118,6 +124,7 @@ MymlObject *MymlTree::parseList(const std::string &key, std::list<Token>::iterat
 **/
 MymlObject *MymlTree::parseDictionary(const std::string &key, std::list<Token>::iterator &begin, size_t level)
 {
+	std::cout << std::string(level, ' ') << "dico" << std::endl;
 	MymlObject *dictionary = new MymlDictionary(key);
 	std::list<Token>::iterator	it = begin;
 

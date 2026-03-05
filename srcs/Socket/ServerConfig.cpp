@@ -1,8 +1,8 @@
 #include <ServerConfig.hpp>
 
 ServerConfig::ServerConfig(std::map<std::string, std::string> cgiHandlers, std::map<std::string, int> requestsFlag, 
-	std::string index_file, std::string rootFolder, std::string execFolder)
-    : cgiExtensions(cgiHandlers), requestsFlag(requestsFlag), index_file(index_file), rootFolder(rootFolder), execFolder(execFolder) {}
+	std::string index_file, std::string rootFolder, std::string execFolder, std::map<int, std::string> errorFiles)
+    : cgiExtensions(cgiHandlers), requestsFlag(requestsFlag), errorFiles(errorFiles), index_file(index_file), rootFolder(rootFolder), execFolder(execFolder) {}
 
 ServerConfig::~ServerConfig() {}
 

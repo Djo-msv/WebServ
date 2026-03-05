@@ -146,6 +146,7 @@ ServerConfig initConfig()
 {
 	std::map<std::string, std::string> cgiHandlers;
 	std::map<std::string, int> requestsFlag;
+	std::map<int, std::string> errorFiles;
 	std::string index_file("/html/index.html");
 	std::string rootFolder("./server00");
 	std::string execFolder("/scripts");
@@ -155,7 +156,8 @@ ServerConfig initConfig()
 	requestsFlag.insert(std::make_pair("/img", ServerConfig::GET));
 	requestsFlag.insert(std::make_pair("/uploads", ServerConfig::DELETE));
 	requestsFlag.insert(std::make_pair("/scripts", ServerConfig::GET | ServerConfig::POST));// 0 = Rien, rajouter un | pour plus de flags
-	return ServerConfig(cgiHandlers, requestsFlag, index_file, rootFolder, execFolder);
+	errorFiles.insert(std::make_pair(404, rootFolder + "/html/errors/404_def.html"));
+	return ServerConfig(cgiHandlers, requestsFlag, index_file, rootFolder, execFolder, errorFiles);
 }
 
 int	main(void)

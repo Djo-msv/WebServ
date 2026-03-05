@@ -15,7 +15,7 @@ class ServerConfig
     public:
         ServerConfig(std::map<std::string, std::string> cgiHandlers,
 			std::map<std::string, int> requestsFlag, std::string index_file,
-			std::string rootFolder, std::string execFolder);
+			std::string rootFolder, std::string execFolder, std::map<int, std::string> errorFiles);
 	~ServerConfig();
 
 

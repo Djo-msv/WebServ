@@ -1,8 +1,9 @@
 #include <ServerConfig.hpp>
 
 ServerConfig::ServerConfig(std::map<std::string, std::string> cgiHandlers, std::map<std::string, int> requestsFlag, 
-	std::string index_file, std::string rootFolder, std::string execFolder, std::map<int, std::string> errorFiles)
-    : cgiExtensions(cgiHandlers), requestsFlag(requestsFlag), errorFiles(errorFiles), index_file(index_file), rootFolder(rootFolder), execFolder(execFolder) {}
+	std::string index_file, std::string rootFolder, std::string execFolder, std::map<int, std::string> errorFiles, time_t timeout) :
+	cgiExtensions(cgiHandlers), requestsFlag(requestsFlag), errorFiles(errorFiles), index_file(index_file),
+	execFolder(execFolder), rootFolder(rootFolder), timeout(timeout) {}
 
 ServerConfig::~ServerConfig() {}
 
@@ -43,6 +44,8 @@ std::string ServerConfig::getErrorFile(int errorCode) const
 }
 
 std::string ServerConfig::getRootFolder() const { return (rootFolder); }
+
+time_t	ServerConfig::getTimeout(void) const { return (timeout); }
 
 bool ServerConfig::isExecFolder(std::string location) const { return (execFolder == location); }
 

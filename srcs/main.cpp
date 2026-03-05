@@ -39,16 +39,27 @@ void handleError(const char* msg)
 	exit(1);
 }
 
+void closeSocketconnection(ClientSocket *cSocket)
+{
+	sockets.erase(sockets.find(cSocket->getSocketFd()));
+	epoll_del(epollInstance, cSocket->getSocketFd(), EPOLLOUT);
+	delete cSocket;
+}
+
 //this function now does the reads + fd_switches (obv once the parsing is separate the switch-case will be post parsing instead of readrequest
 void	managePendingClients()
 {	
 	for (std::deque<ClientSocket *>::iterator it = pendingClientSockets.begin(); it != pendingClientSockets.end(); ++it) {
 		ClientSocket *cSocket = *it;
 		try {
-			switch (cSocket->_status) {
+			switch (cSocket->status) {
 				case ClientSocket::ReadRequest:
 					cSocket->readRequest();
 					break ;
+				case ClientSocket::WaitRequest:
+					if (cSocket->hasTimedOut())
+						cSocket->status = ClientSocket::Done;
+					break;
 				case ClientSocket::ParseRequest:
 					cSocket->parseRequest();
 					break ;
@@ -58,15 +69,17 @@ void	managePendingClients()
 				case ClientSocket::ExecRead:
 					cSocket->execRead();
 					break ;
+				case ClientSocket::WaitResponse:
+					if (cSocket->hasTimedOut())
+						cSocket->status = ClientSocket::Done;
+					break;
 				case ClientSocket::SendResponse:
 					cSocket->sendResponse();
 					break ;
 				case ClientSocket::Done:
 					std::cout << "closing connection with socket : " << cSocket->getSocketFd() << std::endl;
 					it = pendingClientSockets.erase(it);
-					sockets.erase(sockets.find(cSocket->getSocketFd()));
-					epoll_del(epollInstance, cSocket->getSocketFd(), EPOLLOUT);
-					delete cSocket;
+					closeSocketconnection(cSocket);
 					if (it == pendingClientSockets.end())
 						return ;
 					break ;
@@ -98,18 +111,18 @@ void handle_events(epoll_event events[], int nbfds)
 			}
 			else {
 				ClientSocket *cSocket = dynamic_cast<ClientSocket *>(socketIterator->value);
-				switch (cSocket->_status) {
+				switch (cSocket->status) {
 					case ClientSocket::WaitRequest:
-						cSocket->_status = ClientSocket::ReadRequest;
+						cSocket->status = ClientSocket::ReadRequest;
 						break ;
 					case ClientSocket::WaitExecWrite:
-						cSocket->_status = ClientSocket::ExecWrite;
+						cSocket->status = ClientSocket::ExecWrite;
 						break ;
 					case ClientSocket::WaitExecRead:
-						cSocket->_status = ClientSocket::ExecRead;
+						cSocket->status = ClientSocket::ExecRead;
 						break ;
 					case ClientSocket::WaitResponse:
-						cSocket->_status = ClientSocket::SendResponse;
+						cSocket->status = ClientSocket::SendResponse;
 						break ;
 					default:
 						break ;
@@ -161,7 +174,7 @@ ServerConfig initConfig()
 	requestsFlag.insert(std::make_pair("/uploads", ServerConfig::DELETE));
 	requestsFlag.insert(std::make_pair("/scripts", ServerConfig::GET | ServerConfig::POST));// 0 = Rien, rajouter un | pour plus de flags
 	errorFiles.insert(std::make_pair(404, rootFolder + "/html/errors/404_def.html"));
-	return ServerConfig(cgiHandlers, requestsFlag, index_file, rootFolder, execFolder, errorFiles);
+	return (ServerConfig(cgiHandlers, requestsFlag, index_file, rootFolder, execFolder, errorFiles, 15)); // timeout en secondes
 }
 
 int	main(void)

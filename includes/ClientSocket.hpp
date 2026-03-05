@@ -16,11 +16,12 @@
 #include <ProcessExecution.hpp>
 #include <Request.hpp>
 #include <Response.hpp>
+#include <ctime>
 
 class ClientSocket : public Socket
 {
 	public :
-		ClientSocket(ServerSocket &serverSocket, int _epoll, std::map<const int, Socket *> &_sockets, std::map<std::string, std::string> &_mime);
+		ClientSocket(ServerSocket &serverSocket, int epoll, std::map<const int, Socket *> &sockets, std::map<std::string, std::string> &mime);
 		~ClientSocket();
 
 		//untouched readRequest(), now with adequate status-update
@@ -38,6 +39,9 @@ class ClientSocket : public Socket
 		//to switch from SendResponse back to WaitRequest, resets all variables and epoll_mods to EPOLLIN
 		void reset();
 
+		void	resetTimeout();
+		bool	hasTimedOut();
+
 		enum state {
 			WaitRequest,
 			ReadRequest,
@@ -50,16 +54,17 @@ class ClientSocket : public Socket
 			SendResponse,
 			Done //close connection
 		};
-		state				_status;
+		state				status;
 
 	private :
-		ServerSocket &		_serverSocket;
-		const int epollInstance;
 		std::map<const int, Socket *> &sockets;
 		std::map<std::string, std::string> &mime;
-		
+
+		ServerSocket &		_serverSocket;
+		const int 			epollInstance;
+		time_t				timeout;
 		Request				_request;
-		ProcessExecution		_exec;
+		ProcessExecution	_exec;
 		Response			_response;
 		size_t _sendpos;
 		

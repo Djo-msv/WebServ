@@ -15,7 +15,7 @@ class ServerConfig
     public:
         ServerConfig(std::map<std::string, std::string> cgiHandlers,
 			std::map<std::string, int> requestsFlag, std::string index_file,
-			std::string rootFolder, std::string execFolder, std::map<int, std::string> errorFiles);
+			std::string rootFolder, std::string execFolder, std::map<int, std::string> errorFiles, time_t timeout);
 	~ServerConfig();
 
 
@@ -25,13 +25,14 @@ class ServerConfig
             DELETE = 1 << 2
         };
 
-        RequestFlag stringToRequestFlag(const std::string &method) const;
-        bool isMethodAllowed(const std::string &location, int method) const; // Request flag conseillé mais pas forcé
-        std::string getCgi(const std::string &extension) const;
-		std::string getRootFolder() const;
-		bool isExecFolder(std::string location) const;
+        RequestFlag	stringToRequestFlag(const std::string &method) const;
+        bool		isMethodAllowed(const std::string &location, int method) const; // Request flag conseillé mais pas forcé
+        std::string	getCgi(const std::string &extension) const;
+		std::string	getRootFolder() const;
+		bool		isExecFolder(std::string location) const;
 		std::string getIndex() const;
         std::string getErrorFile(int errorCode) const;
+		time_t		getTimeout(void) const;
 
         struct sockaddr_in					sin;
         socklen_t							sin_len;
@@ -40,10 +41,11 @@ class ServerConfig
         int                          		sin_port;
 
     private:
-        std::map<std::string, std::string>  cgiExtensions;
-        std::map<std::string, int>          requestsFlag;
-        std::map<int, std::string>          errorFiles;
-        std::string                         index_file;
-        std::string                         rootFolder;
+        std::map<std::string, std::string>	cgiExtensions;
+        std::map<std::string, int>			requestsFlag;
+        std::map<int, std::string>			errorFiles;
+        std::string							index_file;
 		std::string							execFolder;
+        std::string							rootFolder;
+		time_t								timeout;
 };

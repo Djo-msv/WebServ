@@ -1,10 +1,10 @@
 #include "ClientSocket.hpp"
 
-ClientSocket::ClientSocket(ServerSocket &serverSocket, int _epoll, std::map<const int, Socket *> &_sockets, \
-				std::map<std::string, std::string> &_mime) : Socket(createSocket(serverSocket)), \
-										_status(WaitRequest),  _serverSocket(serverSocket), \
-										epollInstance(_epoll), sockets(_sockets), mime(_mime), \
-										_request(Request(serverSocket.getConfig())), _sendpos(0) {}
+ClientSocket::ClientSocket(ServerSocket &serverSocket, int epoll, std::map<const int, Socket *> &sockets, std::map<std::string, std::string> &mime) :
+	Socket(createSocket(serverSocket)), status(WaitRequest), sockets(sockets), mime(mime),
+	_serverSocket(serverSocket), epollInstance(epoll), _request(Request(serverSocket.getConfig())), _sendpos(0) {
+	resetTimeout();
+}
 
 ClientSocket::~ClientSocket(void) { std::cout << "deleting client of socket :: " << _socketFd << std::endl; }
 
@@ -26,7 +26,7 @@ void	ClientSocket::epollFdSwitch(int old_fd, int new_fd, int flags)
 void	ClientSocket::ErrorHandling(HttpError &e, bool exec)
 {
 	_response.makeErrorResponse(e, _serverSocket.getConfig());
-	_status = WaitResponse;
+	status = WaitResponse;
 	if (exec)
 		epollFdSwitch(_exec.getFdIn(), _socketFd, EPOLLOUT | EPOLLET);
 	else
@@ -55,7 +55,7 @@ void	ClientSocket::readRequest(void)
 		struct sockaddr addr;
 		socklen_t size = sizeof(addr);
 		if (!getsockname(_socketFd, &addr, &size)) //reading done (so far)
-			_status = ParseRequest;
+			status = ParseRequest;
 		else
 			throw std::runtime_error("an error occured while reading into client : '" + \
 				ft_itoa(_socketFd) + "' socket : " + std::string(strerror(errno)));
@@ -64,9 +64,10 @@ void	ClientSocket::readRequest(void)
 	else if (size == 0)
 	{
 		std::cout << "Client " << _socketFd << " disconnected" << std::endl;
-		_status = Done;
+		status = Done;
 		return ;
 	}
+	resetTimeout();
 	_request.add(buffer, size);
 }
 
@@ -78,12 +79,12 @@ void	ClientSocket::parseRequest()
 		if (_response.makeResponse(&_request))
 			this->startExec();
 		else {
-			_status = WaitResponse;
+			status = WaitResponse;
 			epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
 		}
 	}
 	catch (Request::MissingData &e) {
-		_status = ReadRequest;
+		status = ReadRequest;
 		//do the timeout specification here
 	}
 	catch (Request::DeleteRequest &e) { this->deleteFile(e.what()); }
@@ -102,7 +103,7 @@ void	ClientSocket::deleteFile(const char *filename)
 		ustring response = (unsigned char *)"HTTP/1.1 204 No Content\r\n\r\n";
 		_response.add(response.c_str(), response.size());
 		_response.makeMsg();
-		_status = WaitResponse;
+		status = WaitResponse;
 		epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
 	}
 }
@@ -114,14 +115,14 @@ void	ClientSocket::startExec()
 	try { _exec.setupProcess(body); }
 	catch (HttpError &e) { ErrorHandling(e, false); return ; }
 	if (!body) {
-		_status = WaitExecRead;
+		status = WaitExecRead;
 		setnonblocking(_exec.getFdOut());
 		try { _exec.startProcess(false, _request.getCgi(), _request.getTarget(), _request.getEnv()); }
 		catch (HttpError &e) { ErrorHandling(e, false); return ; }
 		epollFdSwitch(_socketFd, _exec.getFdOut(), EPOLLIN | EPOLLET);
 	}
 	else {
-		_status = WaitExecWrite;
+		status = WaitExecWrite;
 		setnonblocking(_exec.getFdIn());
 		setnonblocking(_exec.getFdOut());
 		epollFdSwitch(_socketFd, _exec.getFdIn(), EPOLLOUT | EPOLLET);
@@ -137,17 +138,17 @@ void	ClientSocket::execWrite()
 		size = BUF_SIZE;
 	if (size) {
 		if (write(_exec.getFdIn(), (&body[_sendpos]), size) == -1)
-			_status = WaitExecWrite;
+			status = WaitExecWrite;
 		else
 			_sendpos += size;
 	}
-	else { //write is done, start up the process appropriate _status/epoll switching and close
+	else { //write is done, start up the process appropriate status/epoll switching and close
 		try { _exec.startProcess(true, _request.getCgi(), _request.getTarget(), _request.getEnv()); }
 		catch (HttpError &e) { ErrorHandling(e, true); return ; }
 		close(_exec.getFdIn());
 		_sendpos = 0;
 		epollFdSwitch(_exec.getFdIn(), _exec.getFdOut(), EPOLLIN | EPOLLET);
-		_status = WaitExecRead;
+		status = WaitExecRead;
 	}
 }
 
@@ -156,11 +157,11 @@ void	ClientSocket::execRead()
 	unsigned char buffer[BUF_SIZE];
 	ssize_t size = read(_exec.getFdOut(), buffer, BUF_SIZE);
 	if (size < 0)
-		_status = WaitExecRead;
-	else if (!size) { //read is done, appropriate _status/epoll switching and close
+		status = WaitExecRead;
+	else if (!size) { //read is done, appropriate status/epoll switching and close
 		close(_exec.getFdOut());
 		epollFdSwitch(_exec.getFdOut(), _socketFd, EPOLLOUT | EPOLLET);
-		_status = WaitResponse;
+		status = WaitResponse;
 	}
 	else
 		_response.add(buffer, size);
@@ -174,16 +175,17 @@ void ClientSocket::sendResponse()
 		size = BUF_SIZE;
 	if (size) {
 		if (write(_socketFd, (&msg[_sendpos]), size) == -1)
-			_status = WaitResponse;
+			status = WaitResponse;
 		else
 			_sendpos += size;
+		resetTimeout();
 	}
 	else { //write is done, reset for next request or close the connection
 		_sendpos = 0;
 		if (_request.keepAlive())
 			this->reset();
 		else
-			_status = Done;
+			status = Done;
 	}
 }
 
@@ -194,8 +196,22 @@ void ClientSocket::reset()
 	_response.clear();
 	_exec.clear();
 	epoll_mod(epollInstance, _socketFd, EPOLLIN | EPOLLET);
-	_status = WaitRequest;
+	status = WaitRequest;
+	resetTimeout();
 	_sendpos = 0;
+}
+
+
+void ClientSocket::resetTimeout()
+{
+	timeout = std::time(NULL) + _serverSocket.getConfig().getTimeout();
+}
+
+bool ClientSocket::hasTimedOut()
+{
+	std::cout << (timeout <= std::time(NULL)) << std::endl;
+	std::cout << "timeout : " << timeout << "Current Time : " << std::time(NULL) << std::endl;
+	return (timeout <= std::time(NULL));
 }
 
 int ClientSocket::createSocket(ServerSocket & serverSocket)

@@ -270,13 +270,13 @@ void Request::headers_add(std::string line)
 
 void Request::mime_check(std::map<std::string, std::string> &mime)
 {
-	if (!headers.count("HTTP_ACCEPT"))
-		return ; //no accept header, not sure what that would mean for me but i assume just no checking
 	if (_target.rfind('.') == std::string::npos)
-		throw NotImplemented(); //i think ? this is all very murky territory, needs testing - maybe BadRequest ?
+		throw BadRequest(); //i think ? this is all very murky territory, needs testing - maybe BadRequest ?
 	std::string extension = _target.substr(_target.rfind('.'));
 	if (!mime.count(extension))
-		throw NotImplemented(); //again, guessing here
+		throw BadRequest(); //again, guessing here
+	if (!headers.count("HTTP_ACCEPT"))
+		return ; //no accept header, not sure what that would mean for me but i assume just no checking
 	extension = mime.at(extension);
 	std::stringstream line(headers.at("HTTP_ACCEPT"));
 	while (!line.eof()) {
@@ -287,7 +287,7 @@ void Request::mime_check(std::map<std::string, std::string> &mime)
 		if (type == extension)
 			return ;
 	}
-	throw NotImplemented(); //again, guessing at the error
+	throw BadRequest(); //again, guessing at the error
 }
 
 void Request::parse_body()

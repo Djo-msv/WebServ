@@ -4,6 +4,9 @@
 #include <utility>
 
 #include "MymlObject.hpp"
+#include "MymlDictionary.hpp"
+#include "MymlList.hpp"
+#include "MymlPair.hpp"
 #include "../Lexer/Token.hpp"
 
 class MymlTree
@@ -11,6 +14,8 @@ class MymlTree
 	public :
 		MymlTree(std::list<Token> &tokens);
 		~MymlTree();
+
+		std::list<MymlObject*> getRoot();
 
 	private :
 		MymlList	_root;

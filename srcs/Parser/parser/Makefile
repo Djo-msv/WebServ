@@ -7,7 +7,10 @@ SRCS=Lexer/File.cpp \
 	Lexer/TokenTransformer.cpp \
 	Lexer/Lexer.cpp \
 	main.cpp \
+	Tree/MymlDictionary.cpp \
+	Tree/MymlList.cpp \
 	Tree/MymlObject.cpp \
+	Tree/MymlPair.cpp \
 	Tree/MymlTree.cpp \
 	Tree/treeUtils.cpp \
 	#Lexer/Lexer.cpp \

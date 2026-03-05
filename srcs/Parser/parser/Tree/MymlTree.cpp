@@ -147,3 +147,8 @@ MymlObject *MymlTree::define(std::list<Token>::iterator &begin, const std::strin
 		return (parseDictionary(key, begin, level));
 	return (NULL); // if an error
 }
+
+MymlList	MymlTree::getRoot(void)
+{
+	return (_root);
+}

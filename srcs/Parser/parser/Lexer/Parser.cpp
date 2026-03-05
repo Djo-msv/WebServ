@@ -1,6 +1,34 @@
 #include "Parser.hpp"
 #include "../Tree/MymlTree.hpp"
 
+void	printTree(MymlObject *value, size_t level)
+{
+	if (MymlList *nvalue = dynamic_cast<MymlList *>(value)) {
+		std::cout << "list :" << std::endl;
+		std::list<MymlObject*> lst = nvalue->getList();
+		level++;
+		for(std::list<MymlObject*>::iterator it = lst.begin(); it != lst.end(); it++) {
+			std::cout << std::string(level, '\t') << '-';
+			printTree(*it, level);
+		}
+	}
+	else if (MymlDictionary *nvalue = dynamic_cast<MymlDictionary *>(value)) {
+		std::cout << "dictionary :" << std::endl;
+		std::map<std::string, MymlObject*> dct = nvalue->getDictionary();
+		level++;
+		for(std::map<std::string, MymlObject*>::iterator it = dct.begin(); it != dct.end(); it++) {
+			std::cout << std::string(level, '\t');
+			printTree(it->second, level);
+		}
+	}
+	else if (MymlPair *nvalue = dynamic_cast<MymlPair *>(value))
+	{
+		std::cout << "key : value" << std::endl;
+	}
+	else
+		std::cout << "value" << std::endl;
+}
+
 Parser::Parser(const std::string &path)
 {
 	File files(path);
@@ -23,12 +51,17 @@ Parser::Parser(const std::string &path)
 	Lexer print(_tokens);
 	try {
 		MymlTree	tree(_tokens);
+
+		std::list<MymlObject*> list = (tree.getRoot()).getList();
+		for(std::list<MymlObject*>::iterator it = list.begin(); it != list.end(); it++)
+			printTree(*it, 0);
 	}
 	catch (const std::runtime_error &e) {
 		std::cout << "error :" << e.what() << std::endl;
 		_tokens.clear();
 		return ;
 	}
+
 }
 
 Parser::~Parser()

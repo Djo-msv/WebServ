@@ -10,6 +10,11 @@
 # include <fcntl.h>
 # include <unistd.h>
 
+#define RETHROW(ExceptionType) \
+	catch (const ExceptionType& e) { \
+		throw e; \
+	}
+
 class Response
 {
 	public:

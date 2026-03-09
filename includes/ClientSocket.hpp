@@ -7,6 +7,7 @@
 #include <socket_utils.hpp>
 #include <cstring>
 #include <signal.h>
+#include <ctime>
 
 #define BUF_SIZE 1024
 
@@ -16,7 +17,7 @@
 #include <ProcessExecution.hpp>
 #include <Request.hpp>
 #include <Response.hpp>
-#include <ctime>
+#include <main.hpp>
 
 class ClientSocket : public Socket
 {

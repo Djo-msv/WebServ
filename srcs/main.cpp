@@ -1,21 +1,4 @@
-#include <netinet/in.h>
-#include <signal.h>
-#include <cstring>
-#include <cstdlib>
-#include <sys/epoll.h>
-#include <deque>
-
-#define MAX_EVENTS 10
-#define key first
-#define value second
-#include "ServerSocket.hpp"
-#include "ClientSocket.hpp"
-
-#include "ProcessExecution.hpp"
-#define CATCH_AND_HANDLE(ExceptionType) \
-    catch (const ExceptionType& e) { \
-        handleError(e.what()); \
-	}
+#include <main.hpp>
 
 std::map<std::string, std::string> mime;
 std::map<const int, Socket *>	sockets;
@@ -35,7 +18,7 @@ void handleError(const char* msg)
 	for (SocketIterator it = sockets.begin(); it != sockets.end(); ++it)
 		delete it->value;
 	close(epollInstance);
-        std::cerr << msg << std::endl;
+	std::cerr << msg << std::endl;
 	exit(1);
 }
 

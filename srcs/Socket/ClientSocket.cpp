@@ -68,7 +68,8 @@ void	ClientSocket::readRequest(void)
 		return ;
 	}
 	resetTimeout();
-	_request.add(buffer, size);
+	try { _request.add(buffer, size); }
+	RETHROW(std::bad_alloc)
 }
 
 void	ClientSocket::parseRequest()
@@ -87,7 +88,10 @@ void	ClientSocket::parseRequest()
 		status = ReadRequest;
 		//do the timeout specification here
 	}
-	catch (Request::DeleteRequest &e) { this->deleteFile(e.what()); }
+	catch (Request::DeleteRequest &e) {
+		try { this->deleteFile(e.what()); }
+		RETHROW(std::bad_alloc)
+	}
 	catch (HttpError &e) { ErrorHandling(e, false); }
 	catch (std::exception &e) { throw; }
 }
@@ -101,8 +105,10 @@ void	ClientSocket::deleteFile(const char *filename)
 	else {
 		//here we handle the pivot into response
 		ustring response = (unsigned char *)"HTTP/1.1 204 No Content\r\n\r\n";
-		_response.add(response.c_str(), response.size());
-		_response.makeMsg();
+		try {
+			_response.add(response.c_str(), response.size());
+			_response.makeMsg();
+		} RETHROW(std::bad_alloc)
 		status = WaitResponse;
 		epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
 	}
@@ -119,6 +125,7 @@ void	ClientSocket::startExec()
 		setnonblocking(_exec.getFdOut());
 		try { _exec.startProcess(false, _request.getCgi(), _request.getTarget(), _request.getEnv()); }
 		catch (HttpError &e) { ErrorHandling(e, false); return ; }
+		RETHROW(std::bad_alloc)
 		epollFdSwitch(_socketFd, _exec.getFdOut(), EPOLLIN | EPOLLET);
 	}
 	else {
@@ -145,6 +152,7 @@ void	ClientSocket::execWrite()
 	else { //write is done, start up the process appropriate status/epoll switching and close
 		try { _exec.startProcess(true, _request.getCgi(), _request.getTarget(), _request.getEnv()); }
 		catch (HttpError &e) { ErrorHandling(e, true); return ; }
+		RETHROW(std::bad_alloc) // ! Faut-il fermer _exec.getFdIn() ? Sachant que le throw bad alloc ne se fait qu'a l'initialisation de la liste d'args
 		close(_exec.getFdIn());
 		_sendpos = 0;
 		epollFdSwitch(_exec.getFdIn(), _exec.getFdOut(), EPOLLIN | EPOLLET);
@@ -155,6 +163,7 @@ void	ClientSocket::execWrite()
 void	ClientSocket::execRead()
 {
 	unsigned char buffer[BUF_SIZE];
+
 	ssize_t size = read(_exec.getFdOut(), buffer, BUF_SIZE);
 	if (size < 0)
 		status = WaitExecRead;
@@ -164,12 +173,18 @@ void	ClientSocket::execRead()
 		status = WaitResponse;
 	}
 	else
-		_response.add(buffer, size);
+	{
+		try { _response.add(buffer, size); }
+		RETHROW(std::bad_alloc)
+	}
 }
 
 void ClientSocket::sendResponse()
 {
-	unsigned char *msg = _response.getResponse(mime);
+	unsigned char *msg;
+
+	try { msg = _response.getResponse(mime); }
+	RETHROW (std::bad_alloc)
 	size_t size = _response.getSize() - _sendpos;
 	if (size > BUF_SIZE)
 		size = BUF_SIZE;

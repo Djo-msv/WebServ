@@ -97,7 +97,11 @@ void Response::makeMsg()
 	sizer = _body.size();
 	if (!exec && !_headers.empty())
 		sizer += _headers.size();
-	_msg = new unsigned char[sizer];
+	try {_msg = new unsigned char[sizer]; }
+	catch (std::bad_alloc &e) {
+		_msg = NULL;
+		throw e;
+	}
 	size_t pos = 0;
 	if (!exec && !_headers.empty()) {
 		for (std::string::iterator it = _headers.begin(); it != _headers.end(); it++) {
@@ -123,8 +127,11 @@ void Response::readFile()
 	if (fd == -1) // should not happen ever at this point, but in case
 		return ;
 	unsigned char a;
-	while (read(fd, &a, 1))
-		_body.push_back(a);
+	try
+	{
+		while (read(fd, &a, 1))
+			_body.push_back(a);
+	} RETHROW(std::bad_alloc)
 	close(fd);
 }
 

@@ -1,13 +1,20 @@
 #pragma once
+
 # include <stdexcept>
 # include <unistd.h>
 # include <errno.h>
 # include <socket_utils.hpp>
 # include <HttpErrors.hpp>
-#include <cstdlib>
+# include <cstdlib>
+
 #ifndef BUF_SIZE
 # define BUF_SIZE 1024
 #endif
+
+#define RETHROW(ExceptionType) \
+	catch (const ExceptionType& e) { \
+		throw e; \
+	}
 
 // This class allows the server to execute a program using a CGI script.
 class ProcessExecution

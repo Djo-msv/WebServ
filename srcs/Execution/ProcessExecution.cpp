@@ -32,7 +32,11 @@ void ProcessExecution::setupProcess(bool pipein)
 
 void ProcessExecution::startProcess(bool pipein, std::string cgi, std::string target, char **env) /* fork Process and exec CGI, and stock execve in/out fds */
 {
-	const char **args = new const char*[3];
+	const char **args;
+	
+	try { args = new const char*[3]; }
+	RETHROW(std::bad_alloc)
+
 	args[0] = cgi.c_str();
 	args[1] = target.c_str();
 	args[2] = NULL;

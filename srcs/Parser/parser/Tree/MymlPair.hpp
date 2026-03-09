@@ -10,6 +10,8 @@ class MymlPair :public MymlObject
 
 		std::pair<std::string, std::string>	getMymlPair();
 
+		std::string getKey();
+
 	private :
 		std::pair<std::string, std::string>	_pair;
 };

@@ -1,6 +1,6 @@
 #include "MymlDictionary.hpp"
 
-MymlDictionary::MymlDictionary(const std::string &key) : _key(key)
+MymlDictionary::MymlDictionary(const std::string key) : _key(key)
 {}
 
 MymlDictionary::~MymlDictionary(void)
@@ -17,4 +17,9 @@ void	MymlDictionary::insert(const std::pair<std::string, MymlObject *> value)
 std::map<std::string, MymlObject*>	MymlDictionary::getDictionary(void)
 {
 	return (_dictionary);
+}
+
+std::string	MymlDictionary::getKey(void)
+{
+	return (_key);
 }

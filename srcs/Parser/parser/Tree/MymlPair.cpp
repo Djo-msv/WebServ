@@ -6,3 +6,7 @@ MymlPair::MymlPair(std::string &key, std::string &value) : _pair(std::pair<std::
 MymlPair::~MymlPair(void)
 {}
 
+std::string	MymlPair::getKey(void)
+{
+	return (_pair.first);
+}

@@ -4,15 +4,17 @@
 #include <list>
 #include <map>
 
-class MymlObject
+class MymlObject // class mère
 {
 	public :
 		MymlObject();
-		MymlObject(const std::string &value);
+		MymlObject(const std::string value);
 		virtual ~MymlObject();
 
 		virtual void insert(MymlObject *value);
 		virtual void insert(const std::pair<std::string, MymlObject *> value);
+
+		std::string	getValue();
 	private :
 		std::string	_value;
 		

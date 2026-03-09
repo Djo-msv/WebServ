@@ -15,7 +15,7 @@ class MymlTree
 		MymlTree(std::list<Token> &tokens);
 		~MymlTree();
 
-		MymlList getRoot();
+		MymlList *getRoot();
 
 	private :
 		MymlList	_root;

@@ -10,7 +10,7 @@ bool	isValue(std::list<Token>::iterator it)
 bool	isDictionary(std::list<Token>::iterator it)
 {
 	if (it->_type == STRING) {
-		it ++;
+		it++;
 		if (it->_type == COLON)
 			return (true);
 	}

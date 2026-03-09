@@ -1,6 +1,6 @@
 #include "MymlList.hpp"
 
-MymlList::MymlList(const std::string &key) : _key(key)
+MymlList::MymlList(const std::string key) : _key(key)
 {}
 
 MymlList::~MymlList(void)
@@ -12,6 +12,11 @@ MymlList::~MymlList(void)
 void	MymlList::insert(MymlObject *value)
 {
 	_list.insert(_list.end(), value);
+}
+
+std::string	MymlList::getKey(void)
+{
+	return (_key);
 }
 
 std::list<MymlObject*>	MymlList::getList(void)

@@ -5,11 +5,12 @@
 class MymlList : public MymlObject
 {
 	public :
-		MymlList(const ::std::string &key);
+		MymlList(const ::std::string key);
 		~MymlList();
 
 		virtual void insert(MymlObject *value);
 
+		std::string getKey();
 		std::list<MymlObject*> getList();
 
 	private :

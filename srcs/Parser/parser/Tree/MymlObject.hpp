@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdlib>
 #include <iostream>
 #include <list>
 #include <map>
@@ -14,13 +15,17 @@ class MymlObject // class mère
 		virtual void insert(MymlObject *value);
 		virtual void insert(const std::pair<std::string, MymlObject *> value);
 
-		std::string	getValue();
+		std::string	getAsString();
+		int	getAsInt();
+		double getAsFloat();
+		bool getAsBool();
+
 	private :
 		std::string	_value;
 		
 		// Error class
-		class WrongType : public std::runtime_error {
+		class BadCast : public std::runtime_error {
 			public :
-				WrongType(const std::string msg) : std::runtime_error(msg) {}
+				BadCast(const std::string msg) : std::runtime_error(msg) {}
 		};
 };

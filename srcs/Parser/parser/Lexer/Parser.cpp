@@ -24,7 +24,7 @@ void	printTree(MymlObject *value, size_t level)
 	else if (MymlPair *nvalue = dynamic_cast<MymlPair *>(value))
 		std::cout << "key : value [" << nvalue->getKey() << "]" << std::endl;
 	else
-		std::cout << "value [" << value->getValue() << "]" << std::endl;
+		std::cout << "value [" << value->getAsString() << "]" << std::endl;
 }
 
 Parser::Parser(const std::string &path)

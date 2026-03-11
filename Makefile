@@ -56,6 +56,9 @@ endif
 SRCS_FILES:=	main.cpp \
 				HttpError.cpp \
 				Execution/ProcessExecution.cpp \
+				Parser/MymlObject.cpp \
+				Parser/MymlParser.cpp \
+				Parser/Tokenizer.cpp \
 				Socket/ClientSocket.cpp \
 				Socket/ServerSocket.cpp \
 				Socket/ServerConfig.cpp \

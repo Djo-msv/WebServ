@@ -160,11 +160,16 @@ ServerConfig initConfig()
 	return (ServerConfig(cgiHandlers, requestsFlag, index_file, rootFolder, execFolder, errorFiles, 15)); // timeout en secondes
 }
 
-int	main(void)
+int	main(int argc, char **argv)
 {
 	//TODO sera défini par la config (parser nécéssaire on verra pour définir sur quel standard partir)
 	// AF_INET is used to allow ipv4 connection.
 	// SOCK_STREAM is to tell the socket to use TCP protocol
+	if (argc == 2)
+		MymlParser	config(argv[1]);
+	else
+		return (1);
+	
 	ServerConfig config = initConfig();
 	initMime();
 	config.sin_family = AF_INET;
@@ -179,5 +184,4 @@ int	main(void)
 	}
 	CATCH_AND_HANDLE(std::runtime_error)
 	CATCH_AND_HANDLE(std::bad_alloc)
-	return (0);
 }

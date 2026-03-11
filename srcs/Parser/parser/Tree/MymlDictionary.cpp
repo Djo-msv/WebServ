@@ -11,6 +11,10 @@ MymlDictionary::~MymlDictionary(void)
 
 void	MymlDictionary::insert(const std::pair<std::string, MymlObject *> value)
 {
+	if (_dictionary.count(value.first)) {
+		delete _dictionary.at(value.first);
+		_dictionary.erase(value.first);
+	}
 	_dictionary.insert(_dictionary.end(), value);
 }
 

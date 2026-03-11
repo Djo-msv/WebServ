@@ -24,7 +24,7 @@ Tokenizer::Tokenizer(std::string &file, std::list<Token> &tokens)
 		int		i = 0;
 		size_t	checkToken = file.size();
 
-		while (file.size() == checkToken && i != 9)
+		while (file.size() == checkToken && i != 8)
 			(this->*functions[i++])(file, tokens);
 		if (file.size() == checkToken)
 			throw BadParsing(file);

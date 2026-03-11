@@ -12,6 +12,7 @@
 #define value second
 #include "ServerSocket.hpp"
 #include "ClientSocket.hpp"
+#include "MymlParser.hpp"
 
 #include "ProcessExecution.hpp"
 

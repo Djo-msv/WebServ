@@ -1,6 +1,11 @@
 #pragma once
 
-#include "MymlObject.hpp"
+#include <cstdlib>
+#include <iostream>
+#include <list>
+#include <map>
+
+class MymlObject;
 
 class MymlList : public MymlObject
 {

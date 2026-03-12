@@ -1,9 +1,11 @@
 #pragma once
 
-#include <cstdlib>
-#include <iostream>
-#include <list>
-#include <map>
+#include <stdexcept>
+
+#include "MymlList.hpp"
+#include "MymlPair.hpp"
+#include "MymlDictionary.hpp"
+
 
 class MymlObject // class mère
 {
@@ -20,12 +22,21 @@ class MymlObject // class mère
 		double getAsFloat();
 		bool getAsBool();
 
+		bool	isList();
+		bool	isDictionnary();
+
+		MymlList 		*getAsList();
+		MymlDictionary	*getAsDictionnary();
+
 	private :
 		std::string	_value;
 		
 		// Error class
-		class BadCast : public std::runtime_error {
+		class BadCast : public std::bad_cast {
 			public :
-				BadCast(const std::string msg) : std::runtime_error(msg) {}
+				BadCast(const std::string msg) : msg(msg) {}
+				const char* what() { return (msg.c_str()); }
+			private :
+				const std::string msg;
 		};
 };

@@ -12,9 +12,11 @@
 #define value second
 #include "ServerSocket.hpp"
 #include "ClientSocket.hpp"
-#include "MymlParser.hpp"
+#include "srcs/Parser/Lexer/Parser.hpp"
 
 #include "ProcessExecution.hpp"
+
+std::map<std::string, std::string> initMimetype();
 
 #define CATCH_AND_HANDLE(ExceptionType) \
     catch (const ExceptionType& e) { \

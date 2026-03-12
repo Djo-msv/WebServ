@@ -129,16 +129,6 @@ void	manageRequests()
 	}
 }
 
-void initMime()
-{
-	mime.insert(std::pair<std::string, std::string>(".html", "text/html"));
-	mime.insert(std::pair<std::string, std::string>(".png", "image/png"));
-	mime.insert(std::pair<std::string, std::string>(".jpg", "image/jpeg"));
-	mime.insert(std::pair<std::string, std::string>(".txt", "text/plain"));
-	//incorrect, but useful for testing for now
-	mime.insert(std::pair<std::string, std::string>(".gz", "image/png"));
-}
-
 /**
  * ! Fonction Temporaire a modifier une fois le parsing terminé
 */
@@ -160,26 +150,73 @@ ServerConfig initConfig()
 	return (ServerConfig(cgiHandlers, requestsFlag, index_file, rootFolder, execFolder, errorFiles, 15)); // timeout en secondes
 }
 
+void initServerSockets(Parser &tree)
+{
+	std::list<MymlObject *> root = tree.getRoot();
+
+	for (std::list<MymlObject *>::iterator it = root.begin(); it != root.end(); ++it)
+	{
+		if (!(*it)->isDictionnary())
+			continue ;
+
+		MymlDictionary *serverRepertory = (*it)->getAsDictionnary();
+		try	{
+			ServerConfig config = initServerConfig(serverRepertory);
+			ServerSocket *socket = new ServerSocket(config, epollInstance);
+			sockets.insert(std::make_pair(socket->getSocketFd(), socket));
+		}
+		catch (std::exception &e){
+			std::cout << e.what() << std::endl;
+			continue ;
+		}
+	}
+}
+
+ServerConfig initServerConfig(MymlDictionary *serverRepertory)
+{
+	std::map<std::string, std::string> cgiHandlers;
+	std::map<std::string, int> requestsFlag;
+	std::map<int, std::string> errorFiles;
+	
+	try
+	{
+		std::string index_file(serverRepertory->getValueAsString("index"));
+		std::string rootFolder(serverRepertory->getValueAsString("root_folder"));
+	}
+	catch (std::bad_cast &e) { throw e; }
+	catch (std::invalid_argument &e) { throw std::invalid_argument(std::string("missing mandatory argument : ") + e.what()); }
+	
+	try
+	{
+		std::string execFolder;
+	}
+	
+}
+
 int	main(int argc, char **argv)
 {
 	//TODO sera défini par la config (parser nécéssaire on verra pour définir sur quel standard partir)
 	// AF_INET is used to allow ipv4 connection.
 	// SOCK_STREAM is to tell the socket to use TCP protocol
-	if (argc == 2)
-		MymlParser	config(argv[1]);
-	else
+	if (argc < 2)
+	{
+		std::cout << "usage : " << argv[0] << " <config file/folder>" << std::endl;
 		return (1);
+	}
 	
-	ServerConfig config = initConfig();
-	initMime();
-	config.sin_family = AF_INET;
-	config.sin_port = 7500;
+	Parser	tree(argv[1]);
+	
+	//ServerConfig config = initConfig();
+	mime = initMimetype();
+	//config.sin_family = AF_INET;
+	//config.sin_port = 7500;
 	try
 	{
-		ServerSocket *socket = new ServerSocket(config, epollInstance);
+		// ServerSocket *socket = new ServerSocket(config, epollInstance);
+		initServerSockets(tree);
 		signal(SIGINT, stopServer);
 		signal(SIGPIPE, SIG_IGN);
-		sockets.insert(std::make_pair(socket->getSocketFd(), socket));
+		// sockets.insert(std::make_pair(socket->getSocketFd(), socket));
 		manageRequests();
 	}
 	CATCH_AND_HANDLE(std::runtime_error)

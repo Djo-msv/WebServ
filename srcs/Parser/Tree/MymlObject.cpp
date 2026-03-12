@@ -20,6 +20,27 @@ void MymlObject::insert(const std::pair<std::string, MymlObject *> value)
 	(void) value;
 }
 
+bool	MymlObject::isList()
+{
+	return (dynamic_cast<MymlList *>(this) ? true : false);
+}
+
+bool	MymlObject::isDictionnary()
+{
+	return (dynamic_cast<MymlDictionary *>(this) ? true : false);
+}
+
+MymlList *MymlObject::getAsList()
+{
+	return (dynamic_cast<MymlList *>(this));
+}
+
+MymlDictionary *MymlObject::getAsDictionnary()
+{
+	return (dynamic_cast<MymlDictionary *>(this));
+}
+
+
 std::string	MymlObject::getAsString(void)
 {
 	return (_value);
@@ -47,7 +68,7 @@ double	MymlObject::getAsFloat(void)
 		it++;
 	for (; it != _value.end(); it++) {
 		if (!isdigit(*it) || !(*it == '.' && dot++ == 0))
-			throw BadCast("the value [" + _value + "] is not an integer !");
+			throw BadCast("the value [" + _value + "] is not an floating point value !");
 	}
 	return (atof(_value.c_str()));
 }

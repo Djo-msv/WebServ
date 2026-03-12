@@ -1,7 +1,11 @@
 server1 :
-	- value1
-	- value2
-	- dictionary :
-		key : value1
-		key : value2
-	- value3
+	port : 7500
+	root_folder : /home/csenelle/Documents/42_main_cursus/6th_circle/WebServ/server00
+	index : /html/index.html
+	requests_flags :
+		- /html : GET
+		- /img : GET
+		- /uploads : DELETE
+		- /scripts :
+			- GET
+			- POST

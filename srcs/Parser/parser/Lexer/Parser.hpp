@@ -6,6 +6,7 @@
 #include "File.hpp"
 #include "Lexer.hpp"
 #include "TokenTransformer.hpp"
+#include "../Tree/MymlObject.hpp"
 
 class Parser
 {

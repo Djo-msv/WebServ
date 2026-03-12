@@ -55,7 +55,7 @@ Parser::Parser(const std::string &path)
 		MymlTree	tree(_tokens);
 
 		_root = (tree.getRoot())->getList();
-		for(std::list<MymlObject*>::iterator it = list.begin(); it != list.end(); it++)
+		for(std::list<MymlObject*>::iterator it = _root.begin(); it != _root.end(); it++)
 			printTree(*it, 0);
 	}
 	catch (const std::runtime_error &e) {

@@ -3,6 +3,10 @@
 
 void	printTree(MymlObject *value, size_t level)
 {
+	if (!value) {
+		std::cout << "null value\n";
+		return ;
+	}
 	if (MymlList *nvalue = dynamic_cast<MymlList *>(value)) {
 		std::cout << "list : [" << nvalue->getKey() << "]" << std::endl;
 		std::list<MymlObject*> lst = nvalue->getList();
@@ -36,9 +40,9 @@ Parser::Parser(const std::string &path)
 		std::cout << "no files found at :" << path << std::endl;
 		return ;
 	}
-	for (std::list<std::string>::iterator it = filesvalue.begin(); it != filesvalue.end(); it++)
-		Tokenizer(*it, _tokens);
 	try {
+		for (std::list<std::string>::iterator it = filesvalue.begin(); it != filesvalue.end(); it++)
+			Tokenizer(*it, _tokens);
 		TokenTransformer rewrite(_tokens);
 	}
 	catch (const std::runtime_error &e) {

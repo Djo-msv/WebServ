@@ -126,8 +126,10 @@ MymlObject *MymlTree::parseDictionary(const std::string &key, std::list<Token>::
 	std::list<Token>::iterator	it = begin;
 
 	while (level == nbSpace(it)) {
-		if (!isDictionary(it))
+		if (!isDictionary(it)) {
+			delete dictionary;
 			throw BadParsingError(it->_token);
+		}
 		dictionary->insert(parseDictionaryArg(begin, it, level));
 		begin = it;
 	}

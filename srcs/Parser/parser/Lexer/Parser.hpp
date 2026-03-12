@@ -13,6 +13,9 @@ class Parser
 		Parser(const std::string &path);
 		~Parser();
 
+		std::list<MymlObject*> getRoot();
+
 	private :
 		std::list<Token> _tokens;
+		std::list<MymlObject*> _root;
 };

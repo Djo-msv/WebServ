@@ -54,11 +54,20 @@ endif
 #==============================SOURCES===========================#
 
 SRCS_FILES:=	main.cpp \
+				mimetype.cpp \
 				HttpError.cpp \
 				Execution/ProcessExecution.cpp \
-				Parser/MymlObject.cpp \
-				Parser/MymlParser.cpp \
-				Parser/Tokenizer.cpp \
+				Parser/Tree/MymlObject.cpp \
+				Parser/Tree/MymlDictionary.cpp \
+				Parser/Tree/MymlList.cpp \
+				Parser/Tree/MymlPair.cpp \
+				Parser/Tree/MymlTree.cpp \
+				Parser/Tree/treeUtils.cpp \
+				Parser/Lexer/Parser.cpp \
+				Parser/Lexer/Tokenizer.cpp \
+				Parser/Lexer/File.cpp \
+				Parser/Lexer/Lexer.cpp \
+				Parser/Lexer/TokenTransformer.cpp \
 				Socket/ClientSocket.cpp \
 				Socket/ServerSocket.cpp \
 				Socket/ServerConfig.cpp \

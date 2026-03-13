@@ -2,9 +2,9 @@
 
 #include <stdexcept>
 
-#include "MymlList.hpp"
-#include "MymlPair.hpp"
-#include "MymlDictionary.hpp"
+class MymlList;
+class MymlPair;
+class MymlDictionary;
 
 
 class MymlObject // class mère
@@ -28,15 +28,11 @@ class MymlObject // class mère
 		MymlList 		*getAsList();
 		MymlDictionary	*getAsDictionnary();
 
+		// Error class
+		class BadCast : public std::runtime_error {
+			public :
+				BadCast(const std::string msg) : runtime_error(msg) {}
+		};
 	private :
 		std::string	_value;
-		
-		// Error class
-		class BadCast : public std::bad_cast {
-			public :
-				BadCast(const std::string msg) : msg(msg) {}
-				const char* what() { return (msg.c_str()); }
-			private :
-				const std::string msg;
-		};
 };

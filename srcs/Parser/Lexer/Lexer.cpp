@@ -1,5 +1,6 @@
-#include "Lexer.hpp"
+#include "Parser/Lexer/Lexer.hpp"
 #include <map>
+
 Lexer::Lexer(std::list<Token> &tokens)
 {
 	std::cout << std::endl;

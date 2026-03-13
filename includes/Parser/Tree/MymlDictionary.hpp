@@ -5,7 +5,7 @@
 #include <list>
 #include <map>
 
-class MymlObject;
+#include "MymlObject.hpp"
 
 class MymlDictionary : public MymlObject
 {

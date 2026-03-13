@@ -1,5 +1,5 @@
-#include "Parser.hpp"
-#include "../Tree/MymlTree.hpp"
+#include "Parser/Lexer/Parser.hpp"
+#include "Parser/Tree/MymlTree.hpp"
 
 void	printTree(MymlObject *value, size_t level)
 {

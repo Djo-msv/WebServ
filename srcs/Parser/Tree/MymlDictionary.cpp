@@ -1,5 +1,5 @@
-#include "MymlDictionary.hpp"
-#include "MymlObject.hpp"
+#include "Parser/Tree/MymlDictionary.hpp"
+#include "Parser/Tree/MymlObject.hpp"
 
 MymlDictionary::MymlDictionary(const std::string key) : _key(key)
 {}

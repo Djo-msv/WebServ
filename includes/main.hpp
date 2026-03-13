@@ -6,13 +6,17 @@
 #include <cstdlib>
 #include <sys/epoll.h>
 #include <deque>
+#include <stdexcept>
 
 #define MAX_EVENTS 10
 #define key first
 #define value second
 #include "ServerSocket.hpp"
 #include "ClientSocket.hpp"
-#include "srcs/Parser/Lexer/Parser.hpp"
+#include "Parser/Lexer/Parser.hpp"
+#include "Parser/Tree/MymlDictionary.hpp"
+#include "Parser/Tree/MymlList.hpp"
+#include "Parser/Tree/MymlPair.hpp"
 
 #include "ProcessExecution.hpp"
 

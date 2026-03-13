@@ -1,4 +1,7 @@
-#include "MymlObject.hpp"
+#include "Parser/Tree/MymlObject.hpp"
+#include "Parser/Tree/MymlList.hpp"
+#include "Parser/Tree/MymlDictionary.hpp"
+#include "Parser/Tree/MymlPair.hpp"
 
 MymlObject::MymlObject(void)
 {}

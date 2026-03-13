@@ -1,4 +1,4 @@
-#include "TokenTransformer.hpp"
+#include "Parser/Lexer/TokenTransformer.hpp"
 
 TokenTransformer::TokenTransformer(std::list<Token> &tokens) : _status(STOP_LINE)
 {

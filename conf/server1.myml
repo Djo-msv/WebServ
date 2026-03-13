@@ -9,3 +9,4 @@ server1 :
 		- /scripts :
 			- GET
 			- POST
+	execution_folder : /scripts

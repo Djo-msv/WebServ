@@ -132,22 +132,51 @@ void	manageRequests()
 /**
  * ! Fonction Temporaire a modifier une fois le parsing terminé
 */
-ServerConfig initConfig()
+// ServerConfig initConfig()
+// {
+// 	std::map<std::string, std::string> cgiHandlers;
+// 	std::map<std::string, int> requestsFlag;
+// 	std::map<int, std::string> errorFiles;
+// 	std::string index_file("/html/index.html");
+// 	std::string rootFolder("./server00");
+// 	std::string execFolder("/scripts");
+
+// 	cgiHandlers.insert(std::make_pair(".py", "/usr/bin/python3"));
+// 	requestsFlag.insert(std::make_pair("/html", ServerConfig::GET));
+// 	requestsFlag.insert(std::make_pair("/img", ServerConfig::GET));
+// 	requestsFlag.insert(std::make_pair("/uploads", ServerConfig::DELETE));
+// 	requestsFlag.insert(std::make_pair("/scripts", ServerConfig::GET | ServerConfig::POST));// 0 = Rien, rajouter un | pour plus de flags
+// 	errorFiles.insert(std::make_pair(404, rootFolder + "/html/errors/404_def.html"));
+// 	return (ServerConfig(cgiHandlers, requestsFlag, index_file, rootFolder, execFolder, errorFiles, 15)); // timeout en secondes
+// }
+
+ServerConfig initServerConfig(MymlDictionary *serverRepertory)
 {
 	std::map<std::string, std::string> cgiHandlers;
-	std::map<std::string, int> requestsFlag;
+	std::map<std::string, int> requestsFlags;
 	std::map<int, std::string> errorFiles;
-	std::string index_file("/html/index.html");
-	std::string rootFolder("./server00");
-	std::string execFolder("/scripts");
-
-	cgiHandlers.insert(std::make_pair(".py", "/usr/bin/python3"));
-	requestsFlag.insert(std::make_pair("/html", ServerConfig::GET));
-	requestsFlag.insert(std::make_pair("/img", ServerConfig::GET));
-	requestsFlag.insert(std::make_pair("/uploads", ServerConfig::DELETE));
-	requestsFlag.insert(std::make_pair("/scripts", ServerConfig::GET | ServerConfig::POST));// 0 = Rien, rajouter un | pour plus de flags
-	errorFiles.insert(std::make_pair(404, rootFolder + "/html/errors/404_def.html"));
-	return (ServerConfig(cgiHandlers, requestsFlag, index_file, rootFolder, execFolder, errorFiles, 15)); // timeout en secondes
+	std::string index_file;
+	std::string rootFolder;
+	std::string execFolder;
+	time_t timeout = 15;
+	
+	try
+	{
+		index_file = serverRepertory->getValueAsString("index");
+		rootFolder = serverRepertory->getValueAsString("root_folder");
+	}
+	catch (MymlObject::BadCast &e) { throw e; }
+	catch (std::invalid_argument &e) { throw std::invalid_argument(std::string("missing mandatory argument : ") + e.what()); }
+	
+	try
+	{
+		execFolder = serverRepertory->getValueAsString("execution_folder");
+		timeout = serverRepertory->getValueAsInt("timeout");
+	}
+	catch (MymlObject::BadCast &e) {
+		std::cout << "config optionnal argument error at server " << serverRepertory->getKey() << e.what() << std::endl;
+	}
+	return (ServerConfig(cgiHandlers, requestsFlags, index_file, rootFolder, execFolder, errorFiles, timeout));
 }
 
 void initServerSockets(Parser &tree)
@@ -172,27 +201,6 @@ void initServerSockets(Parser &tree)
 	}
 }
 
-ServerConfig initServerConfig(MymlDictionary *serverRepertory)
-{
-	std::map<std::string, std::string> cgiHandlers;
-	std::map<std::string, int> requestsFlag;
-	std::map<int, std::string> errorFiles;
-	
-	try
-	{
-		std::string index_file(serverRepertory->getValueAsString("index"));
-		std::string rootFolder(serverRepertory->getValueAsString("root_folder"));
-	}
-	catch (std::bad_cast &e) { throw e; }
-	catch (std::invalid_argument &e) { throw std::invalid_argument(std::string("missing mandatory argument : ") + e.what()); }
-	
-	try
-	{
-		std::string execFolder;
-	}
-	
-}
-
 int	main(int argc, char **argv)
 {
 	//TODO sera défini par la config (parser nécéssaire on verra pour définir sur quel standard partir)
@@ -214,10 +222,10 @@ int	main(int argc, char **argv)
 	{
 		// ServerSocket *socket = new ServerSocket(config, epollInstance);
 		initServerSockets(tree);
-		signal(SIGINT, stopServer);
-		signal(SIGPIPE, SIG_IGN);
+	//	signal(SIGINT, stopServer);
+	//	signal(SIGPIPE, SIG_IGN);
 		// sockets.insert(std::make_pair(socket->getSocketFd(), socket));
-		manageRequests();
+	//	manageRequests();
 	}
 	CATCH_AND_HANDLE(std::runtime_error)
 	CATCH_AND_HANDLE(std::bad_alloc)

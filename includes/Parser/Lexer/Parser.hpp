@@ -11,7 +11,7 @@
 class Parser
 {
 	public :
-		Parser(const std::string &path);
+		Parser(const std::string path);
 		~Parser();
 
 		std::list<MymlObject*> getRoot();

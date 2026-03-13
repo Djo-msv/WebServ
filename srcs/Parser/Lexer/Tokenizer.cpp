@@ -125,6 +125,19 @@ void	Tokenizer::basicToken(std::string &file, std::list<Token> &tokens)
 		file.erase(file.begin(), it);
 }
 
+bool	Tokenizer::isString(char c)
+{
+	char	specialChar[] = " \t\'\"\\()[]{}";
+	if (isprint(c)) {
+		for (int i = 0; specialChar[i]; i++) {
+			if (c == specialChar[i])
+				return (0);
+		}
+		return (1);
+	}
+	return (0);
+}
+
 void	Tokenizer::typeOfValue(std::string &file, std::list<Token> &tokens)
 {
 	Token token;
@@ -172,8 +185,8 @@ void	Tokenizer::typeOfValue(std::string &file, std::list<Token> &tokens)
 		else
 			it = file.begin();
 	}
-	if (isalnum(*it)) {
-		for(; isalnum(*it); it++) {};
+	if (isString(*it)) {
+		for(; isString(*it); it++) {};
 		token = (Token){std::string(file, 0, it - file.begin()), STRING, 0};
 		tokens.insert(tokens.end(), token);
 	}

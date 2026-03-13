@@ -22,12 +22,6 @@
 
 std::map<std::string, std::string> initMimetype();
 
-#define CATCH_AND_HANDLE(ExceptionType) \
-    catch (const ExceptionType& e) { \
-        handleError(e.what()); \
-	}
+#define CATCH_AND_HANDLE(ExceptionType) catch (const ExceptionType& e) { handleError(e.what()); }
 
-#define RETHROW(ExceptionType) \
-	catch (const ExceptionType& e) { \
-		throw e; \
-	}
+#define RETHROW(ExceptionType) catch (const ExceptionType& e) { throw e; }

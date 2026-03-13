@@ -27,6 +27,8 @@ class Tokenizer
 		void	escapeValue(std::string &file, std::list<Token> &tokens);
 		void	specialValue(std::string &file, std::list<Token> &tokens);
 
+		bool	isString(char c);
+
 		class BadParsing : public std::runtime_error {
 			public :
 				BadParsing(const std::string msg) : std::runtime_error(msg) {}

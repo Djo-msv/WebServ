@@ -212,7 +212,9 @@ int	main(int argc, char **argv)
 		return (1);
 	}
 	
-	Parser	tree(argv[1]);
+	(void)argv;
+	std::string	path("conf");
+	Parser	tree(path);
 	
 	//ServerConfig config = initConfig();
 	mime = initMimetype();

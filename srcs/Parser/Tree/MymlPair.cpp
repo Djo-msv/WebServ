@@ -27,3 +27,15 @@ MymlObject *MymlPair::getValue(void)
 {
 	return (_pair.second);
 }
+int	MymlPair::getKeyAsInt(void)
+{
+	std::string::iterator it = getKey().begin();
+
+	if (*it == '-')
+		it++;
+	for (; it != getKey().end(); it++) {
+		if (!isdigit(*it))
+			throw BadCast("the value [" + getKey() + "] is not an integer !");
+	}
+	return (std::atoi(getKey().c_str()));
+}

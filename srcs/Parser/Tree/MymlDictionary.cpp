@@ -1,4 +1,5 @@
 #include "Parser/Tree/MymlDictionary.hpp"
+#include "Parser/Tree/MymlList.hpp"
 #include "Parser/Tree/MymlObject.hpp"
 
 MymlDictionary::MymlDictionary(const std::string key) : _key(key)
@@ -33,10 +34,26 @@ std::string	MymlDictionary::getKey(void)
 }
 MymlObject *MymlDictionary::getValue(std::string key)
 {
-	std::map<std::string, MymlObject*>::iterator map = _dictionary->find(key);
+	std::map<std::string, MymlObject *>::iterator map = _dictionary->find(key);
 	if (map == _dictionary->end())
 		throw std::invalid_argument("Cannot find " + key + " inside map of the dictionary " + _key + " !");
 	return (map->second);
+}
+
+MymlList *MymlDictionary::getValueAsList(std::string key)
+{
+	MymlList *list = dynamic_cast<MymlList *>(getValue(key));
+	if (!list)
+		throw BadCast(std::string("the value [" + key + "] is not an list"));
+	return (list);
+}
+
+MymlDictionary *MymlDictionary::getValueAsDictionary(std::string key)
+{
+	MymlDictionary *list = dynamic_cast<MymlDictionary*>(getValue(key));
+	if (!list)
+		throw BadCast(std::string("the value [" + key + "] is not an list"));
+	return (list);
 }
 
 std::string MymlDictionary::getValueAsString(std::string key)

@@ -16,6 +16,7 @@ class MymlPair :public MymlObject
 
 		std::string getKey();
 		MymlObject	*getValue();
+		int 		getKeyAsInt();
 
 	private :
 		std::pair<std::string, MymlObject*>	_pair;

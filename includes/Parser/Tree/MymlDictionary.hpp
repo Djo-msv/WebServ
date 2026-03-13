@@ -6,6 +6,7 @@
 #include <map>
 
 #include "MymlObject.hpp"
+#include "MymlList.hpp"
 
 class MymlDictionary : public MymlObject
 {
@@ -18,10 +19,14 @@ class MymlDictionary : public MymlObject
 		std::string getKey();
 		std::map<std::string, MymlObject*> *getDictionary();
 	
-		MymlObject *getValue(std::string key);
 		std::string getValueAsString(std::string key);
 		int getValueAsInt(std::string key);
 		double getValueAsFloat(std::string key);
+
+		MymlObject *getValue(std::string key);
+		MymlList *getValueAsList(std::string key);
+		MymlDictionary *getValueAsDictionary(std::string key);
+		
 
 	private :
 		std::string							_key;

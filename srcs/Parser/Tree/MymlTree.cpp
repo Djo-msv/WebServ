@@ -1,10 +1,11 @@
 #include "Parser/Tree/MymlTree.hpp"
 
-MymlTree::MymlTree(std::list<Token> &tokens) : _root("root")
+MymlTree::MymlTree(std::list<Token> &tokens)
 {
 	std::string key;
 	std::string value;
 
+	_root =  new MymlList("root");
 	for (std::list<Token>::iterator it = tokens.begin(); it != tokens.end(); it++) {
 		if (it->_type == STRING) {
 			key = it->_token;
@@ -14,18 +15,21 @@ MymlTree::MymlTree(std::list<Token> &tokens) : _root("root")
 				if (isValue(it)) { // is pair
 					value = it->_token;
 					for(;it->_type != INDENTATION && it->_type == END_OF_LINE; it++){};
-					_root.insert(new MymlPair(key, value));	
+					_root->insert(new MymlPair(key, value));	
 				}
 				else { // is list or dictionary
 					for(;it->_type != INDENTATION && it->_type == END_OF_LINE; it++){};
-					_root.insert(define(it, key, 0));
+					_root->insert(define(it, key, 0));
 				}
 			}
 		}
 	}
 }
 
-MymlTree::~MymlTree(void){}
+MymlTree::~MymlTree(void)
+{
+	delete _root;
+}
 
 /*
  * *Takes an line of token and check if it's an define or a value
@@ -156,5 +160,5 @@ MymlObject *MymlTree::define(std::list<Token>::iterator &begin, const std::strin
 
 MymlList	*MymlTree::getRoot(void)
 {
-	return (&_root);
+	return (_root);
 }

@@ -7,6 +7,7 @@
 #include "Lexer.hpp"
 #include "TokenTransformer.hpp"
 #include "Parser/Tree/MymlObject.hpp"
+#include "Parser/Tree/MymlTree.hpp"
 
 class Parser
 {
@@ -14,9 +15,10 @@ class Parser
 		Parser(const std::string path);
 		~Parser();
 
-		std::list<MymlObject*> getRoot();
+		std::list<MymlObject*> *getRoot();
 
 	private :
 		std::list<Token> _tokens;
-		std::list<MymlObject*> _root;
+		std::list<MymlObject*> *_root;
+		MymlTree *_tree;
 };

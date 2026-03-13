@@ -16,9 +16,9 @@ class MymlList : public MymlObject
 		virtual void insert(MymlObject *value);
 
 		std::string getKey();
-		std::list<MymlObject*> getList();
+		std::list<MymlObject*> *getList();
 
 	private :
 		std::string				_key;
-		std::list<MymlObject*>	_list;
+		std::list<MymlObject*>	*_list;
 };

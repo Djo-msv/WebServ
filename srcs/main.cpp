@@ -181,9 +181,9 @@ ServerConfig initServerConfig(MymlDictionary *serverRepertory)
 
 void initServerSockets(Parser &tree)
 {
-	std::list<MymlObject *> root = tree.getRoot();
+	std::list<MymlObject *> *root = tree.getRoot();
 
-	for (std::list<MymlObject *>::iterator it = root.begin(); it != root.end(); ++it)
+	for (std::list<MymlObject *>::iterator it = root->begin(); it != root->end(); ++it)
 	{
 		if (!(*it)->isDictionnary())
 			continue ;
@@ -212,9 +212,7 @@ int	main(int argc, char **argv)
 		return (1);
 	}
 	
-	(void)argv;
-	std::string	path("conf");
-	Parser	tree(path);
+	Parser	tree(argv[1]);
 	
 	//ServerConfig config = initConfig();
 	mime = initMimetype();

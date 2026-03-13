@@ -9,18 +9,18 @@ void	printTree(MymlObject *value, size_t level)
 	}
 	if (MymlList *nvalue = dynamic_cast<MymlList *>(value)) {
 		std::cout << "list : [" << nvalue->getKey() << "]" << std::endl;
-		std::list<MymlObject*> lst = nvalue->getList();
+		std::list<MymlObject*> *lst = nvalue->getList();
 		level++;
-		for(std::list<MymlObject*>::iterator it = lst.begin(); it != lst.end(); it++) {
+		for(std::list<MymlObject*>::iterator it = lst->begin(); it != lst->end(); it++) {
 			std::cout << std::string(level, '\t') << '-';
 			printTree(*it, level);
 		}
 	}
 	else if (MymlDictionary *nvalue = dynamic_cast<MymlDictionary *>(value)) {
 		std::cout << "dictionary : [" << nvalue->getKey() << "]" << std::endl;
-		std::map<std::string, MymlObject*> dct = nvalue->getDictionary();
+		std::map<std::string, MymlObject*> *dct = nvalue->getDictionary();
 		level++;
-		for(std::map<std::string, MymlObject*>::iterator it = dct.begin(); it != dct.end(); it++) {
+		for(std::map<std::string, MymlObject*>::iterator it = dct->begin(); it != dct->end(); it++) {
 			std::cout << std::string(level, '\t');
 			printTree(it->second, level);
 		}
@@ -52,10 +52,10 @@ Parser::Parser(const std::string path)
 	}
 	Lexer print(_tokens);
 	try {
-		MymlTree	tree(_tokens);
+		_tree = new MymlTree(_tokens);
 
-		std::list<MymlObject*> _root = (tree.getRoot())->getList();
-		for(std::list<MymlObject*>::iterator it = _root.begin(); it != _root.end(); it++)
+		_root = ((_tree->getRoot())->getList());
+		for(std::list<MymlObject*>::iterator it = _root->begin(); it != _root->end(); it++)
 			printTree(*it, 0);
 	}
 	catch (const std::runtime_error &e) {
@@ -66,10 +66,12 @@ Parser::Parser(const std::string path)
 }
 
 
-std::list<MymlObject *> Parser::getRoot()
+std::list<MymlObject *> *Parser::getRoot()
 {
 	return (_root);
 }
 
 Parser::~Parser()
-{}
+{
+	delete _tree;
+}

@@ -18,7 +18,7 @@ class MymlTree
 		MymlList *getRoot();
 
 	private :
-		MymlList	_root;
+		MymlList	*_root;
 		std::list<MymlObject *> _anchor;
 
 		MymlObject *define(std::list<Token>::iterator &begin, const std::string &key, size_t prev_level);

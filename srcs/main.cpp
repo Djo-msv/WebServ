@@ -154,8 +154,10 @@ void		initOptionnalConfig(MymlDictionary *serverRepertory, std::string &execFold
 	std::map<std::string, std::string> &cgiHandlers, std::map<std::string, int> &requestsFlags,
 	std::map<int, std::string> &errorFiles)
 {
-	execFolder = serverRepertory->getValueAsString("execution_folder");
-	timeout = serverRepertory->getValueAsInt("timeout");
+	try {
+		execFolder = serverRepertory->getValueAsString("execution_folder");
+		timeout = serverRepertory->getValueAsInt("timeout");
+	} catch (std::invalid_argument &e) { std::cout << e.what() << std::endl; }
 	std::list<MymlObject *> *cgi_list = serverRepertory->getValueAsList("cgi_handlers")->getList();
 	for (std::list<MymlObject *>::iterator it = cgi_list->begin(); it != cgi_list->end(); ++it)
 	{
@@ -183,6 +185,14 @@ void		initOptionnalConfig(MymlDictionary *serverRepertory, std::string &execFold
 			requestsFlags.insert(std::make_pair((*it)->getAsList()->getKey(), flags));
 		}
 	}
+	std::list<MymlObject *> *error_list = serverRepertory->getValueAsList("error_files")->getList();
+	for (std::list<MymlObject *>::iterator it = error_list->begin(); it != error_list->end(); ++it)
+	{
+		MymlPair	*pair = (*it)->getAsPair();
+
+		errorFiles.insert(std::make_pair(pair->getKeyAsInt(), pair->getValue()->getAsString()));
+	}
+	
 }
 
 ServerConfig initServerConfig(MymlDictionary *serverRepertory)
@@ -257,10 +267,10 @@ int	main(int argc, char **argv)
 	{
 		// ServerSocket *socket = new ServerSocket(config, epollInstance);
 		initServerSockets(tree);
-	//	signal(SIGINT, stopServer);
-	//	signal(SIGPIPE, SIG_IGN);
+		signal(SIGINT, stopServer);
+		signal(SIGPIPE, SIG_IGN);
 		// sockets.insert(std::make_pair(socket->getSocketFd(), socket));
-	//	manageRequests();
+		manageRequests();
 	}
 	CATCH_AND_HANDLE(std::runtime_error)
 	CATCH_AND_HANDLE(std::bad_alloc)

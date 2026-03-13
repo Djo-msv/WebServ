@@ -2,7 +2,7 @@
 
 ServerConfig::ServerConfig(int port, std::map<std::string, std::string> cgiHandlers, std::map<std::string, int> requestsFlag, 
 	std::string index_file, std::string rootFolder, std::string execFolder, std::map<int, std::string> errorFiles, time_t timeout) :
-	sin_port(port), cgiExtensions(cgiHandlers), requestsFlag(requestsFlag), errorFiles(errorFiles), index_file(index_file),
+	sin_family(AF_INET), sin_port(port), cgiExtensions(cgiHandlers), requestsFlag(requestsFlag), errorFiles(errorFiles), index_file(index_file),
 	execFolder(execFolder), rootFolder(rootFolder), timeout(timeout) {}
 
 ServerConfig::~ServerConfig() {}
@@ -26,7 +26,7 @@ std::string ServerConfig::getCgi(const std::string &extension) const
     throw NotImplemented();//std::invalid_argument("No CGI handler found for extension: " + extension);
 }
 
-ServerConfig::RequestFlag ServerConfig::stringToRequestFlag(const std::string &method) const
+ServerConfig::RequestFlag ServerConfig::stringToRequestFlag(const std::string &method)
 {
     if (method == "GET") return GET;
     if (method == "POST") return POST;

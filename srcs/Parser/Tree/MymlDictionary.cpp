@@ -35,7 +35,7 @@ MymlObject *MymlDictionary::getValue(std::string key)
 {
 	std::map<std::string, MymlObject*>::iterator map = _dictionary->find(key);
 	if (map == _dictionary->end())
-		throw std::invalid_argument("Cannot find " + key + " inside map of the dictionary " + _key + "!");
+		throw std::invalid_argument("Cannot find " + key + " inside map of the dictionary " + _key + " !");
 	return (map->second);
 }
 
@@ -43,7 +43,7 @@ std::string MymlDictionary::getValueAsString(std::string key)
 {
 	std::map<std::string, MymlObject*>::iterator map = _dictionary->find(key);
 	if (map == _dictionary->end())
-		throw std::invalid_argument("Cannot find " + key + " inside map of the dictionary " + _key + "!");
+		throw std::invalid_argument("Cannot find " + key + " inside map of the dictionary " + _key + " !");
 	return (map->second->getAsString());
 }
 
@@ -51,7 +51,7 @@ int MymlDictionary::getValueAsInt(std::string key)
 {
 	std::map<std::string, MymlObject*>::iterator map = _dictionary->find(key);
 	if (map == _dictionary->end())
-		throw std::invalid_argument("Cannot find " + key + " inside map of the dictionary " + _key + "!");
+		throw std::invalid_argument("Cannot find " + key + " inside map of the dictionary " + _key + " !");
 	return (map->second->getAsInt());
 }
 
@@ -59,6 +59,6 @@ double MymlDictionary::getValueAsFloat(std::string key)
 {
 	std::map<std::string, MymlObject*>::iterator map = _dictionary->find(key);
 	if (map == _dictionary->end())
-		throw std::invalid_argument("Cannot find " + key + " inside map of the dictionary " + _key + "!");
+		throw std::invalid_argument("Cannot find " + key + " inside map of the dictionary " + _key + " !");
 	return (map->second->getAsFloat());
 }

@@ -22,3 +22,8 @@ std::string	MymlPair::getKey(void)
 {
 	return (_pair.first);
 }
+
+MymlObject *MymlPair::getValue(void)
+{
+	return (_pair.second);
+}

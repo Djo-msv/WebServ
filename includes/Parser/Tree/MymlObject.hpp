@@ -24,9 +24,11 @@ class MymlObject // class mère
 
 		bool	isList();
 		bool	isDictionnary();
+		bool	isPair();
 
 		MymlList 		*getAsList();
 		MymlDictionary	*getAsDictionnary();
+		MymlPair		*getAsPair();
 
 		// Error class
 		class BadCast : public std::runtime_error {

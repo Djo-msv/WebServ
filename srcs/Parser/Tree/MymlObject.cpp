@@ -33,6 +33,11 @@ bool	MymlObject::isDictionnary()
 	return (dynamic_cast<MymlDictionary *>(this) ? true : false);
 }
 
+bool	MymlObject::isPair()
+{
+	return (dynamic_cast<MymlPair *>(this) ? true : false);
+}
+
 MymlList *MymlObject::getAsList()
 {
 	return (dynamic_cast<MymlList *>(this));
@@ -43,6 +48,10 @@ MymlDictionary *MymlObject::getAsDictionnary()
 	return (dynamic_cast<MymlDictionary *>(this));
 }
 
+MymlPair *MymlObject::getAsPair()
+{
+	return (dynamic_cast<MymlPair *>(this));
+}
 
 std::string	MymlObject::getAsString(void)
 {

@@ -13,7 +13,7 @@
 class ServerConfig
 {
     public:
-        ServerConfig(std::map<std::string, std::string> cgiHandlers,
+        ServerConfig(int port, std::map<std::string, std::string> cgiHandlers,
 			std::map<std::string, int> requestsFlag, std::string index_file,
 			std::string rootFolder, std::string execFolder, std::map<int, std::string> errorFiles, time_t timeout);
 	~ServerConfig();
@@ -25,7 +25,7 @@ class ServerConfig
             DELETE = 1 << 2
         };
 
-        RequestFlag	stringToRequestFlag(const std::string &method) const;
+        static 		RequestFlag	stringToRequestFlag(const std::string &method);
         bool		isMethodAllowed(const std::string &location, int method) const; // Request flag conseillé mais pas forcé
         std::string	getCgi(const std::string &extension) const;
 		std::string	getRootFolder() const;

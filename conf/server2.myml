@@ -1,4 +1,5 @@
 
+twobytwotable: [ test:'a1', list2:[l1, l2], 'b1', 'b2']
 
 server2 :
 	- value1

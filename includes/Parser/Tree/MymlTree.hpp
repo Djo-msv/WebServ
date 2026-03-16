@@ -22,6 +22,9 @@ class MymlTree
 		std::list<MymlObject *> _anchor;
 
 		MymlObject *define(std::list<Token>::iterator &begin, const std::string &key, size_t prev_level);
+		MymlObject *listDefine(std::list<Token>::iterator &it, const std::string &key);
+		MymlObject *dictionaryDefine(std::list<Token>::iterator &it, const std::string &key);
+		MymlObject *inlineDefine(std::list<Token>::iterator &begin, std::string &key);
 		MymlObject *parseDictionary(const std::string &key, std::list<Token>::iterator &begin, size_t level);
 		MymlObject *parseList(const std::string &key, std::list<Token>::iterator &begin, size_t level);
 		std::pair<std::string, MymlObject*> parseDictionaryArg(std::list<Token>::iterator &begin, std::list<Token>::iterator &it, size_t level);

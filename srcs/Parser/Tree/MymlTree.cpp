@@ -14,12 +14,15 @@ MymlTree::MymlTree(std::list<Token> &tokens)
 				it++;
 				if (isValue(it)) { // is pair
 					value = it->_token;
-					for(;it->_type != INDENTATION && it->_type == END_OF_LINE; it++){};
+					for(;it->_type == END_OF_LINE; it++){};
 					_root->insert(new MymlPair(key, value));	
 				}
-				else { // is list or dictionary
-					for(;it->_type != INDENTATION && it->_type == END_OF_LINE; it++){};
+				else if (it->_type == END_OF_LINE){ // is list or dictionary
+					for(;it->_type == END_OF_LINE; it++){};
 					_root->insert(define(it, key, 0));
+				}
+				else if (it->_type == OPEN_BRACKET || it->_type == OPEN_BRACE) {
+					_root->insert(inlineDefine(it, key));
 				}
 			}
 		}
@@ -29,6 +32,67 @@ MymlTree::MymlTree(std::list<Token> &tokens)
 MymlTree::~MymlTree(void)
 {
 	delete _root;
+}
+
+MymlObject *MymlTree::listDefine(std::list<Token>::iterator &it, const std::string &key)
+{
+	std::string	elemKey;
+	MymlObject *list = new MymlList(key);
+
+	while (it->_type != CLOSE_BRACKET) {
+		if (isValue(it)){
+			elemKey = it->_token;
+			it++;
+			if (it->_type == COLON) {
+				it++;
+				list->insert(inlineDefine(it, elemKey));
+			}
+			else 
+				list->insert(new MymlObject(elemKey));
+		}
+		if (it->_type != COMMA && it->_type != CLOSE_BRACKET)
+			throw (BadParsingError(it->_token));
+		if (it->_type == COMMA)
+			it++;
+	}
+	it++;
+	return (list);
+}
+
+MymlObject *MymlTree::dictionaryDefine(std::list<Token>::iterator &it, const std::string &key)
+{
+	std::string	elemKey;
+	MymlObject *dct = new MymlDictionary(key);
+
+	while (it->_type != CLOSE_BRACE) {
+		if (isValue(it)){
+			elemKey = it->_token;
+			it++;
+			if ((it++)->_type != COLON) 
+				throw (BadParsingError(it->_token));
+			if (isValue(it))
+				dct->insert(std::pair<std::string, MymlObject*>(elemKey, new MymlObject(it->_token)));
+			else
+				dct->insert(std::pair<std::string, MymlObject*>(elemKey, inlineDefine(it, elemKey)));
+			
+		}
+		if (it->_type != COMMA && it->_type != CLOSE_BRACE)
+			throw (BadParsingError(it->_token));
+		if (it->_type == COMMA)
+			it++;
+	}
+	it++;
+	return (dct);
+}
+
+MymlObject *MymlTree::inlineDefine(std::list<Token>::iterator &begin, std::string &key)
+{
+	if (begin->_type == OPEN_BRACKET)
+		return (listDefine(++begin, key));
+	else if (begin->_type == OPEN_BRACE)
+		return (dictionaryDefine(++begin, key));
+	else
+		return (new MymlPair(key, (begin++)->_token));
 }
 
 /*

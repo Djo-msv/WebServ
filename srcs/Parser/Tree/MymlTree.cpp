@@ -25,6 +25,8 @@ MymlTree::MymlTree(std::list<Token> &tokens)
 					}
 					else if (it->_type == OPEN_BRACKET || it->_type == OPEN_BRACE)
 						_root->insert(inlineDefine(it, key));
+					else
+						throw BadParsingError(it->_token);
 				}
 			}
 		}
@@ -86,6 +88,10 @@ MymlObject *MymlTree::dictionaryDefine(std::list<Token>::iterator &it, const std
 				dct->insert(std::pair<std::string, MymlObject*>(elemKey, inlineDefine(it, elemKey)));
 				it++;
 			}
+			else {
+				free (dct);
+				throw BadParsingError(it->_token);
+			}
 		}
 		if (it->_type != COMMA && it->_type != CLOSE_BRACE) {
 			free (dct);
@@ -135,7 +141,7 @@ MymlObject *MymlTree::parseListArg(std::list<Token>::iterator &begin, std::list<
 			for(;it->_type == END_OF_LINE; it++){};
 			return (new MymlPair(key, value));	
 		}
-		else { // is list or dictionary
+		else if (it->_type == END_OF_LINE){ // is list or dictionary
 			for(;it->_type == END_OF_LINE; it++){};
 			return (define(it, key, level));
 		}

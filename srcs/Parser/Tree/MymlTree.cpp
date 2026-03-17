@@ -132,16 +132,16 @@ MymlObject *MymlTree::parseListArg(std::list<Token>::iterator &begin, std::list<
 		if (isValue(it)) { // is pair
 			value = it->_token;
 			it++;
-			for(;it->_type != INDENTATION && it->_type == END_OF_LINE; it++){};
+			for(;it->_type == END_OF_LINE; it++){};
 			return (new MymlPair(key, value));	
 		}
 		else { // is list or dictionary
-			for(;it->_type != INDENTATION && it->_type == END_OF_LINE; it++){};
+			for(;it->_type == END_OF_LINE; it++){};
 			return (define(it, key, level));
 		}
 	}
 	// is value
-	for(;it->_type != INDENTATION && it->_type == END_OF_LINE; it++){};
+	for(;it->_type == END_OF_LINE; it++){};
 	return (new MymlObject(key)); // !
 }
 
@@ -166,12 +166,12 @@ std::pair<std::string, MymlObject*> MymlTree::parseDictionaryArg(std::list<Token
 		if (isValue(it)) { // is dictionary value
 			value = it->_token;
 			it++;
-			for(;it->_type != INDENTATION && it->_type == END_OF_LINE; it++){};
+			for(;it->_type == END_OF_LINE; it++){};
 			obj = std::pair<std::string, MymlObject*>(key, new MymlObject(value));
 			return (obj);
 		}
 		else if (it->_type == END_OF_LINE) { // is list or dictionary
-			for(;it->_type != INDENTATION && it->_type == END_OF_LINE; it++){};
+			for(;it->_type == END_OF_LINE; it++){};
 			obj = std::pair<std::string, MymlObject*>(key, define(it, key, level));
 			return (obj);
 		}

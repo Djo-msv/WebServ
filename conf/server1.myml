@@ -13,5 +13,5 @@ server1 :
 	cgi_handlers :
 		- .py : "/usr/bin/python3"
 	error_files :
-			- 404 : errors/404.html	
+		- 404 : errors/404.html	
 	execution_folder : /scripts

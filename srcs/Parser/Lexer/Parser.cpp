@@ -31,7 +31,7 @@ void	printTree(MymlObject *value, size_t level)
 		std::cout << "value [" << value->getAsString() << "]" << std::endl;
 }
 
-Parser::Parser(const std::string path)
+Parser::Parser(const std::string path) : _tree(NULL)
 {
 	File files(path);
 	std::list<std::string> filesvalue = files.getFile();
@@ -73,5 +73,6 @@ std::list<MymlObject *> *Parser::getRoot()
 
 Parser::~Parser()
 {
-	delete _tree;
+	if (_tree)
+		delete _tree;
 }

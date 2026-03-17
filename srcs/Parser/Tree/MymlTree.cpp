@@ -56,8 +56,10 @@ MymlObject *MymlTree::listDefine(std::list<Token>::iterator &it, const std::stri
 			else 
 				list->insert(new MymlObject(elemKey));
 		}
-		if (it->_type != COMMA && it->_type != CLOSE_BRACKET)
+		if (it->_type != COMMA && it->_type != CLOSE_BRACKET) {
+			free(list);
 			throw (BadParsingError(it->_token));
+		}
 		if (it->_type == COMMA)
 			it++;
 	}
@@ -74,8 +76,10 @@ MymlObject *MymlTree::dictionaryDefine(std::list<Token>::iterator &it, const std
 		if (isValue(it)){
 			elemKey = it->_token;
 			it++;
-			if ((it++)->_type != COLON) 
+			if ((it++)->_type != COLON) {
+				free (dct);
 				throw (BadParsingError(it->_token));
+			}
 			if (isValue(it))
 				dct->insert(std::pair<std::string, MymlObject*>(elemKey, new MymlObject((it++)->_token)));
 			else if (it->_type == OPEN_BRACKET || it->_type == OPEN_BRACE) {
@@ -83,8 +87,10 @@ MymlObject *MymlTree::dictionaryDefine(std::list<Token>::iterator &it, const std
 				it++;
 			}
 		}
-		if (it->_type != COMMA && it->_type != CLOSE_BRACE)
+		if (it->_type != COMMA && it->_type != CLOSE_BRACE) {
+			free (dct);
 			throw (BadParsingError(it->_token));
+		}
 		if (it->_type == COMMA)
 			it++;
 	}
@@ -116,7 +122,7 @@ MymlObject *MymlTree::parseListArg(std::list<Token>::iterator &begin, std::list<
 		it++;
 	else 
 		throw BadParsingError(it->_token);
-	if (it->_type != COLON || it->_type != STRING)
+	if (it->_type != COLON && !isValue(it))
 		throw BadParsingError(it->_token);
 	key = it->_token;
 	it++;
@@ -185,10 +191,10 @@ MymlObject *MymlTree::parseList(const std::string &key, std::list<Token>::iterat
 	std::list<Token>::iterator	it = begin;
 
 	while (level == nbSpace(it)) {
-		if (isDictionary(it)) {
-			delete list;
-			throw BadParsingError(it->_token);
-		}; // throw error
+//		if (isDictionary(it)) {
+//			delete list;
+//			throw BadParsingError(it->_token);
+//		}; // throw error
 		try {
 			list->insert(parseListArg(begin, it, level));
 		}

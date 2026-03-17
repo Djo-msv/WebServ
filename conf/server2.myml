@@ -1,5 +1,5 @@
 
-twobytwotable: [ test:'a1', list2:[l1, l2], 'b1', 'b2']
+twobytwotable: [ test:'a1', map:{key1:l1 , key2:l2, key3:l3}, 'b1', 'b2']
 
 server2 :
 	- value1

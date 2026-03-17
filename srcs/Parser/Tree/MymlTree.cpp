@@ -71,10 +71,11 @@ MymlObject *MymlTree::dictionaryDefine(std::list<Token>::iterator &it, const std
 			if ((it++)->_type != COLON) 
 				throw (BadParsingError(it->_token));
 			if (isValue(it))
-				dct->insert(std::pair<std::string, MymlObject*>(elemKey, new MymlObject(it->_token)));
-			else
+				dct->insert(std::pair<std::string, MymlObject*>(elemKey, new MymlObject((it++)->_token)));
+			else if (it->_type == OPEN_BRACKET || it->_type == OPEN_BRACE) {
 				dct->insert(std::pair<std::string, MymlObject*>(elemKey, inlineDefine(it, elemKey)));
-			
+				it++;
+			}
 		}
 		if (it->_type != COMMA && it->_type != CLOSE_BRACE)
 			throw (BadParsingError(it->_token));

@@ -6,7 +6,7 @@ MymlTree::MymlTree(std::list<Token> &tokens)
 	std::string value;
 
 	_root =  new MymlList("root");
-
+	_error = new ParserError(tokens);
 	try {
 		for (std::list<Token>::iterator it = tokens.begin(); it != tokens.end(); it++) {
 			if (it->_type == STRING) {
@@ -26,7 +26,7 @@ MymlTree::MymlTree(std::list<Token> &tokens)
 					else if (it->_type == OPEN_BRACKET || it->_type == OPEN_BRACE)
 						_root->insert(inlineDefine(it, key));
 					else
-						throw BadParsingError(it->_token);
+						_error->unespectedToken(it);
 				}
 			}
 		}
@@ -60,7 +60,7 @@ MymlObject *MymlTree::listDefine(std::list<Token>::iterator &it, const std::stri
 		}
 		if (it->_type != COMMA && it->_type != CLOSE_BRACKET) {
 			free(list);
-			throw (BadParsingError(it->_token));
+			_error->unespectedToken(it);
 		}
 		if (it->_type == COMMA)
 			it++;
@@ -80,7 +80,7 @@ MymlObject *MymlTree::dictionaryDefine(std::list<Token>::iterator &it, const std
 			it++;
 			if ((it++)->_type != COLON) {
 				free (dct);
-				throw (BadParsingError(it->_token));
+				_error->unespectedToken(it);
 			}
 			if (isValue(it))
 				dct->insert(std::pair<std::string, MymlObject*>(elemKey, new MymlObject((it++)->_token)));
@@ -90,12 +90,12 @@ MymlObject *MymlTree::dictionaryDefine(std::list<Token>::iterator &it, const std
 			}
 			else {
 				free (dct);
-				throw BadParsingError(it->_token);
+				_error->unespectedToken(it);
 			}
 		}
 		if (it->_type != COMMA && it->_type != CLOSE_BRACE) {
 			free (dct);
-			throw (BadParsingError(it->_token));
+			_error->unespectedToken(it);
 		}
 		if (it->_type == COMMA)
 			it++;
@@ -127,9 +127,9 @@ MymlObject *MymlTree::parseListArg(std::list<Token>::iterator &begin, std::list<
 	if (it->_type == DASH)
 		it++;
 	else 
-		throw BadParsingError(it->_token);
+		_error->unespectedToken(it);
 	if (it->_type != COLON && !isValue(it))
-		throw BadParsingError(it->_token);
+		_error->unespectedToken(it);
 	key = it->_token;
 	it++;
 	// is define or pair
@@ -163,7 +163,7 @@ std::pair<std::string, MymlObject*> MymlTree::parseDictionaryArg(std::list<Token
 	std::pair<std::string, MymlObject*>	obj;
 
 	if (!isValue(it))
-		throw BadParsingError(it->_token);
+		_error->unespectedToken(it);
 	key = it->_token;
 	it++;
 	// is define or pair
@@ -182,7 +182,7 @@ std::pair<std::string, MymlObject*> MymlTree::parseDictionaryArg(std::list<Token
 			return (obj);
 		}
 	}
-	throw BadParsingError(it->_token);
+	_error->unespectedToken(it);
 	return (std::pair<std::string, MymlObject*>());
 }
 
@@ -199,7 +199,7 @@ MymlObject *MymlTree::parseList(const std::string &key, std::list<Token>::iterat
 	while (level == nbSpace(it)) {
 		if (isDictionary(it)) {
 			delete list;
-			throw BadParsingError(it->_token);
+			_error->unespectedToken(it);
 		}; // throw error
 		try {
 			list->insert(parseListArg(begin, it, level));
@@ -226,7 +226,7 @@ MymlObject *MymlTree::parseDictionary(const std::string &key, std::list<Token>::
 	while (level == nbSpace(it)) {
 		if (!isDictionary(it)) {
 			delete dictionary;
-			throw BadParsingError(it->_token);
+			_error->unespectedToken(it);
 		}
 		try {
 			dictionary->insert(parseDictionaryArg(begin, it, level));
@@ -250,7 +250,7 @@ MymlObject *MymlTree::define(std::list<Token>::iterator &begin, const std::strin
 	size_t	level = nbSpace(it); // checks indentation and set level to the current indentation
 
 	if (prev_level >= level) // checks that current the level is higher than the previous level and throw exeption if not
-		throw BadParsingError(it->_token);
+		_error->unespectedToken(it);
 	if (it->_type == DASH)
 		return (parseList(key, begin, level));
 	else if (isDictionary(it))

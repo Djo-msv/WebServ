@@ -3,11 +3,16 @@
 #include <list>
 #include <utility>
 
+#include "../ParserError.hpp"
+
 #include "MymlObject.hpp"
 #include "MymlDictionary.hpp"
 #include "MymlList.hpp"
 #include "MymlPair.hpp"
 #include "../Lexer/Token.hpp"
+#include "../ParserError.hpp"
+
+class ParserError;
 
 class MymlTree
 {
@@ -19,6 +24,7 @@ class MymlTree
 
 	private :
 		MymlList	*_root;
+		ParserError *_error;
 		std::list<MymlObject *> _anchor;
 
 		MymlObject *define(std::list<Token>::iterator &begin, const std::string &key, size_t prev_level);

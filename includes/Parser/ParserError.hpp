@@ -9,7 +9,7 @@
 class ParserError
 {
 	public :
-		ParserError(const std::list<Token> &tokens);
+		ParserError(std::list<Token> &tokens);
 		~ParserError();
 
 		void badIndetation(const std::list<Token>::iterator &token);
@@ -19,7 +19,7 @@ class ParserError
 		void unespectedToken(const std::list<Token>::iterator &token);
 	
 	private :
-		std::list<Token> _tokens;
+		std::list<Token> &_tokens;
 
 		int	CountLine(std::list<Token>::iterator *begin, const std::list<Token>::iterator &token);
 		std::string PrintLine(const std::list<Token>::iterator &line, const std::list<Token>::iterator &token);

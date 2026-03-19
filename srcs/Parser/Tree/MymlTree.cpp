@@ -33,6 +33,7 @@ MymlTree::MymlTree(std::list<Token> &tokens)
 	}	
 	catch (const std::runtime_error &e) {
 		delete _root;
+		delete _error;
 		throw BadParsingError(e.what());
 	}
 }
@@ -40,6 +41,7 @@ MymlTree::MymlTree(std::list<Token> &tokens)
 MymlTree::~MymlTree(void)
 {
 	delete _root;
+	delete _error;
 }
 
 MymlObject *MymlTree::listDefine(std::list<Token>::iterator &it, const std::string &key)

@@ -1,6 +1,6 @@
 #include "Parser/ParserError.hpp"
 
-ParserError::ParserError(const std::list<Token> &tokens) : _tokens(tokens)
+ParserError::ParserError(std::list<Token> &tokens) : _tokens(tokens)
 {}
 
 ParserError::~ParserError(void)
@@ -8,7 +8,7 @@ ParserError::~ParserError(void)
 
 int	ParserError::CountLine(std::list<Token>::iterator *begin, const std::list<Token>::iterator &token)
 {
-	int	count_line = 0;
+	int	count_line = 1;
 	
 	*begin = _tokens.begin();
 	for (std::list<Token>::iterator it = _tokens.begin(); it != token; it++) {

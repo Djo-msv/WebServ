@@ -201,11 +201,11 @@ void Request::startline_check(std::string line)
 		_target = _config.getIndex();
 	//location v method
 	std::string location = _target.substr(0, _target.rfind("/"));
-	if (!_config.isMethodAllowed(location, _config.stringToRequestFlag(_method)))
-		throw Forbidden(); //method not supported (NotImplemented ? check needed)
 	//add root
 	if (_target[0] != '/')
 		_target = "/" + _target;
+	if (!_config.isMethodAllowed(location, _config.stringToRequestFlag(_method)))
+		throw Forbidden(); //method not supported (NotImplemented ? check needed)
 	_target = _config.getRootFolder() + _target;
 	//error 404 catch
 	try { seekFile(_target); }

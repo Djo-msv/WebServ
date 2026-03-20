@@ -61,9 +61,6 @@ unsigned char *Response::getResponse(std::map<std::string, std::string> &mime)
 			else
 				_headers += mime.at(_target.substr(_target.rfind('.')));
 			_headers += "\r\nTransfer-Encoding: chunked\r\n";
-			bool gz = (_target.rfind('.') != std::string::npos && _target.substr(_target.rfind('.')) == ".gz");
-			if (gz)
-				_headers += "Content-Encoding: gzip\r\n";
 			this->chunkBody();
 		}
 		//\r\nContent-Length: " + ft_itoa(_body.size() - 2) + "\r\n";

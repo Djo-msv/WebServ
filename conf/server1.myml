@@ -1,8 +1,8 @@
 server1 :
 	port : 7500
-	root_folder : /home/csenelle/Documents/42_main_cursus/6th_circle/WebServ/server00
+	root_folder : ./server00
 	index : /html/index.html
-	timeout : 15
+	timeout : 40
 	request_flags :
 		- /html : GET
 		- /img : GET

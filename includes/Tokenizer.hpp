@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iostream>
-#include <vector>
+#include <list>
 
 class Tokenizer
 		int		getIndent();
@@ -10,7 +10,7 @@ class Tokenizer
 		bool	isMemberOfaDictionary();
 		bool	isString(char c);
 
-		std::vector<std::string>	_tokens;
+		std::list<std::string>	_tokens;
 		
 };
 

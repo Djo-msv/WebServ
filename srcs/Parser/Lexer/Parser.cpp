@@ -50,7 +50,7 @@ Parser::Parser(const std::string path) : _tree(NULL)
 		_tokens.clear();
 		return ;
 	}
-	Lexer print(_tokens);
+//	Lexer print(_tokens);
 	try {
 		_tree = new MymlTree(_tokens);
 
@@ -59,7 +59,7 @@ Parser::Parser(const std::string path) : _tree(NULL)
 			printTree(*it, 0);
 	}
 	catch (const std::runtime_error &e) {
-		std::cout << "error :" << e.what() << std::endl;
+		std::cout << e.what() << std::endl;
 		_tokens.clear();
 		return ;
 	}

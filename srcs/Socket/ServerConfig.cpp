@@ -10,6 +10,12 @@ ServerConfig::~ServerConfig() {}
 bool ServerConfig::isMethodAllowed(const std::string &location, int method) const
 {
     std::map<std::string, int>::const_iterator it = requestsFlag.find(location);
+    std::string loc = location;
+    //needs work ; theres an elegant solution in there
+    while (it == requestsFlag.end() && loc.rfind("/") != std::string::npos) {
+    	loc = loc.substr(0, loc.rfind("/"));
+    	it = requestsFlag.find("/" + loc);
+    }
     if (it != requestsFlag.end()) {
         return it->value & method;
     }
@@ -31,7 +37,7 @@ ServerConfig::RequestFlag ServerConfig::stringToRequestFlag(const std::string &m
     if (method == "GET") return GET;
     if (method == "POST") return POST;
     if (method == "DELETE") return DELETE;
-    throw NotImplemented();//std::invalid_argument("Invalid HTTP method: " + method);
+    throw NotAllowed();//std::invalid_argument("Invalid HTTP method: " + method);
 }
 
 std::string ServerConfig::getErrorFile(int errorCode) const

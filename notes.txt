@@ -1,0 +1,20 @@
+slight overhaul in order to comply with tester rules ::
+	mime exceptions are out the window
+	indexes are location dependent
+	locations can have alters :: ex, directory keeps its methods, index etc. but is virtually just root
+		possible implementation ::
+			if we want to keep the rest of the code as as is as possible, tweak the config
+			we get :: a flags list, with locations mapping
+				an index list, with locations mapping
+				a root alter ego
+	flags get checked retroactively (not the word), through every folder above
+	GET requests on folders write the files/folders present within, in plain text
+	methods can be checked against extensions on top of the folders they belong to
+		(same for executability)
+	exec_folder might be a list ?
+	configuration files dont need a timeout, index, exec folder or error files
+
+still unsure on the difference between a directory/Yeah and directory/nop GETs, since one of them is meant to 404 (Y) and the other not
+still waiting for the test to finish its size 100,000,000 CGI POST request
+	ensured the rest of the server continues as usual (second server functions just fine)
+	server is continually reading, not timeout or suspect behavior as far as i can see

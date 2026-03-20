@@ -62,6 +62,7 @@ unsigned char *Response::getResponse(std::map<std::string, std::string> &mime)
 				_headers += mime.at(_target.substr(_target.rfind('.')));
 			_headers += "\r\nTransfer-Encoding: chunked\r\n";
 			this->chunkBody();
+			//std::cerr << "status :: " << _status << std::endl;
 		}
 		//\r\nContent-Length: " + ft_itoa(_body.size() - 2) + "\r\n";
 		this->makeMsg();
@@ -120,16 +121,40 @@ void Response::readFile()
 {
 	if (_target.empty()) //no _body to make || _body is from default
 		return ;
-	int fd = open(_target.c_str(), O_RDONLY);
-	if (fd == -1) // should not happen ever at this point, but in case
-		return ;
-	unsigned char a;
-	try
+	struct stat s;
+	if ( stat(_target.c_str(), &s) == 0 )
 	{
-		while (read(fd, &a, 1))
-			_body.push_back(a);
-	} RETHROW(std::bad_alloc)
-	close(fd);
+		if( s.st_mode & S_IFDIR )
+		{
+			//list all directories as html text;
+			DIR *dir;
+			struct dirent *ent;
+			if ((dir = opendir (_target.c_str())) != NULL) {
+				/* print all the files and directories within directory */
+				while ((ent = readdir (dir)) != NULL) {
+					std::string name = ent->d_name;
+					if (name == "." || name == "..")
+						continue;
+					_body += (unsigned char *)ent->d_name;
+					_body.push_back('\n');
+				}
+				closedir (dir);
+			}
+		}
+		else if ( s.st_mode & S_IFREG )
+		{
+			int fd = open(_target.c_str(), O_RDONLY);
+			if (fd == -1) // should not happen ever at this point, but in case
+				return ;
+			unsigned char a;
+			try
+			{
+				while (read(fd, &a, 1))
+					_body.push_back(a);
+			} RETHROW(std::bad_alloc)
+			close(fd);
+		}
+	}
 }
 
 //for chunkBody(), future will be put in a response_utils.cpp or renamed request_utils.cpp

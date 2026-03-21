@@ -6,7 +6,8 @@ slight overhaul in order to comply with tester rules ::
 			if we want to keep the rest of the code as as is as possible, tweak the config
 			we get :: a flags list, with locations mapping
 				an index list, with locations mapping
-				a root alter ego
+				an alter list, also with locations mapping
+					go through the map and check a .find, end or between slashes, replace by alias
 	flags get checked retroactively (not the word), through every folder above
 	GET requests on folders write the files/folders present within, in plain text
 	methods can be checked against extensions on top of the folders they belong to
@@ -15,6 +16,21 @@ slight overhaul in order to comply with tester rules ::
 	configuration files dont need a timeout, index, exec folder or error files
 
 still unsure on the difference between a directory/Yeah and directory/nop GETs, since one of them is meant to 404 (Y) and the other not
+	okaaaaaaay i think i get it now, even though its a little confusing ::
+		visibly the only difference is the existence of an index in there
+		ie, a /nop being a directory reaches for an index, whereas a /nop/ reaches for a list of files ls style
+		therefore, when directory/Yeah reaches for an index youpi.bad_extension, it returns a 404
+		but when directory/Yeah/ reaches for a folder read, it returns an ls list
+		now to implement this within the code (ugh)
+			to see this appear in test, actually put some flavor text in the empty files
 still waiting for the test to finish its size 100,000,000 CGI POST request
-	ensured the rest of the server continues as usual (second server functions just fine)
-	server is continually reading, not timeout or suspect behavior as far as i can see
+	ensured the rest of the server continues as usual (second server functions just fine, directory GETs on first server also)
+	server is continually reading, not timeout or suspect behavior as far as i can see, just slow
+
+
+first steps ::
+	retroactive flags check -->tested, should work well
+		next implement that same retroactive method for the index search once index is a locations mapped list
+	exec and allowed methods apply to extensions also
+	alter egos :: hard-code for now, but the logic is in
+	now to wait for the end of the testing haha

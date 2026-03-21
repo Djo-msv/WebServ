@@ -21,7 +21,6 @@ still unsure on the difference between a directory/Yeah and directory/nop GETs, 
 		ie, a /nop being a directory reaches for an index, whereas a /nop/ reaches for a list of files ls style
 		therefore, when directory/Yeah reaches for an index youpi.bad_extension, it returns a 404
 		but when directory/Yeah/ reaches for a folder read, it returns an ls list
-		now to implement this within the code (ugh)
 			to see this appear in test, actually put some flavor text in the empty files
 still waiting for the test to finish its size 100,000,000 CGI POST request
 	ensured the rest of the server continues as usual (second server functions just fine, directory GETs on first server also)
@@ -30,7 +29,7 @@ still waiting for the test to finish its size 100,000,000 CGI POST request
 
 first steps ::
 	retroactive flags check -->tested, should work well
-		next implement that same retroactive method for the index search once index is a locations mapped list
+		implement that same retroactive method for the index search once index is a locations mapped list
 	exec and allowed methods apply to extensions also
 	alter egos :: hard-code for now, but the logic is in
-	now to wait for the end of the testing haha
+	now to wait for the end of the testing...

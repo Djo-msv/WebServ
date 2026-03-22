@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdexcept>
 #include <HttpErrors.hpp>
+#include <list> 
 
 # define value second
 # define key first

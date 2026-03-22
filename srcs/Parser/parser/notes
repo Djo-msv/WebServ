@@ -1,0 +1,82 @@
+- here :
+	- my
+	- first
+	- list : here
+- there :
+	myFirst : dictionnary
+	aList :
+		- aList1
+	another : pair
+
+okay so, in chrono order
+	Parser(std::string path) :: go find files, make a list of the files
+		File(path) :: reads files into a list of string objects
+		Tokenizer(std::string filecontent, std::list<Token{string token, uint8 type, u_int level}>)
+			self-explanatory :: separates every word/spec character
+		TokenTransformer(std::list<Token>)
+			handles casts, backslashes, quotes and indentations
+		Tree(std::list<Token>)
+			reads all tokens and creates a (nb) tree of ymlObjects (dict, list, def)
+			recursive mf, reads through tokens and adds to lists, dicts, defs
+
+advice ::
+	should delete unnecessary spaces in tokenTransformer
+	
+possible actual errors ::
+	Tokenizer::typeOfValue()
+		while (isalnum(*it)) for STRING seems overly restraining - like '.' and '_' --> these are acceptable characters, dude
+
+
+if i had done it ::
+	first i would have kept the files as a map<size_t line num, getline string>
+		why consolidate when i need to separate later during the parsing ?
+	second i would have done a .clearcomments() that just, deletes all comments
+		we don't need or read them, they're only relevant for h.e
+		if backslash do indeed do just what i think, same here+line then token concat
+	third, something to be said for a .substr(0, 1) -> substr(1) || .substr()==
+		using iterators for a 1-sized string seems over-complicated
+		and a .rfind("", 0) == 0 feels uncanny
+	fourth (oh god i am that guy), the switch case are being under utilized
+		code is bulky, often where just one value changes we could cube it
+	fifth, while v for loops on simple step-untils
+		its just difficult to read at first glance, ill admit, aesthetics
+	sixth, space trimming within tokenization (quotes, too ?)
+		personal preference, optimization at most
+	oh my god there's way too many functionalities
+		this is so, so beyond overkill. like. for real.
+	
+	should i give the tree-ification a try ? it doesn't seem overly complex
+	list v dict (indent + '-' v indent ; list of only one kind of value)
+	just a simple recursive distrib ::
+		(at it) :: checkType(it) -> 0 dict, 1 list, 2 pair, 3 value [or sthg]
+			dict :: new dict, read all correct indentation;
+				or, read from { to }, commpa-separated;
+					then call back on every item before return;
+			list :: new list, read all correct indentation of first object type;
+				or, read from [ to ], comma separated;
+					then call back on every item before return;
+			pair :: new pair, read current line and return;
+			value :: new value, read current token and return;
+	which then gives us a possible tree of
+list (name="", std::list<ymlDict>)
+	dict (name="server00", std::list<*ymlObject>)
+		pair (key="listen", val="7500")
+		pair (key="index", val="/html/index.html")
+		pair (key="root", val="./server00")
+		list (name="locations", std::list<ymlList<ymlObj>>))
+			list (name="/scripts", std::list<ymlObj>)
+				obj (val="GET")
+				obj (val="POST")
+			list (name="/html", std::list<ymlObj>)
+				obj (val="GET")
+			list (name="/uploads", std::list<ymlObj>)
+				obj (val="DELETE")
+		list (name="error files", std::list<ymlPair>)
+			pair (key="404", val="/html/error/404.html")
+			pair (key="400", val="/html/error/400.html")
+			//etc.
+	dict (name="default", std::list<*ymlObject>)
+		pair (key="listen", val="8080")
+		pair (key="index", val="/html/404.html")
+		pair (key="root", val=".")
+		//etc.

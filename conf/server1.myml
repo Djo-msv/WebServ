@@ -14,5 +14,4 @@ server1 :
 		- .py : "/usr/bin/python3"
 	error_files :
 		- 404 : errors/404.html
-		- 							#error
 	execution_folder : /scripts

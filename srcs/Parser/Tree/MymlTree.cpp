@@ -61,7 +61,7 @@ MymlObject *MymlTree::listDefine(std::list<Token>::iterator &it, const std::stri
 				list->insert(new MymlObject(elemKey));
 		}
 		if (it->_type != COMMA && it->_type != CLOSE_BRACKET) {
-			free(list);
+			delete list;
 			_error->unespectedToken(it);
 		}
 		if (it->_type == COMMA)
@@ -81,7 +81,7 @@ MymlObject *MymlTree::dictionaryDefine(std::list<Token>::iterator &it, const std
 			elemKey = it->_token;
 			it++;
 			if ((it++)->_type != COLON) {
-				free (dct);
+				delete dct;
 				_error->unespectedToken(it);
 			}
 			if (isValue(it))
@@ -91,12 +91,12 @@ MymlObject *MymlTree::dictionaryDefine(std::list<Token>::iterator &it, const std
 				it++;
 			}
 			else {
-				free (dct);
+				delete dct;
 				_error->unespectedToken(it);
 			}
 		}
 		if (it->_type != COMMA && it->_type != CLOSE_BRACE) {
-			free (dct);
+			delete dct;
 			_error->unespectedToken(it);
 		}
 		if (it->_type == COMMA)
@@ -174,6 +174,8 @@ std::pair<std::string, MymlObject*> MymlTree::parseDictionaryArg(std::list<Token
 		if (isValue(it)) { // is dictionary value
 			value = it->_token;
 			it++;
+			if (it->_type != END_OF_LINE)
+				_error->unespectedToken(it);
 			for(;it->_type == END_OF_LINE; it++){};
 			obj = std::pair<std::string, MymlObject*>(key, new MymlObject(value));
 			return (obj);

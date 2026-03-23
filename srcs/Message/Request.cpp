@@ -172,6 +172,19 @@ void	Request::parse_header(std::string header)
 	catch (std::exception &e) {throw ;}
 }
 
+bool Request::needsIndex()
+{
+	if (*(_target.rbegin()) == '/') { return false; }
+	std::string full_target = _config.getRootFolder() + _target;
+	struct stat s;
+	if ( stat(full_target.c_str(), &s) != 0 ) { throw FileNotFound(); }
+	if( s.st_mode & S_IFDIR ) {
+		_target += "/";
+		return true;
+	}
+	return false;
+}
+
 void Request::startline_check(std::string line)
 {
 	std::stringstream l(line);
@@ -191,27 +204,47 @@ void Request::startline_check(std::string line)
 	if (l.eof())
 		throw BadRequest();
 	getline(l, current, '\r');
-	if (current != "HTTP/1.1")
+	if (current != "HTTP/1.1" && current != "HTTP/1.*")
 		throw NotImplemented(); //wrong http version -> unauthorized ? not provided ?
 	getline(l, current);
-	if (!current.empty())// && !l.eof()) -> unnecessary, i think
+	if (!current.empty())
 		throw BadRequest();
-	//"/" to index
-	if (_target == "/")
-		_target = _config.getIndex();
-	//location v method
-	std::string location = _target.substr(0, _target.rfind("/"));
-	if (!_config.isMethodAllowed(location, _config.stringToRequestFlag(_method)))
-		throw Forbidden(); //method not supported (NotImplemented ? check needed)
-	//add root
+	
 	if (_target[0] != '/')
 		_target = "/" + _target;
+	//hardcode here, alter changes --> this will be done later on obviously
+	std::string alter = "/directory";
+	std::string change = "/";
+	size_t pos = _target.find(alter);
+	if (pos != std::string::npos) {
+		if (_target.size() == (pos + alter.size()))
+			_target = _target.substr(0, pos) + change;
+		else if (_target.at(pos + alter.size()) == '/')
+			_target = _target.substr(0, pos) + change + _target.substr(pos + alter.size() +1);
+	}
+	
+	//"/" to index
+	if (_target == "/" || needsIndex())
+		_target += _config.getIndex();
+	//location/extension v method
+	std::string extension;
+	std::string location = _target;
+	if (_target.rfind('.') != std::string::npos)
+		extension = _target.substr(_target.rfind('.'));
+	bool loc = _config.isMethodAllowed(location, _config.stringToRequestFlag(_method));
+	bool ext = _config.isMethodAllowed(extension, _config.stringToRequestFlag(_method));
+	if (!loc && !ext)
+		throw NotAllowed(); //method not supported (NotImplemented ? check needed)
+	//add root
 	_target = _config.getRootFolder() + _target;
 	//error 404 catch
 	try { seekFile(_target); }
 	catch (std::exception &e) { throw ; }
 	//check_exec, adjust
-	if (_config.isExecFolder(location))
+	pos = location.rfind('/');
+	if (pos && pos != std::string::npos && pos != location.size() - 1)
+		location = location.substr(0, pos);
+	if ((loc && _config.isExecFolder(location)) || (ext && _config.isExecFolder(extension)))
 		this->adjust_exec();
 	//in future, here will be the Accept: header check through the <extension ; media type> map, on an else
 }
@@ -274,7 +307,7 @@ void Request::mime_check(std::map<std::string, std::string> &mime)
 		throw BadRequest(); //i think ? this is all very murky territory, needs testing - maybe BadRequest ?
 	std::string extension = _target.substr(_target.rfind('.'));
 	if (!mime.count(extension))
-		throw BadRequest(); //again, guessing here
+		return ; //again, guessing here
 	if (!headers.count("HTTP_ACCEPT"))
 		return ; //no accept header, not sure what that would mean for me but i assume just no checking
 	extension = mime.at(extension);

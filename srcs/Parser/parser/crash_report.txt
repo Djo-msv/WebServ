@@ -1,0 +1,87 @@
+---------------------------------11/03
+crash catalog ::
+	key : txt.txt isnt recognized as a string (see above) and '.' is not catalogued
+		segfault (uninitialized values and so forth)
+	basic test run leaks ::
+		in server2.myml, leaking a dict arg ; fixed --> new value crushes old value instead of inserting into the void
+	myml.myml invalid indents, beginning
+		segfault ; fixed --> i != 8 instead of != 9, it's a size thing not an index thing
+		thrown BadParsing error is not caught ?? come on, guys.
+			alright, works good now
+	myml.myml invalid indents, beginning of a list/dict obj
+		segfault - invalid read; fixed --> NULL value in printTree was causing the segfault, i assume from Tree.cpp [.97]
+		post-fix, back to non-standardized behavior for within obj
+	myml.myml with a single value at the end of the dictionary ; error
+		leaks :: 9 blocks from the ParseDictionary function ; fixed :: no delete of new'd object when throwing error
+			i assume this is a recurring error to be fixed in other creating functions as well
+	
+	
+
+suspicious behavior ::
+	myml.myml as is :: where did my dict [there] go ??? it literally didn't even make a dict obj, like huh
+		this is fixed by adding - before the objects, but it loses the plot, and also literally why
+	non-standardized behavior for invalid indents ::
+		outside of objects (beginning, end) -> invalid
+		in between objects (|b| a - list and a - dict, in myml.myml example) :: valid
+		within obj (|b| two list - values or two dict values) :: valid, but disregards next - value or indent levels
+	multiple colons fuck up the obj-list instead of thowing a BadParsing error
+	non-named dicts :: "- :" followed by a regular dict ; no parsing error once again, just a fucked up read
+
+
+---------------------------------------------12/03
+
+crash catalog ::
+	for a bad indentation after we start a dict, error is thrown but leaks are had
+		define errors arent caught ???????? need a try, catch in ParseDict (assume List also) around PDArg
+			man's error etiquette is like, severely dubious
+
+suspicious behavior ::
+	empty - value is categorized as "\n" instead of error
+	empty list name : forces a delete of all the info before first new list/dict obj / ignores following indentation
+	even a simple, actual server check (see below, A=/, B=.) is just flung all over the place :: spec the beginning value of the dict is flung around and completely inaccurate, further down lists are excluded from their original obj, so on
+		also this should all be stored in a bigger list above it
+	multiple - values in a line do not result in error (values are ignored)
+	incorrect but plentiful indentation (level>prev but no :) does not trigger error, is ignored
+		
+in code discoveries ::
+	MymlTree.cpp l.111 error is not thrown (what's the error ? should it throw and why ? and delete the list if so !)
+
+
+------------------19/03----------------------------------------------------------------------------------
+
+suspicious behavior ::
+	multvalues in one pair :: ie "key : 15 66 5 8 2 4 55", indents shuffled (again)
+	same with multvalues colon separated
+	incorrect indent && unnecessarily - value :: ie "listname : alist?\n- key : value\n-key : value", indents shuffled [dic and list]
+	
+
+crash report ::
+	free to delete fix
+	in ParserError, _tokens from recon to ref, no const ref
+	leak when space in key in dic :: ie "ke_ y : value" :: 8b, 1 block -> links back to the Tree constructor itself
+		unsure where that is, needs further exploration
+
+below ::
+
+- server00 :
+	listen : 7500
+	index : AhtmlAindexBhtml
+	root : BAserver00
+	locations :
+		- Ascripts
+			- GET
+			- POST
+		- Ahtml
+			- GET
+		- Auploads
+			- DELETE
+	errorFiles :
+		- 404 : AhtmlAerrorA404Bhtml
+		- 400 : AhtmlAerrorA400Bhtml
+- default :
+	listen : 8080
+	index : AerrorA404Bhtml
+	root : B
+	locations :
+		- Ahtml :
+			- GET

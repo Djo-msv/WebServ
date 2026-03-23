@@ -9,6 +9,7 @@
 # include <vector>
 # include <fcntl.h>
 # include <unistd.h>
+# include <dirent.h>
 
 #define RETHROW(ExceptionType) \
 	catch (const ExceptionType& e) { \

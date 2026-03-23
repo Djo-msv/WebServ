@@ -33,6 +33,11 @@ class BadRequest : public HttpError {
         BadRequest() : HttpError("400 Bad Request", "./errors/400_def.html", 400) {};
 };
 
+class NotAllowed : public HttpError {
+    public:
+        NotAllowed() : HttpError("405 Method Not Allowed", "./errors/400_def.html", 415) {};
+};
+
 
 /*
     200 OK

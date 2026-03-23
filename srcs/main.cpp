@@ -148,7 +148,6 @@ void	manageRequests()
 // }
 
 
-
 void initServerSockets(Parser &tree)
 {
 	std::list<MymlObject *> *root = tree.getRoot();

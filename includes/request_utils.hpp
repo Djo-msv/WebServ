@@ -4,6 +4,7 @@
 # include <HttpErrors.hpp>
 # include <ServerConfig.hpp>
 # include <Request.hpp>
+# include <list>
 # include <sys/stat.h>
 # include <cstdio>
 
@@ -15,3 +16,4 @@ std::string	seekFile(std::string &pathfile);
 ustring	chunk_parse(ustring _body);
 bool check_key(std::string key);
 bool check_val(std::string &val);
+std::list<std::string> target_list(std::string loc);

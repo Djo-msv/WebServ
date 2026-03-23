@@ -9,6 +9,7 @@ typedef std::basic_string<unsigned char> ustring;
 # include <vector>
 # include <algorithm>
 # include <map>
+# include <list>
 # include <sys/stat.h>
 # include <HttpError.hpp>
 # include <ServerSocket.hpp>

@@ -79,3 +79,9 @@ double MymlDictionary::getValueAsFloat(std::string key)
 		throw std::invalid_argument("Cannot find " + key + " inside map of the dictionary " + _key + " !");
 	return (map->second->getAsFloat());
 }
+
+
+bool	MymlDictionary::has(std::string key)
+{
+	return (_dictionary->find(key) != _dictionary->end());
+}

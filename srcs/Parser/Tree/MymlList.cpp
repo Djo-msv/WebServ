@@ -26,3 +26,13 @@ std::list<MymlObject*>	*MymlList::getList(void)
 {
 	return (_list);
 }
+
+std::list<MymlObject *>::iterator MymlList::begin()
+{
+	return (_list->begin());
+}
+
+std::list<MymlObject *>::iterator MymlList::end()
+{
+	return (_list->end());
+}

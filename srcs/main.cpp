@@ -147,79 +147,7 @@ void	manageRequests()
 // 	return (ServerConfig(cgiHandlers, requestsFlag, index_file, rootFolder, execFolder, errorFiles, 15)); // timeout en secondes
 // }
 
-void		initOptionnalConfig(MymlDictionary *serverRepertory, std::string &execFolder, time_t &timeout,
-	std::map<std::string, std::string> &cgiHandlers, std::map<std::string, int> &requestsFlags,
-	std::map<int, std::string> &errorFiles)
-{
-	try {
-		execFolder = serverRepertory->getValueAsString("execution_folder");
-		timeout = serverRepertory->getValueAsInt("timeout");
-	} catch (std::invalid_argument &e) { std::cout << e.what() << std::endl; }
-	std::list<MymlObject *> *cgi_list = serverRepertory->getValueAsList("cgi_handlers")->getList();
-	for (std::list<MymlObject *>::iterator it = cgi_list->begin(); it != cgi_list->end(); ++it)
-	{
-		MymlPair	*pair = (*it)->getAsPair();
-		cgiHandlers.insert(std::make_pair(pair->getKey(), pair->getValue()->getAsString()));
-	}
-	std::list<MymlObject *> *request_list = serverRepertory->getValueAsList("request_flags")->getList();
-	for (std::list<MymlObject *>::iterator it = request_list->begin(); it != request_list->end(); ++it)
-	{
-		if ((*it)->isPair())
-		{
-			MymlPair	*pair = (*it)->getAsPair();
 
-			int flag = ServerConfig::stringToRequestFlag(pair->getValue()->getAsString());
-			requestsFlags.insert(std::make_pair(pair->getKey(), flag));
-		} else
-		{
-			std::list<MymlObject *>	*list = (*it)->getAsList()->getList();
-
-			int flags = 0;
-			for (std::list<MymlObject *>::iterator flag = list->begin(); flag != list->end(); ++flag)
-			{
-				flags |= ServerConfig::stringToRequestFlag((*flag)->getAsString());
-			}
-			requestsFlags.insert(std::make_pair((*it)->getAsList()->getKey(), flags));
-		}
-	}
-	std::list<MymlObject *> *error_list = serverRepertory->getValueAsList("error_files")->getList();
-	for (std::list<MymlObject *>::iterator it = error_list->begin(); it != error_list->end(); ++it)
-	{
-		MymlPair	*pair = (*it)->getAsPair();
-
-		errorFiles.insert(std::make_pair(pair->getKeyAsInt(), pair->getValue()->getAsString()));
-	}
-	
-}
-
-ServerConfig initServerConfig(MymlDictionary *serverRepertory)
-{
-	std::map<std::string, std::string> cgiHandlers;
-	std::map<std::string, int> requestsFlags;
-	std::map<int, std::string> errorFiles;
-	std::string index_file;
-	std::string rootFolder;
-	std::string execFolder;
-	time_t	timeout = 15;
-	int		port;
-	
-	try
-	{
-		index_file = serverRepertory->getValueAsString("index");
-		rootFolder = serverRepertory->getValueAsString("root_folder");
-		port = serverRepertory->getValueAsInt("port");
-	}
-	catch (MymlObject::BadCast &e) { throw e; }
-	catch (std::invalid_argument &e) { throw std::invalid_argument(std::string("missing mandatory argument : ") + e.what()); }
-	
-	try	{ initOptionnalConfig(serverRepertory, execFolder, timeout, cgiHandlers, requestsFlags, errorFiles); }
-	catch (MymlObject::BadCast &e) {
-		throw (MymlObject::BadCast("config optionnal argument error at server " +  serverRepertory->getKey() + ' ' + e.what()));
-	}
-	catch (std::invalid_argument &e) { throw e; }
-
-	return (ServerConfig(port, cgiHandlers, requestsFlags, index_file, rootFolder, execFolder, errorFiles, timeout));
-}
 
 void initServerSockets(Parser &tree)
 {

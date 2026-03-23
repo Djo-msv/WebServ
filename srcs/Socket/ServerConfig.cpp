@@ -1,9 +1,9 @@
 #include <ServerConfig.hpp>
 
-ServerConfig::ServerConfig(int port, std::map<std::string, std::string> cgiHandlers, std::map<std::string, int> requestsFlag, 
-	std::string index_file, std::string rootFolder, std::string execFolder, std::map<int, std::string> errorFiles, time_t timeout) :
-	sin_family(AF_INET), sin_port(port), cgi_extensions(cgiHandlers), requestsFlag(requestsFlag), error_files(errorFiles), index_file(index_file),
-	exec_folder(execFolder), rootFolder(rootFolder), timeout(timeout) {}
+ServerConfig::ServerConfig(int port, location root_location, std::map<std::string, location *> locations,
+			std::map<std::string, std::string> cgi_extensions, std::string exec_folder, std::map<int, std::string> error_files, time_t timeout) :
+		sin_family(AF_INET), sin_port(port), root_location(root_location), locations(locations),
+		cgi_extensions(cgi_extensions), error_files(error_files), timeout(timeout) {}
 
 ServerConfig::~ServerConfig() {}
 

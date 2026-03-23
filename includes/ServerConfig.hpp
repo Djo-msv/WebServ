@@ -11,27 +11,27 @@
 # define value second
 # define key first
 
+struct location
+{
+	int			allowed_methods;
+	std::string	path;
+	std::string	rootFolder;
+	std::string	index_file;
+};
+
 class ServerConfig
 {
     public:
-        ServerConfig(int port, std::map<std::string, std::string> cgiHandlers,
-			std::map<std::string, int> requestsFlag, std::string index_file,
-			std::string rootFolder, std::string execFolder, std::map<int, std::string> errorFiles, time_t timeout);
-	~ServerConfig();
-
+		ServerConfig(int port, location root_location, std::map<std::string, location *> locations,
+			std::map<std::string, std::string> cgi_extensions, std::string exec_folder, std::map<int, std::string> error_files, time_t timeout);
+		
+			~ServerConfig();
 
         enum MethodFlag {
             GET = 1 << 0,
             POST = 1 << 1,
             DELETE = 1 << 2
         };
-
-		struct location
-		{
-			std::string					path;
-			std::string					rootFolder;
-			std::string					index_file;
-		};
 		
 
         static 		MethodFlag	stringToMethodFlag(const std::string &method);
@@ -50,10 +50,10 @@ class ServerConfig
         int                          		sin_port;
 
     private:
-		std::map<std::string, int>			allowed_methods;
-        std::map<std::string, std::string>	cgi_extensions;
+		location							root_location;
 		std::map<std::string, location *>	locations;
+        std::map<std::string, std::string>	cgi_extensions;
         std::map<int, std::string>			error_files;
-        location							root_location;
+		std::string							exec_folder;
 		time_t								timeout;
 };

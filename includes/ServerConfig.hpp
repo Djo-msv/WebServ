@@ -26,6 +26,15 @@ class ServerConfig
             DELETE = 1 << 2
         };
 
+		struct location
+		{
+			std::map<std::string, int>	requestsFlag;
+			std::string					path;
+			std::string					rootFolder;
+			std::string					index_file;
+		};
+		
+
         static 		RequestFlag	stringToRequestFlag(const std::string &method);
         bool		isMethodAllowed(const std::string &location, int method) const; // Request flag conseillé mais pas forcé
         std::string	getCgi(const std::string &extension) const;
@@ -42,11 +51,9 @@ class ServerConfig
         int                          		sin_port;
 
     private:
-        std::map<std::string, std::string>	cgiExtensions;
-        std::map<std::string, int>			requestsFlag;
-        std::map<int, std::string>			errorFiles;
-        std::string							index_file;
-		std::string							execFolder;
-        std::string							rootFolder;
+        std::map<std::string, std::string>	cgi_extensions;
+		std::map<std::string, location *>	locations;
+        std::map<int, std::string>			error_files;
+        location							root_location;
 		time_t								timeout;
 };

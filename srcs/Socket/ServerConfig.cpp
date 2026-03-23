@@ -2,11 +2,12 @@
 
 ServerConfig::ServerConfig(int port, std::map<std::string, std::string> cgiHandlers, std::map<std::string, int> requestsFlag, 
 	std::string index_file, std::string rootFolder, std::string execFolder, std::map<int, std::string> errorFiles, time_t timeout) :
-	sin_family(AF_INET), sin_port(port), cgiExtensions(cgiHandlers), requestsFlag(requestsFlag), errorFiles(errorFiles), index_file(index_file),
-	execFolder(execFolder), rootFolder(rootFolder), timeout(timeout) {}
+	sin_family(AF_INET), sin_port(port), cgi_extensions(cgiHandlers), requestsFlag(requestsFlag), error_files(errorFiles), index_file(index_file),
+	exec_folder(execFolder), rootFolder(rootFolder), timeout(timeout) {}
 
 ServerConfig::~ServerConfig() {}
 
+// Need to adapt to location
 bool ServerConfig::isMethodAllowed(const std::string &location, int method) const
 {
     if (location.empty()) { return false ; }
@@ -39,11 +40,10 @@ bool ServerConfig::isMethodAllowed(const std::string &location, int method) cons
     return false;
 }
 
-
 std::string ServerConfig::getCgi(const std::string &extension) const
 {
-    std::map<std::string, std::string>::const_iterator it = cgiExtensions.find(extension);
-    if (it != cgiExtensions.end()) {
+    std::map<std::string, std::string>::const_iterator it = cgi_extensions.find(extension);
+    if (it != cgi_extensions.end()) {
         return it->value;
     }
     throw NotImplemented();//std::invalid_argument("No CGI handler found for extension: " + extension);
@@ -59,8 +59,8 @@ ServerConfig::RequestFlag ServerConfig::stringToRequestFlag(const std::string &m
 
 std::string ServerConfig::getErrorFile(int errorCode) const
 {
-    std::map<int, std::string>::const_iterator it = errorFiles.find(errorCode);
-    if (it != errorFiles.end()) {
+    std::map<int, std::string>::const_iterator it = error_files.find(errorCode);
+    if (it != error_files.end()) {
         return it->value;
     }
     throw FileNotFound();

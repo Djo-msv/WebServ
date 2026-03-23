@@ -20,7 +20,7 @@ class ServerConfig
 	~ServerConfig();
 
 
-        enum RequestFlag {
+        enum MethodFlag {
             GET = 1 << 0,
             POST = 1 << 1,
             DELETE = 1 << 2
@@ -28,15 +28,14 @@ class ServerConfig
 
 		struct location
 		{
-			std::map<std::string, int>	requestsFlag;
 			std::string					path;
 			std::string					rootFolder;
 			std::string					index_file;
 		};
 		
 
-        static 		RequestFlag	stringToRequestFlag(const std::string &method);
-        bool		isMethodAllowed(const std::string &location, int method) const; // Request flag conseillé mais pas forcé
+        static 		MethodFlag	stringToMethodFlag(const std::string &method);
+        bool		isMethodAllowed(const std::string &location, int method) const; // Method Flag conseillé mais pas forcé
         std::string	getCgi(const std::string &extension) const;
 		std::string	getRootFolder() const;
 		bool		isExecFolder(std::string location) const;
@@ -51,6 +50,7 @@ class ServerConfig
         int                          		sin_port;
 
     private:
+		std::map<std::string, int>			allowed_methods;
         std::map<std::string, std::string>	cgi_extensions;
 		std::map<std::string, location *>	locations;
         std::map<int, std::string>			error_files;

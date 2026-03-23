@@ -231,8 +231,8 @@ void Request::startline_check(std::string line)
 	std::string location = _target;
 	if (_target.rfind('.') != std::string::npos)
 		extension = _target.substr(_target.rfind('.'));
-	bool loc = _config.isMethodAllowed(location, _config.stringToRequestFlag(_method));
-	bool ext = _config.isMethodAllowed(extension, _config.stringToRequestFlag(_method));
+	bool loc = _config.isMethodAllowed(location, _config.stringToMethodFlag(_method));
+	bool ext = _config.isMethodAllowed(extension, _config.stringToMethodFlag(_method));
 	if (!loc && !ext)
 		throw NotAllowed(); //method not supported (NotImplemented ? check needed)
 	//add root

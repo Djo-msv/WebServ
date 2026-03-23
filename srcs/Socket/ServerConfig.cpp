@@ -49,7 +49,7 @@ std::string ServerConfig::getCgi(const std::string &extension) const
     throw NotImplemented();//std::invalid_argument("No CGI handler found for extension: " + extension);
 }
 
-ServerConfig::RequestFlag ServerConfig::stringToRequestFlag(const std::string &method)
+ServerConfig::MethodFlag ServerConfig::stringToMethodFlag(const std::string &method)
 {
     if (method == "GET") return GET;
     if (method == "POST") return POST;

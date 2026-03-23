@@ -10,12 +10,10 @@ class Socket
 	protected :
 		const int _socketFd;
 	public :
-		Socket();
-		~Socket();
+		Socket(int fd);
+		virtual ~Socket();
 
-		const int getSocketFd();
-	
-		virtual int createSocket() = 0;
+		int getSocketFd();
 
 		class SocketError : public std::runtime_error {
 			public :

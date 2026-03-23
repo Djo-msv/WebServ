@@ -1,0 +1,17 @@
+server1 :
+	port : 7500
+	root_folder : ./server00
+	index : /html/index.html
+	timeout : 40
+	request_flags :
+		- /html : GET
+		- /img : GET
+		- /uploads : DELETE
+		- /scripts :
+			- GET
+			- POST
+	cgi_handlers :
+		- .py : "/usr/bin/python3"
+	error_files :
+			- 404 : errors/404.html	
+	execution_folder : /scripts

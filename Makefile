@@ -54,9 +54,28 @@ endif
 #==============================SOURCES===========================#
 
 SRCS_FILES:=	main.cpp \
+				mimetype.cpp \
+				HttpError.cpp \
+				Execution/ProcessExecution.cpp \
+				Parser/Tree/MymlObject.cpp \
+				Parser/Tree/MymlDictionary.cpp \
+				Parser/Tree/MymlList.cpp \
+				Parser/Tree/MymlPair.cpp \
+				Parser/Tree/MymlTree.cpp \
+				Parser/Tree/treeUtils.cpp \
+				Parser/Lexer/Parser.cpp \
+				Parser/Lexer/Tokenizer.cpp \
+				Parser/Lexer/File.cpp \
+				Parser/Lexer/Lexer.cpp \
+				Parser/Lexer/TokenTransformer.cpp \
 				Socket/ClientSocket.cpp \
 				Socket/ServerSocket.cpp \
-				Socket/socket_utils.cpp
+				Socket/ServerConfig.cpp \
+				Socket/Socket.cpp \
+				Socket/socket_utils.cpp \
+				Message/Request.cpp \
+				Message/request_utils.cpp \
+				Message/Response.cpp
 
 SRCS:=			$(addprefix $(SRC_DIR)/, $(SRCS_FILES))
 

@@ -8,15 +8,8 @@
 #include <stdexcept>
 #include <map>
 #include <socket_utils.hpp>
+#include <ServerConfig.hpp>
 #include <Socket.hpp>
-
-struct ServerConfig
-{
-	int 		sin_port;
-	sa_family_t sin_family;
-	std::string	cgi_path;
-	std::string	index_file;
-};
 
 class ServerSocket : public Socket
 {
@@ -25,11 +18,13 @@ class ServerSocket : public Socket
 		ServerSocket(ServerConfig, int epollInstance);
 		~ServerSocket();
 
+		ServerConfig &getConfig();
+
 	private :
 		ServerConfig _config;	
 
-		virtual int	createSocket();
-		sockaddr_in setupSocketAddress(ServerConfig);
+		int			createSocket(ServerConfig &);
+		sockaddr_in	setupSocketAddress(ServerConfig);
 		
 		// Error class
 		class BindError : public std::runtime_error {

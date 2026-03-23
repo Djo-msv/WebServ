@@ -46,6 +46,7 @@ Parser::Parser(const std::string path) : _tree(NULL)
 		TokenTransformer rewrite(_tokens);
 	}
 	catch (const std::runtime_error &e) {
+		std::cout << "\e[1;31m" << "error :" << "\e[0m" << std::endl;
 		std::cout << e.what() << std::endl;
 		_tokens.clear();
 		return ;
@@ -54,11 +55,12 @@ Parser::Parser(const std::string path) : _tree(NULL)
 	try {
 		_tree = new MymlTree(_tokens);
 
-		_root = ((_tree->getRoot())->getList());
-		for(std::list<MymlObject*>::iterator it = _root->begin(); it != _root->end(); it++)
-			printTree(*it, 0);
+//		_root = ((_tree->getRoot())->getList());
+//		for(std::list<MymlObject*>::iterator it = _root->begin(); it != _root->end(); it++)
+//			printTree(*it, 0);
 	}
 	catch (const std::runtime_error &e) {
+		std::cout << "\e[1;31m" << "error :" << "\e[0m" << std::endl;
 		std::cout << e.what() << std::endl;
 		_tokens.clear();
 		return ;

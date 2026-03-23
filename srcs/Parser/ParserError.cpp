@@ -59,12 +59,11 @@ void ParserError::badCast(const std::list<Token>::iterator &token)
 
 void ParserError::unespectedToken(const std::list<Token>::iterator &token)
 {
-	int	count;
 	std::ostringstream str;
 	std::list<Token>::iterator	begin;
 
-	count = CountLine(&begin, token);
-	str << "\e[1;31m" << "error on line " << count << ":" << "\e[0m" << std::endl;
+	CountLine(&begin, token);
+	str << "\e[1;31m" << "error on line " << ":" << "\e[0m" << std::endl;
 	std::string msg = str.str();
 	throw BadParsingError(PrintLine(begin, token, msg));
 }

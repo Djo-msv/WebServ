@@ -168,7 +168,7 @@ void		initOptionnalConfig(MymlDictionary *serverRepertory, std::string &execFold
 		{
 			MymlPair	*pair = (*it)->getAsPair();
 
-			int flag = ServerConfig::stringToRequestFlag(pair->getValue()->getAsString());
+			int flag = ServerConfig::stringToMethodFlag(pair->getValue()->getAsString());
 			requestsFlags.insert(std::make_pair(pair->getKey(), flag));
 		} else
 		{
@@ -177,7 +177,7 @@ void		initOptionnalConfig(MymlDictionary *serverRepertory, std::string &execFold
 			int flags = 0;
 			for (std::list<MymlObject *>::iterator flag = list->begin(); flag != list->end(); ++flag)
 			{
-				flags |= ServerConfig::stringToRequestFlag((*flag)->getAsString());
+				flags |= ServerConfig::stringToMethodFlag((*flag)->getAsString());
 			}
 			requestsFlags.insert(std::make_pair((*it)->getAsList()->getKey(), flags));
 		}
@@ -212,11 +212,11 @@ ServerConfig initServerConfig(MymlDictionary *serverRepertory)
 	catch (MymlObject::BadCast &e) { throw e; }
 	catch (std::invalid_argument &e) { throw std::invalid_argument(std::string("missing mandatory argument : ") + e.what()); }
 	
-	try	{ initOptionnalConfig(serverRepertory, execFolder, timeout, cgiHandlers, requestsFlags, errorFiles); }
-	catch (MymlObject::BadCast &e) {
-		throw (MymlObject::BadCast("config optionnal argument error at server " +  serverRepertory->getKey() + ' ' + e.what()));
-	}
-	catch (std::invalid_argument &e) { throw e; }
+	//try	{ initOptionnalConfig(serverRepertory, execFolder, timeout, cgiHandlers, requestsFlags, errorFiles); }
+	//catch (MymlObject::BadCast &e) {
+	//	throw (MymlObject::BadCast("config optionnal argument error at server " +  serverRepertory->getKey() + ' ' + e.what()));
+	//}
+	//catch (std::invalid_argument &e) { throw e; }
 
 	return (ServerConfig(port, cgiHandlers, requestsFlags, index_file, rootFolder, execFolder, errorFiles, timeout));
 }

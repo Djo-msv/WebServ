@@ -35,11 +35,12 @@ class ServerConfig
 		
 
         static 		MethodFlag	stringToMethodFlag(const std::string &method);
-        bool		isMethodAllowed(const std::string &location, int method) const; // Method Flag conseillé mais pas forcé
+        bool		isMethodAllowed(std::list<std::string> &full, int method) const; // Method Flag conseillé mais pas forcé
         std::string	getCgi(const std::string &extension) const;
-		std::string	getRootFolder() const;
-		bool		isExecFolder(std::string location) const;
-		std::string getIndex() const;
+        std::string	getFullPath(std::list<std::string> &full) const;
+		location	getRootFolder() const;
+		bool		isExecFolder(std::list<std::string> &full) const;
+		std::string getIndex(std::list<std::string> &full) const;
         std::string getErrorFile(int errorCode) const;
 		time_t		getTimeout(void) const;
 

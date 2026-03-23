@@ -212,41 +212,29 @@ void Request::startline_check(std::string line)
 	
 	if (_target[0] != '/')
 		_target = "/" + _target;
-	//hardcode here, alter changes --> this will be done later on obviously
-	std::string alter = "/directory";
-	std::string change = "/";
-	size_t pos = _target.find(alter);
-	if (pos != std::string::npos) {
-		if (_target.size() == (pos + alter.size()))
-			_target = _target.substr(0, pos) + change;
-		else if (_target.at(pos + alter.size()) == '/')
-			_target = _target.substr(0, pos) + change + _target.substr(pos + alter.size() +1);
-	}
 	
-	//"/" to index
-	if (_target == "/" || needsIndex())
-		_target += _config.getIndex();
-	//location/extension v method
-	std::string extension;
-	std::string location = _target;
+	//location/extension lists
+	std::list<std::string> extension;
+	std::list<std::string> location = target_list(_target);
 	if (_target.rfind('.') != std::string::npos)
-		extension = _target.substr(_target.rfind('.'));
+		extension.push_back(_target.substr(_target.rfind('.')));
+	
+	//"/" or non '/' terminated folder to index
+	if (_target == "/" || needsIndex())
+		_target += _config.getIndex(location);
+	// method check
 	bool loc = _config.isMethodAllowed(location, _config.stringToMethodFlag(_method));
 	bool ext = _config.isMethodAllowed(extension, _config.stringToMethodFlag(_method));
 	if (!loc && !ext)
 		throw NotAllowed(); //method not supported (NotImplemented ? check needed)
-	//add root
-	_target = _config.getRootFolder() + _target;
+	//add roots and aliases
+	_target = _config.getRootFolder() + _config.getFullPath(location);
 	//error 404 catch
 	try { seekFile(_target); }
 	catch (std::exception &e) { throw ; }
 	//check_exec, adjust
-	pos = location.rfind('/');
-	if (pos && pos != std::string::npos && pos != location.size() - 1)
-		location = location.substr(0, pos);
 	if ((loc && _config.isExecFolder(location)) || (ext && _config.isExecFolder(extension)))
 		this->adjust_exec();
-	//in future, here will be the Accept: header check through the <extension ; media type> map, on an else
 }
 
 void Request::adjust_exec()

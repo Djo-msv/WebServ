@@ -7,37 +7,49 @@ ServerConfig::ServerConfig(int port, location root_location, std::map<std::strin
 
 ServerConfig::~ServerConfig() {}
 
-// Need to adapt to location
-bool ServerConfig::isMethodAllowed(const std::string &location, int method) const
+bool ServerConfig::isMethodAllowed(std::list<std::string> &full, int method) const
 {
-    if (location.empty()) { return false ; }
-    std::map<std::string, int>::const_iterator it = requestsFlag.find(location);
-    if (it != requestsFlag.end())
-        return it->value & method;
+    std::map<std::string, location>::const_iterator it;
+    std::string loc;
 
-    std::list<std::string> full;
-    std::string loc = location;
-    if (*(loc.rbegin()) == '/' && loc.size() > 1)
-        loc.erase(loc.size() - 1);
-    if (loc.rfind('/') != std::string::npos && loc.size() > 1) {
-        full.push_back(loc.substr(loc.rfind('/')));
-        loc = loc.substr(0, loc.rfind('/'));
-    }
-    while (!loc.empty() && loc.size() > 1 && loc.rfind('/') != std::string::npos) {
-        full.push_back(loc.substr(loc.rfind('/')));
-        loc = loc.substr(0, loc.rfind('/'));
-    }
-    loc.clear();
     for (std::list<std::string>::const_iterator itt = full.begin(); itt != full.end(); itt++) {
-        if (!loc.empty() && (it = requestsFlag.find(*itt + loc)) != requestsFlag.end())
-            return it->value & method;
-        if ((it = requestsFlag.find(*itt)) != requestsFlag.end())
-            return it->value & method;
+        if (!loc.empty() && (it = locations.find(*itt + loc)) != locations.end() && it->value->allowed_methods)
+            return it->value->allowed_methods & method;
+        if ((it = locations.find(*itt)) != locations.end() && it->value->allowed_methods)
+            return it->value->allowed_methods & method;
         loc = *itt;
     }
-    if ((it = requestsFlag.find("/")) != requestsFlag.end())
-        return it->value & method;
+    if (root_location.allowed_methods)
+        return root_location.allowed_methods & method;
     return false;
+}
+
+std::string ServerConfig::getIndex(std::list<std::string> &full) const
+{
+    std::map<std::string, location>::const_iterator it;
+    std::string loc;
+
+    for (std::list<std::string>::const_iterator itt = full.begin(); itt != full.end(); itt++) {
+        if (itt->empty()) { continue; }
+        if (!loc.empty() && (it = locations.find(*itt + loc)) != locations.end() && !it->value->index.empty())
+            return it->value->index;
+        if ((it = locations.find(*itt)) != locations.end() && !it->value->index.empty())
+            return it->value->index;
+        loc = *itt;
+    }
+    if (root_location.allowed_methods)
+        return root_location.index;
+}
+
+std::string ServerConfig::getFullPath(std::list<std::string> &full) const
+{
+    std::string path;
+    std::map<std::string, location>::const_iterator it;
+    for (std::list<std::string>::const_iterator itt = ++full.begin(); itt != full.end(); itt++) {
+        if ((it = locations.find(*itt)) != locations.end()) { path = it->value->path + path; }
+        else { path = *itt + path; }
+    }
+    return path;
 }
 
 std::string ServerConfig::getCgi(const std::string &extension) const
@@ -46,7 +58,7 @@ std::string ServerConfig::getCgi(const std::string &extension) const
     if (it != cgi_extensions.end()) {
         return it->value;
     }
-    throw NotImplemented();//std::invalid_argument("No CGI handler found for extension: " + extension);
+    throw NotImplemented();
 }
 
 ServerConfig::MethodFlag ServerConfig::stringToMethodFlag(const std::string &method)
@@ -54,7 +66,7 @@ ServerConfig::MethodFlag ServerConfig::stringToMethodFlag(const std::string &met
     if (method == "GET") return GET;
     if (method == "POST") return POST;
     if (method == "DELETE") return DELETE;
-    throw NotAllowed();//std::invalid_argument("Invalid HTTP method: " + method);
+    throw NotAllowed();
 }
 
 std::string ServerConfig::getErrorFile(int errorCode) const
@@ -66,10 +78,14 @@ std::string ServerConfig::getErrorFile(int errorCode) const
     throw FileNotFound();
 }
 
-std::string ServerConfig::getRootFolder() const { return (rootFolder); }
+std::string ServerConfig::getRootFolder() const { return (root_location.path); }
 
 time_t	ServerConfig::getTimeout(void) const { return (timeout); }
 
-bool ServerConfig::isExecFolder(std::string location) const { return (execFolder == location); }
-
-std::string ServerConfig::getIndex() const { return (index_file); }
+bool ServerConfig::isExecFolder(std::list<std::string> &full) const
+{
+    for (std::list<std::string>::const_iterator itt = full.begin(); itt != full.end(); itt++) {
+        if (*itt == exec_folder) {  return true; }
+    }
+    return false;
+}

@@ -29,7 +29,7 @@ MymlObject *MymlPair::getValue(void)
 }
 int	MymlPair::getKeyAsInt(void)
 {
-	std::string::iterator it = _pair.first.begin();
+	std::string::iterator it = getKey().begin();
 
 	if (*it == '-')
 		it++;

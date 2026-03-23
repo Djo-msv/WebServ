@@ -9,33 +9,10 @@ ServerConfig::~ServerConfig() {}
 
 bool ServerConfig::isMethodAllowed(const std::string &location, int method) const
 {
-    if (location.empty()) { return false ; }
     std::map<std::string, int>::const_iterator it = requestsFlag.find(location);
-    if (it != requestsFlag.end())
+    if (it != requestsFlag.end()) {
         return it->value & method;
-
-    std::list<std::string> full;
-    std::string loc = location;
-    if (*(loc.rbegin()) == '/' && loc.size() > 1)
-        loc.erase(loc.size() - 1);
-    if (loc.rfind('/') != std::string::npos && loc.size() > 1) {
-        full.push_back(loc.substr(loc.rfind('/')));
-        loc = loc.substr(0, loc.rfind('/'));
     }
-    while (!loc.empty() && loc.size() > 1 && loc.rfind('/') != std::string::npos) {
-        full.push_back(loc.substr(loc.rfind('/')));
-        loc = loc.substr(0, loc.rfind('/'));
-    }
-    loc.clear();
-    for (std::list<std::string>::const_iterator itt = full.begin(); itt != full.end(); itt++) {
-        if (!loc.empty() && (it = requestsFlag.find(*itt + loc)) != requestsFlag.end())
-            return it->value & method;
-        if ((it = requestsFlag.find(*itt)) != requestsFlag.end())
-            return it->value & method;
-        loc = *itt;
-    }
-    if ((it = requestsFlag.find("/")) != requestsFlag.end())
-        return it->value & method;
     return false;
 }
 
@@ -54,7 +31,7 @@ ServerConfig::RequestFlag ServerConfig::stringToRequestFlag(const std::string &m
     if (method == "GET") return GET;
     if (method == "POST") return POST;
     if (method == "DELETE") return DELETE;
-    throw NotAllowed();//std::invalid_argument("Invalid HTTP method: " + method);
+    throw NotImplemented();//std::invalid_argument("Invalid HTTP method: " + method);
 }
 
 std::string ServerConfig::getErrorFile(int errorCode) const

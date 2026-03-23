@@ -224,8 +224,8 @@ void ClientSocket::resetTimeout()
 
 bool ClientSocket::hasTimedOut()
 {
-	//std::cout << (timeout <= std::time(NULL)) << std::endl;
-	//std::cout << "timeout : " << timeout << "Current Time : " << std::time(NULL) << std::endl;
+	std::cout << (timeout <= std::time(NULL)) << std::endl;
+	std::cout << "timeout : " << timeout << "Current Time : " << std::time(NULL) << std::endl;
 	return (timeout <= std::time(NULL));
 }
 

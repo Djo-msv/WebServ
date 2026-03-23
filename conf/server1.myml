@@ -1,10 +1,10 @@
 server1 :
 	port : 7500
-<<<<<<< MonkeyTypingParser
+<<<<<<< HEAD
 	root_folder : /home/jmassavi/Documents/commun_core/circle-5/WebServ/server00
 =======
 	root_folder : ./server00
->>>>>>> main
+>>>>>>> d5ca643 (image fix + gzip hardcode delete)
 	index : /html/index.html
 	timeout : 40
 	request_flags :

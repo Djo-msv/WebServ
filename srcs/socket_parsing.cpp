@@ -101,7 +101,7 @@ ServerConfig initServerConfig(MymlDictionary *serverRepertory)
 	std::map<std::string, std::string>	cgi_handlers;
 	std::map<int, std::string>			errorFiles;
 	std::map<std::string, location *> 	locations;
-	location							root_loc = (location){0};
+	location							root_loc = (location){0, "", ""};
 	std::string 						exec_folder;
 	time_t	timeout = 15;
 	int		port;

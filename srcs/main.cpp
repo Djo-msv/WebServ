@@ -126,26 +126,6 @@ void	manageRequests()
 	}
 }
 
-/**
- * ! Fonction Temporaire a modifier une fois le parsing terminé
-*/
-// ServerConfig initConfig()
-// {
-// 	std::map<std::string, std::string> cgiHandlers;
-// 	std::map<std::string, int> requestsFlag;
-// 	std::map<int, std::string> errorFiles;
-// 	std::string index_file("/html/index.html");
-// 	std::string rootFolder("./server00");
-// 	std::string execFolder("/scripts");
-
-// 	cgiHandlers.insert(std::make_pair(".py", "/usr/bin/python3"));
-// 	requestsFlag.insert(std::make_pair("/html", ServerConfig::GET));
-// 	requestsFlag.insert(std::make_pair("/img", ServerConfig::GET));
-// 	requestsFlag.insert(std::make_pair("/uploads", ServerConfig::DELETE));
-// 	requestsFlag.insert(std::make_pair("/scripts", ServerConfig::GET | ServerConfig::POST));// 0 = Rien, rajouter un | pour plus de flags
-// 	errorFiles.insert(std::make_pair(404, rootFolder + "/html/errors/404_def.html"));
-// 	return (ServerConfig(cgiHandlers, requestsFlag, index_file, rootFolder, execFolder, errorFiles, 15)); // timeout en secondes
-// }
 
 
 void initServerSockets(Parser &tree)

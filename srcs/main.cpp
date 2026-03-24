@@ -152,9 +152,7 @@ void initServerSockets(Parser &tree)
 
 int	main(int argc, char **argv)
 {
-	//TODO sera défini par la config (parser nécéssaire on verra pour définir sur quel standard partir)
-	// AF_INET is used to allow ipv4 connection.
-	// SOCK_STREAM is to tell the socket to use TCP protocol
+
 	if (argc < 2)
 	{
 		std::cout << "usage : " << argv[0] << " <config file/folder>" << std::endl;
@@ -163,17 +161,12 @@ int	main(int argc, char **argv)
 	
 	Parser	tree(argv[1]);
 	
-	//ServerConfig config = initConfig();
 	mime = initMimetype();
-	//config.sin_family = AF_INET;
-	//config.sin_port = 7500;
 	try
 	{
-		// ServerSocket *socket = new ServerSocket(config, epollInstance);
 		initServerSockets(tree);
 		signal(SIGINT, stopServer);
 		signal(SIGPIPE, SIG_IGN);
-		// sockets.insert(std::make_pair(socket->getSocketFd(), socket));
 		manageRequests();
 	}
 	CATCH_AND_HANDLE(std::runtime_error)

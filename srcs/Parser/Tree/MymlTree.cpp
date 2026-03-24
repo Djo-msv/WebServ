@@ -47,7 +47,14 @@ MymlTree::~MymlTree(void)
 MymlObject *MymlTree::listDefine(std::list<Token>::iterator &it, const std::string &key)
 {
 	std::string	elemKey;
-	MymlObject *list = new MymlList(key);
+	MymlObject *list = NULL;
+	try {list = new MymlList(key);}
+	catch (const std::bad_alloc& e){
+		if (list)
+			delete list;
+		throw std::bad_alloc();
+	}
+
 
 	while (it->_type != CLOSE_BRACKET) {
 		if (isValue(it)){
@@ -74,8 +81,13 @@ MymlObject *MymlTree::listDefine(std::list<Token>::iterator &it, const std::stri
 MymlObject *MymlTree::dictionaryDefine(std::list<Token>::iterator &it, const std::string &key)
 {
 	std::string	elemKey;
-	MymlObject *dct = new MymlDictionary(key);
-
+	MymlObject *dct = NULL;
+	try {dct = new MymlDictionary(key);}
+	catch (const std::bad_alloc& e){
+		if (dct)
+			delete dct;
+		throw std::bad_alloc();
+	}
 	while (it->_type != CLOSE_BRACE) {
 		if (isValue(it)){
 			elemKey = it->_token;
@@ -197,7 +209,13 @@ std::pair<std::string, MymlObject*> MymlTree::parseDictionaryArg(std::list<Token
 **/
 MymlObject *MymlTree::parseList(const std::string &key, std::list<Token>::iterator &begin, size_t level)
 {
-	MymlObject *list = new MymlList(key);
+	MymlObject *list = NULL;
+	try {list = new MymlList(key);}
+	catch (const std::bad_alloc& e){
+		if (list)
+			delete list;
+		throw std::bad_alloc();
+	}
 	std::list<Token>::iterator	it = begin;
 
 	while (level == nbSpace(it)) {
@@ -224,7 +242,14 @@ MymlObject *MymlTree::parseList(const std::string &key, std::list<Token>::iterat
 **/
 MymlObject *MymlTree::parseDictionary(const std::string &key, std::list<Token>::iterator &begin, size_t level)
 {
-	MymlObject *dictionary = new MymlDictionary(key);
+	MymlObject *dictionary = NULL;
+	try {dictionary = new MymlDictionary(key);}
+	catch (const std::bad_alloc& e){
+		if (dictionary)
+			delete dictionary;
+		throw std::bad_alloc();
+	}
+	
 	std::list<Token>::iterator	it = begin;
 
 	while (level == nbSpace(it)) {

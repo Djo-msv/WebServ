@@ -260,7 +260,7 @@ int	main(int argc, char **argv)
 	Parser	tree(argv[1]);
 	
 	//ServerConfig config = initConfig();
-/*	mime = initMimetype();
+	mime = initMimetype();
 	//config.sin_family = AF_INET;
 	//config.sin_port = 7500;
 	try
@@ -273,5 +273,5 @@ int	main(int argc, char **argv)
 		manageRequests();
 	}
 	CATCH_AND_HANDLE(std::runtime_error)
-	CATCH_AND_HANDLE(std::bad_alloc)*/
+	CATCH_AND_HANDLE(std::bad_alloc)
 }

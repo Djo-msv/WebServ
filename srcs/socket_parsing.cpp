@@ -39,12 +39,9 @@ location	*parse_location(MymlDictionary *location_repertory, location root_loc)
 	catch(const std::exception &e) { throw e; }
 
 	location *loc = new location;
-
 	loc->allowed_methods = flags;
 	loc->index = index;
 	loc->root = root;
-	loc->path = location_repertory->getKey();
-
 	return (loc);
 }
 
@@ -113,7 +110,6 @@ ServerConfig initServerConfig(MymlDictionary *serverRepertory)
 	{
 		port = serverRepertory->getValueAsInt("port");
 		root_loc.root = serverRepertory->getValueAsString("root");
-		root_loc.path = "/";
 	}
 	catch (std::invalid_argument &e) { throw std::invalid_argument(std::string("missing mandatory argument : ") + e.what()); }
 	RETHROW (MymlObject::BadCast)

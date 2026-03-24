@@ -15,7 +15,6 @@
 struct location
 {
     int			allowed_methods;
-    std::string	path;
     std::string	root;
     std::string	index;
 };

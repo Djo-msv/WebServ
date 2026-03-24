@@ -17,7 +17,7 @@ int		getFlags(MymlDictionary *repertory)
 
 location	*parse_location(MymlDictionary *location_repertory, location root_loc)
 {
-	std::string index;
+	std::string index("");
 	std::string root;
 	int			flags;
 
@@ -25,8 +25,6 @@ location	*parse_location(MymlDictionary *location_repertory, location root_loc)
 	{
 		if (location_repertory->has("index"))
 			index = location_repertory->getValueAsString("index");
-		else
-			index = root_loc.index;
 		if (location_repertory->has("root"))
 		{
 			if (location_repertory->has("alias"))
@@ -84,6 +82,8 @@ void	initOptionnalConfig(MymlDictionary *serverRepertory, std::string &exec_fold
 {
 	try
 	{
+		try { root_loc.allowed_methods = getFlags(serverRepertory); } IGNORE(std::invalid_argument)
+		try { root_loc.index = serverRepertory->getValueAsString("index"); } IGNORE(std::invalid_argument)
 		try { exec_folder = serverRepertory->getValueAsString("execution_folder"); } IGNORE(std::invalid_argument)
 		try { timeout = serverRepertory->getValueAsInt("timeout"); } IGNORE(std::invalid_argument)
 		try { initCgiHandlers(serverRepertory, cgi_handlers); } IGNORE(std::invalid_argument)
@@ -104,7 +104,7 @@ ServerConfig initServerConfig(MymlDictionary *serverRepertory)
 	std::map<std::string, std::string>	cgi_handlers;
 	std::map<int, std::string>			errorFiles;
 	std::map<std::string, location *> 	locations;
-	location							root_loc;
+	location							root_loc = (location){0};
 	std::string 						exec_folder;
 	time_t	timeout = 15;
 	int		port;
@@ -112,9 +112,7 @@ ServerConfig initServerConfig(MymlDictionary *serverRepertory)
 	try
 	{
 		port = serverRepertory->getValueAsInt("port");
-		root_loc.index = serverRepertory->getValueAsString("index");
 		root_loc.root = serverRepertory->getValueAsString("root");
-		root_loc.allowed_methods = getFlags(serverRepertory);
 		root_loc.path = "/";
 	}
 	catch (std::invalid_argument &e) { throw std::invalid_argument(std::string("missing mandatory argument : ") + e.what()); }

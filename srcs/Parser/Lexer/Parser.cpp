@@ -36,19 +36,16 @@ Parser::Parser(const std::string path)
 	File files(path);
 	std::list<std::string> filesvalue = files.getFile();
 	
-	if (filesvalue.empty()) {
-		std::cout << "no files found at :" << path << std::endl;
-		return ;
-	}
+	if (filesvalue.empty())
+		throw std::invalid_argument("no files found at :" + path);
 	try {
 		for (std::list<std::string>::iterator it = filesvalue.begin(); it != filesvalue.end(); it++)
 			Tokenizer(*it, _tokens);
 		TokenTransformer rewrite(_tokens);
 	}
 	catch (const std::runtime_error &e) {
-		std::cout << e.what() << std::endl;
 		_tokens.clear();
-		return ;
+		throw e;
 	}
 	Lexer print(_tokens);
 	try {
@@ -58,10 +55,9 @@ Parser::Parser(const std::string path)
 		for(std::list<MymlObject*>::iterator it = _root->begin(); it != _root->end(); it++)
 			printTree(*it, 0);
 	}
-	catch (const std::runtime_error &e) {
-		std::cout << "error :" << e.what() << std::endl;
+	catch (std::runtime_error &e) {
 		_tokens.clear();
-		return ;
+		throw std::invalid_argument(std::string("error :") + e.what());
 	}
 }
 

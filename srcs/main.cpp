@@ -152,23 +152,26 @@ void initServerSockets(Parser &tree)
 
 int	main(int argc, char **argv)
 {
-
 	if (argc < 2)
 	{
-		std::cout << "usage : " << argv[0] << " <config file/folder>" << std::endl;
+		std::cout << "usage : " << argv[0] << " <configuration file/folder>" << std::endl;
 		return (1);
 	}
 	
-	Parser	tree(argv[1]);
-	
-	mime = initMimetype();
-	try
-	{
-		initServerSockets(tree);
-		signal(SIGINT, stopServer);
-		signal(SIGPIPE, SIG_IGN);
-		manageRequests();
+	try {
+		Parser	tree(argv[1]);
+		mime = initMimetype();
+		try {
+			initServerSockets(tree);
+			signal(SIGINT, stopServer);
+			signal(SIGPIPE, SIG_IGN);
+			manageRequests();
+		}
+		CATCH_AND_HANDLE(std::runtime_error)
+		CATCH_AND_HANDLE(std::bad_alloc)
 	}
-	CATCH_AND_HANDLE(std::runtime_error)
-	CATCH_AND_HANDLE(std::bad_alloc)
+	catch (std::exception &e) {
+		std::cout << e.what() << std::endl;
+		return (1);
+	}
 }

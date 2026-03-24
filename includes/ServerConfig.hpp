@@ -6,17 +6,18 @@
 #include <unistd.h>
 #include <stdexcept>
 #include <HttpErrors.hpp>
-#include <list> 
+#include <list>
+#include <ctime>
 
 # define value second
 # define key first
 
 struct location
 {
-	int			allowed_methods;
-	std::string	path;
-	std::string	root;
-	std::string	index_file;
+    int			allowed_methods;
+    std::string	path;
+    std::string	root;
+    std::string	index;
 };
 
 class ServerConfig
@@ -38,7 +39,7 @@ class ServerConfig
         bool		isMethodAllowed(std::list<std::string> &full, int method) const; // Method Flag conseillé mais pas forcé
         std::string	getCgi(const std::string &extension) const;
         std::string	getFullPath(std::list<std::string> &full) const;
-		location	getRootFolder() const;
+		std::string	getRootFolder() const;
 		bool		isExecFolder(std::list<std::string> &full) const;
 		std::string getIndex(std::list<std::string> &full) const;
         std::string getErrorFile(int errorCode) const;

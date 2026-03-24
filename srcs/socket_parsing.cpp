@@ -11,22 +11,22 @@ int		getFlags(MymlDictionary *repertory)
 			flags |= ServerConfig::stringToMethodFlag((*it)->getAsString());
 	}
 	else
-		flags |= ServerConfig::stringToMethodFlag(methods->getAsPair()->getValue()->getAsString());
+		flags |= ServerConfig::stringToMethodFlag(methods->getAsString());
 	return (flags);
 }
 
 location	*parse_location(MymlDictionary *location_repertory, location root_loc)
 {
-	std::string index_file;
+	std::string index;
 	std::string root;
 	int			flags;
 
 	try
 	{
 		if (location_repertory->has("index"))
-			index_file = location_repertory->getValueAsString("index");
+			index = location_repertory->getValueAsString("index");
 		else
-			index_file = root_loc.index_file;
+			index = root_loc.index;
 		if (location_repertory->has("root"))
 		{
 			if (location_repertory->has("alias"))
@@ -35,7 +35,7 @@ location	*parse_location(MymlDictionary *location_repertory, location root_loc)
 		} else if (location_repertory->has("alias"))
 			root = location_repertory->getValueAsString("alias");
 		else
-			root = root_loc.root;
+			root = root_loc.root + location_repertory->getKey();
 		flags = getFlags(location_repertory);
 	}
 	catch(const std::exception &e) { throw e; }
@@ -43,9 +43,24 @@ location	*parse_location(MymlDictionary *location_repertory, location root_loc)
 	location *loc = new location;
 
 	loc->allowed_methods = flags;
-	loc->index_file = index_file;
+	loc->index = index;
 	loc->root = root;
 	loc->path = location_repertory->getKey();
+
+	return (loc);
+}
+
+
+void	init_error_files(MymlDictionary *serverRepertory, std::map<int, std::string> &error_files) {
+	try {
+		std::list<MymlObject *> *error_list = serverRepertory->getValueAsList("error_files")->getList();
+		for (std::list<MymlObject *>::iterator it = error_list->begin(); it != error_list->end(); ++it)
+		{
+			MymlPair	*pair = (*it)->getAsPair();
+
+			error_files.insert(std::make_pair(pair->getKeyAsInt(), pair->getValue()->getAsString()));
+		}
+	} IGNORE(std::invalid_argument)
 }
 
 
@@ -67,24 +82,21 @@ void	initOptionnalConfig(MymlDictionary *serverRepertory, std::string &exec_fold
 	std::map<std::string, std::string> &cgi_handlers, location &root_loc,
 	std::map<std::string, location *> &server_locations, std::map<int, std::string> &error_files)
 {
-	try { exec_folder = serverRepertory->getValueAsString("execution_folder"); } IGNORE(std::invalid_argument)
-	try { timeout = serverRepertory->getValueAsInt("timeout"); } IGNORE(std::invalid_argument)
-	try { initCgiHandlers(serverRepertory, cgi_handlers); } RETHROW(MymlObject::BadCast)
-	try {
-		MymlList *locations = serverRepertory->getValueAsList("locations");
-		for (std::list<MymlObject *>::iterator it = locations->begin(); it != locations->end(); ++it)
-		{
-			MymlDictionary *dict = (*it)->getAsDictionnary();
-			server_locations[dict->getKey()] = parse_location(dict, root_loc);
-		}
-	} IGNORE (std::invalid_argument)
-	std::list<MymlObject *> *error_list = serverRepertory->getValueAsList("error_files")->getList();
-	for (std::list<MymlObject *>::iterator it = error_list->begin(); it != error_list->end(); ++it)
+	try
 	{
-		MymlPair	*pair = (*it)->getAsPair();
-
-		error_files.insert(std::make_pair(pair->getKeyAsInt(), pair->getValue()->getAsString()));
-	}
+		try { exec_folder = serverRepertory->getValueAsString("execution_folder"); } IGNORE(std::invalid_argument)
+		try { timeout = serverRepertory->getValueAsInt("timeout"); } IGNORE(std::invalid_argument)
+		try { initCgiHandlers(serverRepertory, cgi_handlers); } IGNORE(std::invalid_argument)
+		try {
+			MymlList *locations = serverRepertory->getValueAsList("locations");
+			for (std::list<MymlObject *>::iterator it = locations->begin(); it != locations->end(); ++it)
+			{
+				MymlDictionary *dict = (*it)->getAsDictionnary();
+				server_locations[dict->getKey()] = parse_location(dict, root_loc);
+			}
+		} IGNORE(std::invalid_argument)
+		try { init_error_files(serverRepertory, error_files); } IGNORE(std::invalid_argument)
+	} RETHROW(MymlObject::BadCast)
 }
 
 ServerConfig initServerConfig(MymlDictionary *serverRepertory)
@@ -100,7 +112,7 @@ ServerConfig initServerConfig(MymlDictionary *serverRepertory)
 	try
 	{
 		port = serverRepertory->getValueAsInt("port");
-		root_loc.index_file = serverRepertory->getValueAsString("index");
+		root_loc.index = serverRepertory->getValueAsString("index");
 		root_loc.root = serverRepertory->getValueAsString("root");
 		root_loc.allowed_methods = getFlags(serverRepertory);
 		root_loc.path = "/";

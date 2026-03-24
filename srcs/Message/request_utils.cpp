@@ -143,7 +143,7 @@ std::list<std::string> target_list(std::string loc)
 		loc = loc.substr(0, loc.rfind('/'));
 	}
 	for (std::list<std::string>::iterator it = full.begin(); it != full.end(); it++) {
-		if ((*it).empty()) { it = full.erase(it); }
-        }
+		if ((*it).empty() || *it == "/") { it = full.erase(it); }
+	}
 	return full;
 }

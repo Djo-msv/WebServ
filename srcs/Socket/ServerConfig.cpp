@@ -45,11 +45,15 @@ std::string ServerConfig::getIndex(std::list<std::string> &full) const
 std::string ServerConfig::getFullPath(std::list<std::string> &full) const
 {
     std::string path;
+    std::string back;
+    if (!full.empty()) { back = full.back(); }
     std::map<std::string, location *>::const_iterator it;
-    for (std::list<std::string>::const_iterator itt = ++full.begin(); itt != full.end(); itt++) {
-        if ((it = locations.find(*itt)) != locations.end()) { path = it->value->path + path; }
-        else { path = *itt + path; }
+    if (full.size() > 2) {
+        for (std::list<std::string>::const_iterator itt = ++full.begin(); itt != --full.end(); itt++)
+            path = *itt + path;
     }
+    if ((it = locations.find(back)) != locations.end()) { path = it->value->root + path; }
+    else { path = root_location.root + back + path; }
     return path;
 }
 
@@ -79,7 +83,7 @@ std::string ServerConfig::getErrorFile(int errorCode) const
     throw FileNotFound();
 }
 
-std::string ServerConfig::getRootFolder() const { return (root_location.path); }
+std::string ServerConfig::getRootFolder() const { return (root_location.root); }
 
 time_t	ServerConfig::getTimeout(void) const { return (timeout); }
 

@@ -77,7 +77,7 @@ class Request
 		std::map<std::string, std::string> headers;
 
 		void	parse_header(std::string header);
-		bool	needsIndex();
+		bool	needsIndex(std::string full_target);
 		void	startline_check(std::string line);
 		void	adjust_exec();
 		void	headers_add(std::string line);

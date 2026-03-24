@@ -131,6 +131,7 @@ void Request::parse(std::map<std::string, std::string> &mime)
 		header = (char *)(_request.substr(0, headerEnd).c_str());
 		_body = _request.substr(headerEnd + 4);
 	}
+	//std::cout << "request :: \n" << (char *)_request.c_str() << std::endl;
 	try {
 		this->parse_header(header);
 		_status = 1; //headers are parsed with no error
@@ -172,10 +173,9 @@ void	Request::parse_header(std::string header)
 	catch (std::exception &e) {throw ;}
 }
 
-bool Request::needsIndex()
+bool Request::needsIndex(std::string full_target)
 {
 	if (*(_target.rbegin()) == '/') { return false; }
-	std::string full_target = _config.getRootFolder() + _target;
 	struct stat s;
 	if ( stat(full_target.c_str(), &s) != 0 ) { throw FileNotFound(); }
 	if( s.st_mode & S_IFDIR ) {
@@ -201,7 +201,7 @@ void Request::startline_check(std::string line)
 		_query = _target.substr(_target.find('?') + 1);
 		_target = _target.substr(0, _target.find('?'));
 	}
-	if (l.eof())
+	if (_target.empty() || l.eof())
 		throw BadRequest();
 	getline(l, current, '\r');
 	if (current != "HTTP/1.1" && current != "HTTP/1.*")
@@ -219,16 +219,18 @@ void Request::startline_check(std::string line)
 	if (_target.rfind('.') != std::string::npos)
 		extension.push_back(_target.substr(_target.rfind('.')));
 	
-	//"/" or non '/' terminated folder to index
-	if (_target == "/" || needsIndex())
-		_target += _config.getIndex(location);
 	// method check
 	bool loc = _config.isMethodAllowed(location, _config.stringToMethodFlag(_method));
 	bool ext = _config.isMethodAllowed(extension, _config.stringToMethodFlag(_method));
 	if (!loc && !ext)
 		throw NotAllowed(); //method not supported (NotImplemented ? check needed)
-	//add roots and aliases
-	_target = _config.getRootFolder() + _config.getFullPath(location);
+	//aswitch to real path and add index
+	std::string index;
+	if (_target == "/" || needsIndex(_config.getFullPath(location)))
+		index = _config.getIndex(location);
+	_target = _config.getFullPath(location);
+	if (*(_target.rbegin()) != '/' && !index.empty()) { _target += "/"; }
+	_target += index;
 	//error 404 catch
 	try { seekFile(_target); }
 	catch (std::exception &e) { throw ; }
@@ -292,7 +294,7 @@ void Request::headers_add(std::string line)
 void Request::mime_check(std::map<std::string, std::string> &mime)
 {
 	if (_target.rfind('.') == std::string::npos)
-		throw BadRequest(); //i think ? this is all very murky territory, needs testing - maybe BadRequest ?
+		return ; //i think ? this is all very murky territory, needs testing - maybe BadRequest ?
 	std::string extension = _target.substr(_target.rfind('.'));
 	if (!mime.count(extension))
 		return ; //again, guessing here

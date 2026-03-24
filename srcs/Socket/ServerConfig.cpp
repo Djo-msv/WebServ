@@ -3,13 +3,13 @@
 ServerConfig::ServerConfig(int port, location root_location, std::map<std::string, location *> locations,
 			std::map<std::string, std::string> cgi_extensions, std::string exec_folder, std::map<int, std::string> error_files, time_t timeout) :
 		sin_family(AF_INET), sin_port(port), root_location(root_location), locations(locations),
-		cgi_extensions(cgi_extensions), error_files(error_files), timeout(timeout) {}
+		cgi_extensions(cgi_extensions), error_files(error_files), exec_folder(exec_folder), timeout(timeout) {}
 
 ServerConfig::~ServerConfig() {}
 
 bool ServerConfig::isMethodAllowed(std::list<std::string> &full, int method) const
 {
-    std::map<std::string, location>::const_iterator it;
+    std::map<std::string, location *>::const_iterator it;
     std::string loc;
 
     for (std::list<std::string>::const_iterator itt = full.begin(); itt != full.end(); itt++) {
@@ -26,7 +26,7 @@ bool ServerConfig::isMethodAllowed(std::list<std::string> &full, int method) con
 
 std::string ServerConfig::getIndex(std::list<std::string> &full) const
 {
-    std::map<std::string, location>::const_iterator it;
+    std::map<std::string, location *>::const_iterator it;
     std::string loc;
 
     for (std::list<std::string>::const_iterator itt = full.begin(); itt != full.end(); itt++) {
@@ -37,14 +37,15 @@ std::string ServerConfig::getIndex(std::list<std::string> &full) const
             return it->value->index;
         loc = *itt;
     }
-    if (root_location.allowed_methods)
+    if (!root_location.index.empty())
         return root_location.index;
+    return "";
 }
 
 std::string ServerConfig::getFullPath(std::list<std::string> &full) const
 {
     std::string path;
-    std::map<std::string, location>::const_iterator it;
+    std::map<std::string, location *>::const_iterator it;
     for (std::list<std::string>::const_iterator itt = ++full.begin(); itt != full.end(); itt++) {
         if ((it = locations.find(*itt)) != locations.end()) { path = it->value->path + path; }
         else { path = *itt + path; }

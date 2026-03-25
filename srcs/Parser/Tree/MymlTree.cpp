@@ -17,7 +17,13 @@ MymlTree::MymlTree(std::list<Token> &tokens)
 					if (isValue(it)) { // is pair
 						value = it->_token;
 						for(;it->_type == END_OF_LINE; it++){};
-						_root->insert(new MymlPair(key, value));	
+						mymlObject *pair = NULL;
+						try {pair = new MymlList(key);}
+						catch (const std::bad_alloc& e){
+							if (pair)
+								delete pair;
+							throw std::bad_alloc();
+						}
 					}
 					else if (it->_type == END_OF_LINE){ // is list or dictionary
 						for(;it->_type == END_OF_LINE; it++){};

@@ -71,7 +71,13 @@ MymlObject *MymlTree::listDefine(std::list<Token>::iterator &it, const std::stri
 				list->insert(inlineDefine(it, elemKey));
 			}
 			else 
-				list->insert(new MymlObject(elemKey));
+ 			{
+				try {list->insert(new MymlObject(elemKey)); }
+				catch (const std::bad_alloc& e){
+					dekete list;
+					throw std::bad_alloc();
+				}
+			}
 		}
 		if (it->_type != COMMA && it->_type != CLOSE_BRACKET) {
 			delete list;

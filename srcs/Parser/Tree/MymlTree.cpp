@@ -109,7 +109,13 @@ MymlObject *MymlTree::dictionaryDefine(std::list<Token>::iterator &it, const std
 				_error->unespectedToken(it);
 			}
 			if (isValue(it))
-				dct->insert(std::pair<std::string, MymlObject*>(elemKey, new MymlObject((it++)->_token)));
+			{
+				try {dct->insert(std::pair<std::string, MymlObject*>(elemKey, new MymlObject((it++)->_token))); }
+				catch (const std::bad_alloc& e){
+					dekete dct;
+					throw std::bad_alloc();
+				}
+			}
 			else if (it->_type == OPEN_BRACKET || it->_type == OPEN_BRACE) {
 				dct->insert(std::pair<std::string, MymlObject*>(elemKey, inlineDefine(it, elemKey)));
 				it++;

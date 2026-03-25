@@ -54,7 +54,6 @@ Parser::Parser(const std::string path) : _tree(NULL)
 		_tree = new MymlTree(_tokens);
 
 		_root = ((_tree->getRoot())->getList());
-//			printTree(*it, 0);
 	}
 	catch (const std::runtime_error &e) {
 		std::cout << "\e[1;31m" << "error :" << "\e[0m" << std::endl;

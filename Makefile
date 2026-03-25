@@ -3,7 +3,7 @@ MAKEFLAGS += --no-print-directory
 
 #==============================COMPIL===========================#
 
-CC = c++
+CC = g++
 CFLAGS = -Wall -Wextra -Werror -std=c++98
 
 ifeq ($(DEBUG), 1)
@@ -68,6 +68,7 @@ SRCS_FILES:=	main.cpp \
 				Parser/Lexer/File.cpp \
 				Parser/Lexer/Lexer.cpp \
 				Parser/Lexer/TokenTransformer.cpp \
+				Parser/ParserError.cpp \
 				Socket/ClientSocket.cpp \
 				Socket/ServerSocket.cpp \
 				Socket/ServerConfig.cpp \

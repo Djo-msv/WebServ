@@ -76,8 +76,11 @@ void	managePendingClients()
 void handle_events(epoll_event events[], int nbfds)
 {
 	for (int n = 0; n < nbfds; ++n) {
-// ? Here it is impossible to reach sockets.end() as for a fd to be called it has to be registered to epoll therefore has been added to sockets map 
 			SocketIterator socketIterator = sockets.find(events[n].data.fd);
+			if (socketIterator == sockets.end()) {
+				std::cout << "WTf ?" << std::endl;
+				// WTF ?? THROW ERROR -> literally impossible
+			};
 			ServerSocket *sSocket = dynamic_cast<ServerSocket *>(socketIterator->value);
 			if (sSocket != NULL) {
 				ClientSocket *cSocket = new ClientSocket(*sSocket, epollInstance, sockets, mime);

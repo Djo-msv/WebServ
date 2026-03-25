@@ -1,9 +1,12 @@
 
+twobytwotable: [ test:'a1', map:{key1:l1 , key2:l2, key3:l3}, 'b1', 'b2']
 
 server2 :
 	- value1
 	- value2
 	- dictionary :
-		key : value1
-		key : value2
+		key1 : "value1 test"
+		key2 : value2
 	- value3
+
+randomValue

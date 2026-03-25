@@ -31,7 +31,7 @@ void	printTree(MymlObject *value, size_t level)
 		std::cout << "value [" << value->getAsString() << "]" << std::endl;
 }
 
-Parser::Parser(const std::string path)
+Parser::Parser(const std::string path) : _tree(NULL)
 {
 	File files(path);
 	std::list<std::string> filesvalue = files.getFile();
@@ -46,20 +46,22 @@ Parser::Parser(const std::string path)
 		TokenTransformer rewrite(_tokens);
 	}
 	catch (const std::runtime_error &e) {
+		std::cout << "\e[1;31m" << "error :" << "\e[0m" << std::endl;
 		std::cout << e.what() << std::endl;
 		_tokens.clear();
 		return ;
 	}
-	Lexer print(_tokens);
+//	Lexer print(_tokens);
 	try {
 		_tree = new MymlTree(_tokens);
 
 		_root = ((_tree->getRoot())->getList());
-		for(std::list<MymlObject*>::iterator it = _root->begin(); it != _root->end(); it++)
-			printTree(*it, 0);
+//		for(std::list<MymlObject*>::iterator it = _root->begin(); it != _root->end(); it++)
+//			printTree(*it, 0);
 	}
 	catch (const std::runtime_error &e) {
-		std::cout << "error :" << e.what() << std::endl;
+		std::cout << "\e[1;31m" << "error :" << "\e[0m" << std::endl;
+		std::cout << e.what() << std::endl;
 		_tokens.clear();
 		return ;
 	}
@@ -73,5 +75,6 @@ std::list<MymlObject *> *Parser::getRoot()
 
 Parser::~Parser()
 {
-	delete _tree;
+	if (_tree)
+		delete _tree;
 }

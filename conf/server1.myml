@@ -6,12 +6,12 @@ server1 :
 	request_flags :
 		- /html : GET
 		- /img : GET
-		- /uploads : DELETE
+		- /uploads : DELETE 
 		- /scripts :
 			- GET
 			- POST
 	cgi_handlers :
 		- .py : "/usr/bin/python3"
 	error_files :
-			- 404 : errors/404.html	
+		- 404 : errors/404.html
 	execution_folder : /scripts

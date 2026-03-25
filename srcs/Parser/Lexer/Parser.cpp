@@ -36,10 +36,8 @@ Parser::Parser(const std::string path) : _tree(NULL)
 	File files(path);
 	std::list<std::string> filesvalue = files.getFile();
 	
-	if (filesvalue.empty()) {
-		std::cout << "no files found at :" << path << std::endl;
-		return ;
-	}
+	if (filesvalue.empty())
+		throw std::invalid_argument("no files found at :" + path);
 	try {
 		for (std::list<std::string>::iterator it = filesvalue.begin(); it != filesvalue.end(); it++)
 			Tokenizer(*it, _tokens);
@@ -49,7 +47,7 @@ Parser::Parser(const std::string path) : _tree(NULL)
 		std::cout << "\e[1;31m" << "error :" << "\e[0m" << std::endl;
 		std::cout << e.what() << std::endl;
 		_tokens.clear();
-		return ;
+		throw e;
 	}
 //	Lexer print(_tokens);
 	try {
@@ -63,7 +61,7 @@ Parser::Parser(const std::string path) : _tree(NULL)
 		std::cout << "\e[1;31m" << "error :" << "\e[0m" << std::endl;
 		std::cout << e.what() << std::endl;
 		_tokens.clear();
-		return ;
+		throw std::invalid_argument(std::string("error :") + e.what());
 	}
 }
 

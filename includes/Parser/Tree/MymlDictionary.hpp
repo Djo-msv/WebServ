@@ -26,6 +26,8 @@ class MymlDictionary : public MymlObject
 		MymlObject *getValue(std::string key);
 		MymlList *getValueAsList(std::string key);
 		MymlDictionary *getValueAsDictionary(std::string key);
+
+		bool	has(std::string key);
 		
 
 	private :

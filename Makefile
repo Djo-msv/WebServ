@@ -8,6 +8,7 @@ CFLAGS = -Wall -Wextra -Werror -std=c++98
 
 ifeq ($(DEBUG), 1)
 	CFLAGS += -g
+	CXX = g++
 endif
 
 #==============================COLORS==============================#
@@ -54,6 +55,7 @@ endif
 #==============================SOURCES===========================#
 
 SRCS_FILES:=	main.cpp \
+				socket_parsing.cpp \
 				mimetype.cpp \
 				HttpError.cpp \
 				Execution/ProcessExecution.cpp \
@@ -111,7 +113,7 @@ $(DIRS):
 
 $(NAME): $(OBJS)
 	@echo "\n$(GREEN)Create binaries$(NOC)"
-	@$(CC) $(CFLAGS) $(OBJS) $(INC) -o $@ $(LIBS) $(LDFLAGS) -lm
+	@$(CXX) $(CFLAGS) $(OBJS) $(INC) -o $@ $(LIBS) $(LDFLAGS) -lm
 	@echo "$(PURPLE) $(BOLD)"
 	@printf "%s\n" \
 	' __      __          __          ____                       ' \
@@ -134,7 +136,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(DIRS)
 	@echo -n "\r"; for i in $$(seq 1 25); do if [ $$(expr $$i "*" 4) -le $(PERCENT) ]; then echo -n "█"; else echo -n " "; fi; done; echo -n "";
 	@printf " $(NB_COMP)/$(TO_COMP) - Compiling $<"
 	@echo -n "$(NOC)"
-	@$(CC) $(CFLAGS) $(INC) $< -c -o $@
+	@$(CXX) $(CFLAGS) $(INC) $< -c -o $@
 	$(eval NB_COMP=$(shell expr $(NB_COMP) + 1))
 
 
@@ -150,9 +152,6 @@ fclean: clean
 
 re: fclean
 	@make
-
-rebonus: fclean
-	@make bonus
 
 .PHONY: all clean fclean re rebonus
 

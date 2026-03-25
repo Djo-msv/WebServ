@@ -126,3 +126,24 @@ bool check_val(std::string &val)
 		val.erase(cut, val.end());
 	return true;
 }
+
+std::list<std::string> target_list(std::string loc)
+{
+	std::list<std::string> full;
+	full.push_back(loc);
+	if (loc.empty() || loc.find('/') == std::string::npos) { return full; }
+	if (*(loc.rbegin()) == '/' && loc.size() > 1)
+		loc.erase(loc.size() - 1);
+	if (loc.rfind('/') != std::string::npos && loc.size() > 1) {
+		full.push_back(loc.substr(loc.rfind('/')));
+		loc = loc.substr(0, loc.rfind('/'));
+	}
+	while (!loc.empty() && loc.size() > 1 && loc.rfind('/') != std::string::npos) {
+		full.push_back(loc.substr(loc.rfind('/')));
+		loc = loc.substr(0, loc.rfind('/'));
+	}
+	for (std::list<std::string>::iterator it = full.begin(); it != full.end(); it++) {
+		if ((*it).empty() || *it == "/") { it = full.erase(it); }
+	}
+	return full;
+}

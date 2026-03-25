@@ -9,6 +9,7 @@ typedef std::basic_string<unsigned char> ustring;
 # include <vector>
 # include <algorithm>
 # include <map>
+# include <list>
 # include <sys/stat.h>
 # include <HttpError.hpp>
 # include <ServerSocket.hpp>
@@ -76,6 +77,7 @@ class Request
 		std::map<std::string, std::string> headers;
 
 		void	parse_header(std::string header);
+		bool	needsIndex(std::string full_target);
 		void	startline_check(std::string line);
 		void	adjust_exec();
 		void	headers_add(std::string line);

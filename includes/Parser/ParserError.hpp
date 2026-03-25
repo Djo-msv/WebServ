@@ -17,7 +17,7 @@ class ParserError
 		void missingClosing(const std::list<Token>::iterator &token);
 		void badCast(const std::list<Token>::iterator &token);
 		
-		void unespectedToken(const std::list<Token>::iterator &token);
+		void unexpectedToken(const std::list<Token>::iterator &token);
 	
 	private :
 		std::list<Token> &_tokens;

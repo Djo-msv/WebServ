@@ -216,7 +216,7 @@ std::pair<std::string, MymlObject*> MymlTree::parseDictionaryArg(std::list<Token
 			return (obj);
 		}
 	}
-	_error->unespectedToken(it);
+	_error->unexpectedToken(it);
 	return (std::pair<std::string, MymlObject*>());
 }
 

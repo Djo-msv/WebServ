@@ -57,7 +57,7 @@ void ParserError::badCast(const std::list<Token>::iterator &token)
 	(void)token;
 }
 
-void ParserError::unespectedToken(const std::list<Token>::iterator &token)
+void ParserError::unexpectedToken(const std::list<Token>::iterator &token)
 {
 	std::ostringstream str;
 	std::list<Token>::iterator	begin;

@@ -17,6 +17,12 @@ bool ServerConfig::isMethodAllowed(std::list<std::string> &full, int method) con
             return it->value->allowed_methods & method;
         if ((it = locations.find(*itt)) != locations.end() && it->value->allowed_methods)
             return it->value->allowed_methods & method;
+        if ((*itt).find('.') != std::string::npos) {
+            std::string ext = (*itt).substr((*itt).rfind('.'));
+            if ((it = locations.find(ext)) != locations.end() && it->value->allowed_methods
+                    && it->value->allowed_methods & method)
+                return true;
+        }
         loc = *itt;
     }
     if (root_location.allowed_methods)
@@ -47,11 +53,11 @@ std::string ServerConfig::getFullPath(std::list<std::string> &full) const
     std::string path;
     std::string back;
     if (!full.empty()) { back = full.back(); }
-    std::map<std::string, location *>::const_iterator it;
-    if (full.size() > 2) {
-        for (std::list<std::string>::const_iterator itt = ++full.begin(); itt != --full.end(); itt++)
+    if (full.size() > 1) {
+        for (std::list<std::string>::const_iterator itt = full.begin(); itt != --full.end(); itt++)
             path = *itt + path;
     }
+    std::map<std::string, location *>::const_iterator it;
     if ((it = locations.find(back)) != locations.end()) { path = it->value->root + path; }
     else { path = root_location.root + back + path; }
     return path;
@@ -87,9 +93,17 @@ std::string ServerConfig::getRootFolder() const { return (root_location.root); }
 
 time_t	ServerConfig::getTimeout(void) const { return (timeout); }
 
-bool ServerConfig::isExecFolder(std::list<std::string> &full) const
+bool ServerConfig::isExecFolder(std::list<std::string> &full, int method) const
 {
+    if (full.empty()) { return false; }
     for (std::list<std::string>::const_iterator itt = full.begin(); itt != full.end(); itt++) {
+        std::string extension = *itt;
+        if (extension.find('.') != std::string::npos) {
+            extension = extension.substr(extension.rfind('.'));
+            if (!extension.empty() && extension == exec_folder && locations.count(extension)
+                    && locations.at(extension)->allowed_methods && locations.at(extension)->allowed_methods & method)
+                return true;
+        }
         if (*itt == exec_folder) {  return true; }
     }
     return false;

@@ -32,6 +32,8 @@ void closeSocketconnection(ClientSocket *cSocket)
 //this function now does the reads + fd_switches (obv once the parsing is separate the switch-case will be post parsing instead of readrequest
 void	managePendingClients()
 {	
+	static size_t i = 0;
+	i++;
 	for (std::deque<ClientSocket *>::iterator it = pendingClientSockets.begin(); it != pendingClientSockets.end(); ++it) {
 		ClientSocket *cSocket = *it;
 		try {
@@ -119,7 +121,7 @@ void	manageRequests()
 	while (true) {
 		// nbfds defines the number of file descriptors ready for the requested I/O operation.
 		// Specifying a timeout of -1 causes epoll_wait() to block indefinitely
-		if ((nbfds = epoll_wait(epollInstance, events, MAX_EVENTS, 100)) == -1)
+		if ((nbfds = epoll_wait(epollInstance, events, MAX_EVENTS, 2)) == -1)
 			throw std::runtime_error("An error has occured while waiting for connections. Error code : " + ft_itoa(errno));
 		handle_events(events, nbfds);
 		managePendingClients();

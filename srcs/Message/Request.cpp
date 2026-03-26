@@ -99,7 +99,7 @@ ssize_t Request::getSize() const
 {
 	if (headers.count("CONTENT_LENGTH"))
 		return (ssize_t)atol((headers.at("CONTENT_LENGTH")).c_str());
-	if (headers.count("TRANSFER_ENCODING") && headers.at("TRANSFER_ENCODING") == "chunked")
+	if (headers.count("HTTP_TRANSFER_ENCODING") && headers.at("HTTP_TRANSFER_ENCODING") == "chunked")
 		return CHUNKED;
 	return 0;
 }
@@ -131,7 +131,7 @@ void Request::parse(std::map<std::string, std::string> &mime)
 		header = (char *)(_request.substr(0, headerEnd).c_str());
 		_body = _request.substr(headerEnd + 4);
 	}
-	//std::cout << "request :: \n" << (char *)_request.c_str() << std::endl;
+	std::cout << "request headers :: \n" << header << std::endl;
 	try {
 		this->parse_header(header);
 		_status = 1; //headers are parsed with no error
@@ -173,18 +173,6 @@ void	Request::parse_header(std::string header)
 	catch (std::exception &e) {throw ;}
 }
 
-bool Request::needsIndex(std::string full_target)
-{
-	if (*(_target.rbegin()) == '/') { return false; }
-	struct stat s;
-	if ( stat(full_target.c_str(), &s) != 0 ) { throw FileNotFound(); }
-	if( s.st_mode & S_IFDIR ) {
-		_target += "/";
-		return true;
-	}
-	return false;
-}
-
 void Request::startline_check(std::string line)
 {
 	std::stringstream l(line);
@@ -209,37 +197,62 @@ void Request::startline_check(std::string line)
 	getline(l, current);
 	if (!current.empty())
 		throw BadRequest();
-	
+	this->target_work();
+}
+#include <iostream>
+void Request::target_work()
+{
 	if (_target[0] != '/')
 		_target = "/" + _target;
-	
-	//location/extension lists
-	std::list<std::string> extension;
+	//make location list
 	std::list<std::string> location = target_list(_target);
-	if (_target.rfind('.') != std::string::npos)
-		extension.push_back(_target.substr(_target.rfind('.')));
-	
+	//cut path_info and update target + list + script_name
+	std::string path_info = get_path_info(_config.getFullPath(location));
+	if (!path_info.empty() && _target.find(path_info) != std::string::npos) {
+		_target = _target.substr(0, _target.rfind(path_info));
+		location = target_list(_target);
+		if (!_config.isExecFolder(location, _config.stringToMethodFlag(_method))) {
+			_target += path_info;
+			location = target_list(_target);
+		}
+	}
+	std::string script_name = _target;
 	// method check
-	bool loc = _config.isMethodAllowed(location, _config.stringToMethodFlag(_method));
-	bool ext = _config.isMethodAllowed(extension, _config.stringToMethodFlag(_method));
-	if (!loc && !ext)
-		throw NotAllowed(); //method not supported (NotImplemented ? check needed)
-	//aswitch to real path and add index
+	if (!_config.isMethodAllowed(location, _config.stringToMethodFlag(_method)))
+		throw NotAllowed();
+	//add index
 	std::string index;
-	if (_target == "/" || needsIndex(_config.getFullPath(location)))
+	if (_target == "/" || needsIndex(_config.getFullPath(location))) {
 		index = _config.getIndex(location);
+		if (!index.empty() && index[0] != '/')
+			index = "/" + index;
+		if (!index.empty()) { location.push_front(index); script_name += index; }
+	}
+	//target to full_path
 	_target = _config.getFullPath(location);
-	if (*(_target.rbegin()) != '/' && !index.empty()) { _target += "/"; }
-	_target += index;
+	//debug read
+	std::cout << "currently seeking :: " << _target << std::endl;
 	//error 404 catch
 	try { seekFile(_target); }
 	catch (std::exception &e) { throw ; }
 	//check_exec, adjust
-	if ((loc && _config.isExecFolder(location)) || (ext && _config.isExecFolder(extension)))
-		this->adjust_exec();
+	if (_config.isExecFolder(location, _config.stringToMethodFlag(_method)))
+		this->adjust_exec(path_info, script_name);
 }
 
-void Request::adjust_exec()
+bool Request::needsIndex(std::string full_target)
+{
+	if (*(_target.rbegin()) == '/') { return false; }
+	struct stat s;
+	if ( stat(full_target.c_str(), &s) != 0 ) { throw FileNotFound(); }
+	if( s.st_mode & S_IFDIR ) {
+		_target += "/";
+		return true;
+	}
+	return false;
+}
+
+void Request::adjust_exec(std::string path_info, std::string script_name)
 {
 	exec = true;
 	//looking for cgi executable file
@@ -248,10 +261,14 @@ void Request::adjust_exec()
 	//adding relevant variables :: cgi version, redirect status, query string, method request, etc.
 	headers.insert(std::pair<std::string, std::string>("REDIRECT_STATUS", "true"));
 	headers.insert(std::pair<std::string, std::string>("GATEWAY_INTERFACE", "CGI/1.1"));
-	std::string filename = _target;
-	if (_target.rfind('/') != std::string::npos)
-		filename = _target.substr(_target.rfind('/') + 1);
-	headers.insert(std::pair<std::string, std::string>("SCRIPT_FILENAME", filename));
+	headers.insert(std::pair<std::string, std::string>("SERVER_PROTOCOL", "HTTP/1.1"));
+	headers.insert(std::pair<std::string, std::string>("SERVER_PORT", ft_itoa(_config.sin_port)));
+	headers.insert(std::pair<std::string, std::string>("SERVER_NAME", "localhost"));
+	//lol ? + path_info is still required when empty ? or im getting it wrong
+	headers.insert(std::pair<std::string, std::string>("SERVER_SOFTWARE", "HOME-MADE/1.0"));
+	if (path_info.empty()) { path_info = script_name; }
+	headers.insert(std::pair<std::string, std::string>("PATH_INFO", path_info));
+	headers.insert(std::pair<std::string, std::string>("SCRIPT_FILENAME", script_name));
 	headers.insert(std::pair<std::string, std::string>("REQUEST_METHOD", _method));
 	if (!_query.empty())
 		headers.insert(std::pair<std::string, std::string>("QUERY_STRING", _query));
@@ -318,9 +335,9 @@ void Request::parse_body()
 	try {
 		if (this->getSize() == CHUNKED) {
 			//un-chunk the body
-			_body = chunk_parse(_body);
+			_body = chunk_parse(_body, _parse_body);
 			//adjust size headers accordingly (in case of cgi)
-			headers.erase(headers.find("TRANSFER_ENCODING"));
+			headers.erase(headers.find("HTTP_TRANSFER_ENCODING"));
 			headers.insert(std::pair<std::string, std::string>("CONTENT_LENGTH", ft_itoa(_body.size())));
 		}
 		else
@@ -384,5 +401,6 @@ void Request::read() const
 }
 
 Request::MissingData::MissingData() : std::out_of_range("data missing from request !") {}
+Request::ChunkParsing::ChunkParsing() : std::out_of_range("parsing of the chunked body is unfinished !") {}
 
 Request::DeleteRequest::DeleteRequest(std::string target) : std::out_of_range(target.c_str()) {}

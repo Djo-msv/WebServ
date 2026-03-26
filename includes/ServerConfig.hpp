@@ -39,7 +39,7 @@ class ServerConfig
         std::string	getCgi(const std::string &extension) const;
         std::string	getFullPath(std::list<std::string> &full) const;
 		std::string	getRootFolder() const;
-		bool		isExecFolder(std::list<std::string> &full) const;
+		bool		isExecFolder(std::list<std::string> &full, int method) const;
 		std::string getIndex(std::list<std::string> &full) const;
         std::string getErrorFile(int errorCode) const;
 		time_t		getTimeout(void) const;

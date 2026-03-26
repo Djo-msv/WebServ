@@ -62,7 +62,7 @@ unsigned char *Response::getResponse(std::map<std::string, std::string> &mime)
 				_headers += mime.at(_target.substr(_target.rfind('.')));
 			_headers += "\r\nTransfer-Encoding: chunked\r\n";
 			this->chunkBody();
-			//std::cerr << "status :: " << _status << std::endl;
+			std::cerr << "status :: " << _status << std::endl;
 		}
 		//\r\nContent-Length: " + ft_itoa(_body.size() - 2) + "\r\n";
 		this->makeMsg();
@@ -111,6 +111,8 @@ void Response::makeMsg()
 		_msg[pos] = *it;
 		pos++;
 	}
+	if (exec) { std::cout << "body sent :: \n" << (char *)_body.c_str() << std::endl; }
+	else { std::cout << "not exec ???\n"; }
 }
 
 

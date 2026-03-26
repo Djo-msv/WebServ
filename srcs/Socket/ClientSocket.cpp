@@ -84,6 +84,7 @@ void	ClientSocket::parseRequest()
 			epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
 		}
 	}
+	catch (Request::ChunkParsing &e) { /*std::cout << "back to parsing the body\n";*/ status = ParseRequest; }
 	catch (Request::MissingData &e) {
 		status = ReadRequest;
 		//do the timeout specification here
@@ -117,7 +118,7 @@ void	ClientSocket::deleteFile(const char *filename)
 //starting the execution process here (write or exec + read)
 void	ClientSocket::startExec()
 {
-	bool body = _request.getBody();
+	/*bool body = _request.getBody();
 	try { _exec.setupProcess(body); }
 	catch (HttpError &e) { ErrorHandling(e, false); return ; }
 	if (!body) {
@@ -133,6 +134,24 @@ void	ClientSocket::startExec()
 		setnonblocking(_exec.getFdIn());
 		setnonblocking(_exec.getFdOut());
 		epollFdSwitch(_socketFd, _exec.getFdIn(), EPOLLOUT | EPOLLET);
+	}*/
+	//new version, we start the program immediately -- remember to take out the bool exec in ErrorHandling since we won't be needing it
+	bool body = _request.getBody();
+	try { _exec.setupProcess(body); }
+	catch (HttpError &e) { ErrorHandling(e, false); return ; }
+	setnonblocking(_exec.getFdOut());
+	if (body)
+		setnonblocking(_exec.getFdIn());
+	try { _exec.startProcess(body, _request.getCgi(), _request.getTarget(), _request.getEnv()); }
+	catch (HttpError &e) { ErrorHandling(e, false); return ; }
+	RETHROW(std::bad_alloc)// ! Faut-il fermer _exec.getFdIn() ? Sachant que le throw bad alloc ne se fait qu'a l'initialisation de la liste d'args
+	if (body) {
+		status = WaitExecWrite;
+		epollFdSwitch(_socketFd, _exec.getFdIn(), EPOLLOUT | EPOLLET);
+	}
+	else {
+		status = WaitExecRead;
+		epollFdSwitch(_socketFd, _exec.getFdOut(), EPOLLIN | EPOLLET);
 	}
 }
 
@@ -144,17 +163,15 @@ void	ClientSocket::execWrite()
 	if (size > BUF_SIZE)
 		size = BUF_SIZE;
 	if (size) {
-		if (write(_exec.getFdIn(), (&body[_sendpos]), size) == -1)
+		if ((size = write(_exec.getFdIn(), (&body[_sendpos]), size)) == -1)
 			status = WaitExecWrite;
 		else
 			_sendpos += size;
 	}
 	else { //write is done, start up the process appropriate status/epoll switching and close
-		try { _exec.startProcess(true, _request.getCgi(), _request.getTarget(), _request.getEnv()); }
-		catch (HttpError &e) { ErrorHandling(e, true); return ; }
-		RETHROW(std::bad_alloc) // ! Faut-il fermer _exec.getFdIn() ? Sachant que le throw bad alloc ne se fait qu'a l'initialisation de la liste d'args
 		close(_exec.getFdIn());
 		_sendpos = 0;
+		//std::cout << "\n--writing to cgi is over, switching to read--\n";
 		epollFdSwitch(_exec.getFdIn(), _exec.getFdOut(), EPOLLIN | EPOLLET);
 		status = WaitExecRead;
 	}
@@ -185,11 +202,11 @@ void ClientSocket::sendResponse()
 
 	try { msg = _response.getResponse(mime); }
 	RETHROW (std::bad_alloc)
-	size_t size = _response.getSize() - _sendpos;
+	ssize_t size = _response.getSize() - _sendpos;
 	if (size > BUF_SIZE)
 		size = BUF_SIZE;
 	if (size) {
-		if (write(_socketFd, (&msg[_sendpos]), size) == -1)
+		if ((size = write(_socketFd, (&msg[_sendpos]), size)) == -1)
 			status = WaitResponse;
 		else
 			_sendpos += size;

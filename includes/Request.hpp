@@ -51,6 +51,11 @@ class Request
 				MissingData();
 		};
 		
+		class ChunkParsing : public std::out_of_range {
+			public:
+				ChunkParsing();
+		};
+		
 		class DeleteRequest : public std::out_of_range {
 			public:
 				DeleteRequest(std::string target);
@@ -61,6 +66,7 @@ class Request
 		
 		ustring			_request;
 		ustring			_body;
+		ustring			_parse_body;
 
 		std::string		_method;
 		std::string		_cgi;
@@ -77,9 +83,10 @@ class Request
 		std::map<std::string, std::string> headers;
 
 		void	parse_header(std::string header);
-		bool	needsIndex(std::string full_target);
 		void	startline_check(std::string line);
-		void	adjust_exec();
+		void	target_work();
+		bool	needsIndex(std::string full_target);
+		void	adjust_exec(std::string path_info, std::string script_name);
 		void	headers_add(std::string line);
 		void	mime_check(std::map<std::string, std::string> &mime);
 		void	parse_body();

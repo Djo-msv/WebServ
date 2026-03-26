@@ -62,16 +62,21 @@ static bool check_hex(ustring hex)
 	}
 	return true;
 }
-
 //parsing of chunked body (ex :: hex+\r\n+chunk+...+0\r\n\r\n)
-ustring chunk_parse(ustring _body)
+ustring chunk_parse(ustring &_body, ustring &new_body)
 {
 	if (_body.empty())
 		throw Request::MissingData();
-	ustring new_body;
 	unsigned int size = 0;
+	int count = 0;
+	
+	if (_body.find((unsigned char *)"\r\n") == 0)
+		_body = _body.substr(2);
 	while (!_body.empty())
 	{
+		if (count > 7) { throw Request::ChunkParsing(); }
+		if (_body.find((unsigned char *)"\r\n") == 0)
+			_body = _body.substr(2);
 		std::size_t pos = _body.find((unsigned char *)"\r\n");
 		if (pos == ustring::npos)
 			throw Request::MissingData();
@@ -86,6 +91,7 @@ ustring chunk_parse(ustring _body)
 			throw Request::MissingData();
 		new_body += _body.substr(0, size);
 		_body = _body.substr(size);
+		count++;
 	}
 	if (size)
 		throw Request::MissingData();
@@ -130,7 +136,6 @@ bool check_val(std::string &val)
 std::list<std::string> target_list(std::string loc)
 {
 	std::list<std::string> full;
-	full.push_back(loc);
 	if (loc.empty() || loc.find('/') == std::string::npos) { return full; }
 	if (*(loc.rbegin()) == '/' && loc.size() > 1)
 		loc.erase(loc.size() - 1);
@@ -143,7 +148,27 @@ std::list<std::string> target_list(std::string loc)
 		loc = loc.substr(0, loc.rfind('/'));
 	}
 	for (std::list<std::string>::iterator it = full.begin(); it != full.end(); it++) {
-		if ((*it).empty() || *it == "/") { it = full.erase(it); }
+		if ((*it).empty() || (it != full.begin() && *it == "/")) { it = full.erase(it); }
 	}
 	return full;
+}
+
+std::string get_path_info(std::string loc)
+{
+	std::string path_info;
+	std::string last_dir;
+	struct stat s;
+	size_t pos;
+	while ((pos = loc.rfind('/')) != std::string::npos && pos > 1) {
+		if (stat(loc.c_str(), &s) == 0) {
+			if(last_dir.empty() && s.st_mode & S_IFDIR)
+				last_dir = loc;
+			else if (s.st_mode & S_IFREG)
+				break ;
+		}
+		else
+			path_info = loc.substr(pos) + path_info;
+		loc = loc.substr(0, pos);
+	}
+	return path_info;
 }

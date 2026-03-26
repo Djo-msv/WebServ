@@ -9,7 +9,7 @@
 #include <signal.h>
 #include <ctime>
 
-#define BUF_SIZE 1024
+#define BUF_SIZE 5000//1024
 
 #include <Socket.hpp>
 #include <HttpErrors.hpp>

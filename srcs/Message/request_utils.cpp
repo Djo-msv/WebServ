@@ -69,33 +69,36 @@ ustring chunk_parse(ustring &_body, ustring &new_body)
 		throw Request::MissingData();
 	unsigned int size = 0;
 	int count = 0;
+	//unsigned int sizerr = _body.size();
 	
 	if (_body.find((unsigned char *)"\r\n") == 0)
 		_body = _body.substr(2);
+	if (_body.empty())
+		return new_body;
 	while (!_body.empty())
 	{
-		if (count > 7) { throw Request::ChunkParsing(); }
+		if (count > 8) {/*std::cout << "finish next time, body reduced by " << (sizerr - _body.size()) << std::endl;*/ throw Request::ChunkParsing(); }
 		if (_body.find((unsigned char *)"\r\n") == 0)
 			_body = _body.substr(2);
 		std::size_t pos = _body.find((unsigned char *)"\r\n");
 		if (pos == ustring::npos)
 			throw Request::MissingData();
 		ustring hex = _body.substr(0, pos);
-		_body = _body.substr(pos + 2);
 		if (!check_hex(hex))
 			throw BadRequest();
 		sscanf((char *)hex.c_str(), "%x", &size);
 		if (!size)
 			break ;
-		if (size > _body.length())
+		if (size > _body.length() - 2 - pos)
 			throw Request::MissingData();
+		_body = _body.substr(pos + 2);
 		new_body += _body.substr(0, size);
 		_body = _body.substr(size);
 		count++;
 	}
 	if (size)
 		throw Request::MissingData();
-	if (_body.length() < 2 || _body.substr(0, 2) != (unsigned char *)"\r\n")
+	if (_body.length() < 5 || _body.substr(0, 5) != (unsigned char *)"0\r\n\r\n")
 		throw Request::MissingData();
 	return new_body;
 }

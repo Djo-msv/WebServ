@@ -33,8 +33,10 @@ class ClientSocket : public Socket
 		void	deleteFile(const char *filename);
 		//writing to cgi pipein + appropriate _status, epoll and sockets update && starting cgi once write is over
 		void	execWrite();
+		void	writeToRead(); //in case of exec write timeout, switch to exec read
 		//reading from running cgi pipeout + appropriate _status, epoll and sockets update
 		void	execRead();
+		void	readToWrite(); //in case of exec read timeout, switch to response write
 		//sends response in buffers, currently closes connection in the future .clear() on all objects
 		void sendResponse();
 		//to switch from SendResponse back to WaitRequest, resets all variables and epoll_mods to EPOLLIN

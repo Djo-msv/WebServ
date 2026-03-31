@@ -1,0 +1,20 @@
+server1 :
+	port : 7501
+	root : ./server00
+	index : /html/index.html
+	timeout : 40
+	allow_methods : GET
+	locations :
+		- /html :
+			allow_methods : GET
+		- /img :
+			allow_methods : GET
+		- /uploads :
+			allow_methods : DELETE
+		- /scripts :
+			allow_methods :
+				- GET
+				- POST
+	cgi_handlers :
+		- .py : /usr/bin/python3
+	execution_folder : /scripts

@@ -84,11 +84,8 @@ void	ClientSocket::parseRequest()
 			epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
 		}
 	}
-	catch (Request::ChunkParsing &e) { /*std::cout << "back to parsing the body\n";*/ status = ParseRequest; }
-	catch (Request::MissingData &e) {
-		status = ReadRequest;
-		//do the timeout specification here
-	}
+	catch (Request::ChunkParsing &e) { status = ParseRequest; }
+	catch (Request::MissingData &e) { status = ReadRequest; }
 	catch (Request::DeleteRequest &e) {
 		try { this->deleteFile(e.what()); }
 		RETHROW(std::bad_alloc)
@@ -118,23 +115,6 @@ void	ClientSocket::deleteFile(const char *filename)
 //starting the execution process here (write or exec + read)
 void	ClientSocket::startExec()
 {
-	/*bool body = _request.getBody();
-	try { _exec.setupProcess(body); }
-	catch (HttpError &e) { ErrorHandling(e, false); return ; }
-	if (!body) {
-		status = WaitExecRead;
-		setnonblocking(_exec.getFdOut());
-		try { _exec.startProcess(false, _request.getCgi(), _request.getTarget(), _request.getEnv()); }
-		catch (HttpError &e) { ErrorHandling(e, false); return ; }
-		RETHROW(std::bad_alloc)
-		epollFdSwitch(_socketFd, _exec.getFdOut(), EPOLLIN | EPOLLET);
-	}
-	else {
-		status = WaitExecWrite;
-		setnonblocking(_exec.getFdIn());
-		setnonblocking(_exec.getFdOut());
-		epollFdSwitch(_socketFd, _exec.getFdIn(), EPOLLOUT | EPOLLET);
-	}*/
 	//new version, we start the program immediately -- remember to take out the bool exec in ErrorHandling since we won't be needing it
 	bool body = _request.getBody();
 	try { _exec.setupProcess(body); }
@@ -158,23 +138,36 @@ void	ClientSocket::startExec()
 //new cgi write
 void	ClientSocket::execWrite()
 {
+	resetTimeout();
+	//std::cout << "timeout has been reset on execwrite\n";
 	unsigned char *body = _request.getBody();
 	ssize_t size = _request.getSize() - _sendpos;
 	if (size > BUF_SIZE)
 		size = BUF_SIZE;
 	if (size) {
-		if ((size = write(_exec.getFdIn(), (&body[_sendpos]), size)) == -1)
+		if ((size = write(_exec.getFdIn(), (&body[_sendpos]), size)) == -1) {
+			std::cout << "waiting execwrite\n";
 			status = WaitExecWrite;
+		}
 		else
 			_sendpos += size;
 	}
 	else { //write is done, start up the process appropriate status/epoll switching and close
 		close(_exec.getFdIn());
 		_sendpos = 0;
-		//std::cout << "\n--writing to cgi is over, switching to read--\n";
 		epollFdSwitch(_exec.getFdIn(), _exec.getFdOut(), EPOLLIN | EPOLLET);
 		status = WaitExecRead;
 	}
+}
+
+void	ClientSocket::writeToRead()
+{
+	close(_exec.getFdIn());
+	std::cout << "\n--writing to cgi is over (timeout), amount written = " << _sendpos << ", switching to read--\n";
+	_sendpos = 0;
+	epollFdSwitch(_exec.getFdIn(), _exec.getFdOut(), EPOLLIN | EPOLLET);
+	status = WaitExecRead;
+	resetTimeout();
 }
 
 void	ClientSocket::execRead()
@@ -182,6 +175,7 @@ void	ClientSocket::execRead()
 	unsigned char buffer[BUF_SIZE];
 
 	ssize_t size = read(_exec.getFdOut(), buffer, BUF_SIZE);
+	resetTimeout();
 	if (size < 0)
 		status = WaitExecRead;
 	else if (!size) { //read is done, appropriate status/epoll switching and close
@@ -196,10 +190,19 @@ void	ClientSocket::execRead()
 	}
 }
 
+void	ClientSocket::readToWrite()
+{
+	close(_exec.getFdOut());
+	epollFdSwitch(_exec.getFdOut(), _socketFd, EPOLLOUT | EPOLLET);
+	status = WaitResponse;
+	resetTimeout();
+}
+
 void ClientSocket::sendResponse()
 {
 	unsigned char *msg;
 
+	resetTimeout();
 	try { msg = _response.getResponse(mime); }
 	RETHROW (std::bad_alloc)
 	ssize_t size = _response.getSize() - _sendpos;

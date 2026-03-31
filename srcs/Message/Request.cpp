@@ -40,11 +40,13 @@ Request& Request::operator=(const Request &other)
 //replaces the += overload for non-NULL terminated buffers
 void Request::add(const unsigned char *buffer, size_t size)
 {
-	ustring &ref = _request;
-	if (_status)
-		ref = _body;
+	if (_status) {
+		for (size_t i = 0; i != size; i++)
+			_body.push_back(buffer[i]);
+		return ;
+	}
 	for (size_t i = 0; i != size; i++)
-		ref.push_back(buffer[i]);
+		_request.push_back(buffer[i]);
 }
 //clear func, self exp
 void Request::clear()
@@ -131,7 +133,7 @@ void Request::parse(std::map<std::string, std::string> &mime)
 		header = (char *)(_request.substr(0, headerEnd).c_str());
 		_body = _request.substr(headerEnd + 4);
 	}
-	std::cout << "request headers :: \n" << header << std::endl;
+	//std::cout << "request headers :: \n" << header << std::endl;
 	try {
 		this->parse_header(header);
 		_status = 1; //headers are parsed with no error
@@ -231,7 +233,7 @@ void Request::target_work()
 	//target to full_path
 	_target = _config.getFullPath(location);
 	//debug read
-	std::cout << "currently seeking :: " << _target << std::endl;
+	//std::cout << "currently seeking :: " << _target << std::endl;
 	//error 404 catch
 	try { seekFile(_target); }
 	catch (std::exception &e) { throw ; }
@@ -265,7 +267,7 @@ void Request::adjust_exec(std::string path_info, std::string script_name)
 	headers.insert(std::pair<std::string, std::string>("SERVER_PORT", ft_itoa(_config.sin_port)));
 	headers.insert(std::pair<std::string, std::string>("SERVER_NAME", "localhost"));
 	//lol ? + path_info is still required when empty ? or im getting it wrong
-	headers.insert(std::pair<std::string, std::string>("SERVER_SOFTWARE", "HOME-MADE/1.0"));
+	headers.insert(std::pair<std::string, std::string>("SERVER_SOFTWARE", "HOMEMADE/1.0"));
 	if (path_info.empty()) { path_info = script_name; }
 	headers.insert(std::pair<std::string, std::string>("PATH_INFO", path_info));
 	headers.insert(std::pair<std::string, std::string>("SCRIPT_FILENAME", script_name));
@@ -336,6 +338,7 @@ void Request::parse_body()
 		if (this->getSize() == CHUNKED) {
 			//un-chunk the body
 			_body = chunk_parse(_body, _parse_body);
+			std::cout << "dechunk complete, body size = " << _body.size() << "\n";
 			//adjust size headers accordingly (in case of cgi)
 			headers.erase(headers.find("HTTP_TRANSFER_ENCODING"));
 			headers.insert(std::pair<std::string, std::string>("CONTENT_LENGTH", ft_itoa(_body.size())));

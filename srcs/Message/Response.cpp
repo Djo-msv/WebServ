@@ -48,6 +48,7 @@ void Response::add(const unsigned char *buffer, size_t size)
 		//public getters
 
 size_t Response::getSize() const { return sizer; }
+bool Response::empty() const { return _body.empty(); }
 
 unsigned char *Response::getResponse(std::map<std::string, std::string> &mime)
 {
@@ -64,7 +65,7 @@ unsigned char *Response::getResponse(std::map<std::string, std::string> &mime)
 			this->chunkBody();
 			std::cerr << "status :: " << _status << std::endl;
 		}
-		//\r\nContent-Length: " + ft_itoa(_body.size() - 2) + "\r\n";
+		else { this->handleExec(); }
 		this->makeMsg();
 	}
 	return _msg;
@@ -111,13 +112,35 @@ void Response::makeMsg()
 		_msg[pos] = *it;
 		pos++;
 	}
-	if (exec) { std::cout << "body sent :: \n" << (char *)_body.c_str() << std::endl; }
-	else { std::cout << "not exec ???\n"; }
+	if (exec) { std::cout << "body sent size :: " << _body.size() << std::endl; }
+	//else { std::cout << "not exec\n"; }*/
 }
 
 
 
 		//private message-making functions, in chronological order
+
+void Response::handleExec()
+{
+	if (_body.empty() || _body.find((unsigned char *)"\n") == ustring::npos) {
+		_body = (unsigned char *)"HTTP/1.1 500 Internal Server Error\r\nContent-Type: text/html\r\nContent-Length: 90\r\n\r\n<html><h1>The CGI program did not return anything or took too long to respond.</h1></html>";
+		return ;
+	}
+	ustring fin = (unsigned char *)"\r\n";
+	if (_body.find(fin) == ustring::npos) { fin = (unsigned char *)"\n"; }
+	std::string stat = (char *)_body.substr(0, _body.find(fin)).c_str();
+	if (stat.size() > 9 && stat.substr(0, 8) == "HTTP/1.1") { return; }
+	if (stat.size() > 8) {
+		if (stat.substr(0, 7) != "Status:" && stat.substr(0, 7) != "status:") { stat = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n"; }
+		else {
+			stat = stat.substr(7);
+			if (stat[0] != ' ') { stat = " " + stat; }
+			stat = "HTTP/1.1" + stat;
+			_body = _body.substr(_body.find(fin));
+		}
+		_body = (unsigned char*)stat.c_str() + _body;
+	}
+}
 
 void Response::readFile()
 {

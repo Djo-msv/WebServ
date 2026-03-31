@@ -34,6 +34,7 @@ class Response
 		//getters
 		unsigned char *getResponse(std::map<std::string, std::string> &mime); //result
 		size_t getSize() const;
+		bool empty() const;
 	
 	private:
 		std::string _target; //target file to return
@@ -47,6 +48,7 @@ class Response
 		bool exec; //is there an exec to run ? (makeResponse return)
 		size_t sizer;
 		
+		void handleExec(); //if exec, check the cgi return for 1)empty body 2)status in "status: []" form
 		void readFile(); //if target, reads the target file into a body string
 		void chunkBody(); //chunks body, by BUF_SIZE
 };

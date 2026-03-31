@@ -48,8 +48,16 @@ void	managePendingClients()
 				case ClientSocket::ParseRequest:
 					cSocket->parseRequest();
 					break ;
+				case ClientSocket::WaitExecWrite:
+					if (cSocket->hasTimedOut())
+						cSocket->writeToRead();
+					break ;
 				case ClientSocket::ExecWrite:
 					cSocket->execWrite();
+					break ;
+				case ClientSocket::WaitExecRead:
+					if (cSocket->hasTimedOut())
+						cSocket->readToWrite();
 					break ;
 				case ClientSocket::ExecRead:
 					cSocket->execRead();
@@ -121,7 +129,7 @@ void	manageRequests()
 	while (true) {
 		// nbfds defines the number of file descriptors ready for the requested I/O operation.
 		// Specifying a timeout of -1 causes epoll_wait() to block indefinitely
-		if ((nbfds = epoll_wait(epollInstance, events, MAX_EVENTS, 2)) == -1)
+		if ((nbfds = epoll_wait(epollInstance, events, MAX_EVENTS, 3)) == -1)
 			throw std::runtime_error("An error has occured while waiting for connections. Error code : " + ft_itoa(errno));
 		handle_events(events, nbfds);
 		managePendingClients();

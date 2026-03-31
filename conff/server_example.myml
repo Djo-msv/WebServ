@@ -1,0 +1,19 @@
+server2 :
+	port : 7500
+	root : ./YoupiBanane
+	timeout : 200
+	allow_methods : GET
+	locations :
+		- /directory :
+			index : youpi.bad_extension
+			alias : ./YoupiBanane
+			allow_methods : GET
+		- .bla :
+			allow_methods : POST
+		- /post_body :
+			allow_methods : POST
+		- /nop :
+			allow_methods : GET
+	cgi_handlers :
+		- .bla : ./cgi_tester
+	execution_folder : .bla

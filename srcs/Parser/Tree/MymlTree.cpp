@@ -17,7 +17,7 @@ MymlTree::MymlTree(std::list<Token> &tokens)
 					if (isValue(it)) { // is pair
 						value = it->_token;
 						for(;it->_type == END_OF_LINE; it++){};
-						mymlObject *pair = NULL;
+						MymlObject *pair = NULL;
 						try {pair = new MymlList(key);}
 						catch (const std::bad_alloc& e){
 							if (pair)
@@ -32,7 +32,7 @@ MymlTree::MymlTree(std::list<Token> &tokens)
 					else if (it->_type == OPEN_BRACKET || it->_type == OPEN_BRACE)
 						_root->insert(inlineDefine(it, key));
 					else
-						_error->unespectedToken(it);
+						_error->unexpectedToken(it);
 				}
 			}
 		}
@@ -74,14 +74,14 @@ MymlObject *MymlTree::listDefine(std::list<Token>::iterator &it, const std::stri
  			{
 				try {list->insert(new MymlObject(elemKey)); }
 				catch (const std::bad_alloc& e){
-					dekete list;
+					delete list;
 					throw std::bad_alloc();
 				}
 			}
 		}
 		if (it->_type != COMMA && it->_type != CLOSE_BRACKET) {
 			delete list;
-			_error->unespectedToken(it);
+			_error->unexpectedToken(it);
 		}
 		if (it->_type == COMMA)
 			it++;
@@ -106,13 +106,13 @@ MymlObject *MymlTree::dictionaryDefine(std::list<Token>::iterator &it, const std
 			it++;
 			if ((it++)->_type != COLON) {
 				delete dct;
-				_error->unespectedToken(it);
+				_error->unexpectedToken(it);
 			}
 			if (isValue(it))
 			{
 				try {dct->insert(std::pair<std::string, MymlObject*>(elemKey, new MymlObject((it++)->_token))); }
 				catch (const std::bad_alloc& e){
-					dekete dct;
+					delete dct;
 					throw std::bad_alloc();
 				}
 			}
@@ -122,12 +122,12 @@ MymlObject *MymlTree::dictionaryDefine(std::list<Token>::iterator &it, const std
 			}
 			else {
 				delete dct;
-				_error->unespectedToken(it);
+				_error->unexpectedToken(it);
 			}
 		}
 		if (it->_type != COMMA && it->_type != CLOSE_BRACE) {
 			delete dct;
-			_error->unespectedToken(it);
+			_error->unexpectedToken(it);
 		}
 		if (it->_type == COMMA)
 			it++;
@@ -159,9 +159,9 @@ MymlObject *MymlTree::parseListArg(std::list<Token>::iterator &begin, std::list<
 	if (it->_type == DASH)
 		it++;
 	else 
-		_error->unespectedToken(it);
+		_error->unexpectedToken(it);
 	if (it->_type != COLON && !isValue(it))
-		_error->unespectedToken(it);
+		_error->unexpectedToken(it);
 	key = it->_token;
 	it++;
 	// is define or pair
@@ -195,7 +195,7 @@ std::pair<std::string, MymlObject*> MymlTree::parseDictionaryArg(std::list<Token
 	std::pair<std::string, MymlObject*>	obj;
 
 	if (!isValue(it))
-		_error->unespectedToken(it);
+		_error->unexpectedToken(it);
 	key = it->_token;
 	it++;
 	// is define or pair
@@ -205,7 +205,7 @@ std::pair<std::string, MymlObject*> MymlTree::parseDictionaryArg(std::list<Token
 			value = it->_token;
 			it++;
 			if (it->_type != END_OF_LINE)
-				_error->unespectedToken(it);
+				_error->unexpectedToken(it);
 			for(;it->_type == END_OF_LINE; it++){};
 			obj = std::pair<std::string, MymlObject*>(key, new MymlObject(value));
 			return (obj);
@@ -239,7 +239,7 @@ MymlObject *MymlTree::parseList(const std::string &key, std::list<Token>::iterat
 	while (level == nbSpace(it)) {
 		if (isDictionary(it)) {
 			delete list;
-			_error->unespectedToken(it);
+			_error->unexpectedToken(it);
 		}; // throw error
 		try {
 			list->insert(parseListArg(begin, it, level));
@@ -273,7 +273,7 @@ MymlObject *MymlTree::parseDictionary(const std::string &key, std::list<Token>::
 	while (level == nbSpace(it)) {
 		if (!isDictionary(it)) {
 			delete dictionary;
-			_error->unespectedToken(it);
+			_error->unexpectedToken(it);
 		}
 		try {
 			dictionary->insert(parseDictionaryArg(begin, it, level));
@@ -297,7 +297,7 @@ MymlObject *MymlTree::define(std::list<Token>::iterator &begin, const std::strin
 	size_t	level = nbSpace(it); // checks indentation and set level to the current indentation
 
 	if (prev_level >= level) // checks that current the level is higher than the previous level and throw exeption if not
-		_error->unespectedToken(it);
+		_error->unexpectedToken(it);
 	if (it->_type == DASH)
 		return (parseList(key, begin, level));
 	else if (isDictionary(it))

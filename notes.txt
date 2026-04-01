@@ -6,27 +6,23 @@ cgi env variables still possibly missing ::
 
 supposedly, we want ::  "http://$SERVER_NAME:$SERVER_PORT$SCRIPT_NAME$PATH_INFO" to point to be a gettable url
 
-?????? lmao what ??? it's saying "PATH_INFO not found" but it's literally in the environment AND there isn't any path info !! i literally just put the script_name in there thats what they wanted
-
 question :: is it possible to put down a decimal number in the timeout variable ? next update we'll try that
 	answer is yes !! we can set it to .05 if we feel like rushing the fcking job
 	but it's not recommended (example POST 0, method is checked too fast "0" is left over on the read channel)
 
-next lets try to keep reading for a while after read == 0 on the execRead() if Response::_body.empty()
-	we'll need likely just an easy check in execRead() with an if(size && []) { return; }
-	we'll try to wait for a timeout version ? like, only stop reading if !size and timeout ?
+-----------------------------------------------------------
 
-success !!
-but, body returned is too short still (caused by the execwrite timeout yet again, 119,096/100,000,000 ; lot less)
-	trials ::
-		trying it out on a school computer
-		lengthening the timeout (attempted : 40, 60, 100)
-		idwdt but obviously next step would be alternating read/write once write has timed out, i guess (like read and then switch back to write ?)
-		disregard -1 entirely ? add a timeout spec for -1 return but attempt it regardless
-			nope
-
-currently monitoring the execwrite wait amounts to see if we get any or if it only times out
-	attempting setnonblock on exec side pipes during the ExecutionProcess::setupProcess() function
-
-as assumed, only one wait == timed out
-setnonblock did _not_ work
+clean up notes :: 01/04
+	main.cpp :: 
+	if (waitRequest.timeout()) { status = Done; } --> no Bad Request return ? (ex the request has no sep)
+		possible solution :: { parse(); } //with a argument-dependent parse (MissingData becomes BadRequest throws)
+	to avoid valgrind leaks, maybe we change the signal for stopping the server ? (SIGQUIT or sthg maybe)
+	Request.cpp ::
+	SERVER-SOFTWARE cgi env variable might need renaming
+	getting rid of the PATH env var in cgi
+	added lengthRequired error
+	might want to put the target_work *after* the body parsing :: get full request first, then check if its server-compatible
+	Response.cpp ::
+	deleted the "unknown" content-type :: no known type, no header
+we forgot non cgi POST requests lmao might want to put that to work, solution { in request, check if target is a 1)file 2)we can append; in response have a if/else in the no exec box where we 1)write instead of read (query, body, path info ?) and 2)return a 204 No Content status }
+	next up :: Socket/ + socket_parsing.cpp

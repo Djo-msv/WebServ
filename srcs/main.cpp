@@ -76,8 +76,6 @@ void	managePendingClients()
 					if (it == pendingClientSockets.end())
 						return ;
 					break ;
-				default:
-					break ;
 			}
 		} CATCH_AND_HANDLE(std::exception)
 	}
@@ -86,38 +84,37 @@ void	managePendingClients()
 void handle_events(epoll_event events[], int nbfds)
 {
 	for (int n = 0; n < nbfds; ++n) {
-// ? Here it is impossible to reach sockets.end() as for a fd to be called it has to be registered to epoll therefore has been added to sockets map 
-			SocketIterator socketIterator = sockets.find(events[n].data.fd);
-			ServerSocket *sSocket = dynamic_cast<ServerSocket *>(socketIterator->value);
-			if (sSocket != NULL) {
-				ClientSocket *cSocket = new ClientSocket(*sSocket, epollInstance, sockets, mime);
-				//adding the client to sockets + epoll + pendingList
-				if (!sockets.count(cSocket->getSocketFd())) {
-					epoll_add(epollInstance, cSocket->getSocketFd(), EPOLLIN | EPOLLET);
-					sockets.insert(std::make_pair(cSocket->getSocketFd(), 
-							cSocket));
-					pendingClientSockets.push_back(cSocket);
-				}
+		SocketIterator socketIterator = sockets.find(events[n].data.fd);
+		ServerSocket *sSocket = dynamic_cast<ServerSocket *>(socketIterator->value);
+		if (sSocket != NULL) {
+			ClientSocket *cSocket = new ClientSocket(*sSocket, epollInstance, sockets, mime);
+			//adding the client to sockets + epoll + pendingList
+			if (!sockets.count(cSocket->getSocketFd())) {
+				epoll_add(epollInstance, cSocket->getSocketFd(), EPOLLIN | EPOLLET);
+				sockets.insert(std::make_pair(cSocket->getSocketFd(), 
+						cSocket));
+				pendingClientSockets.push_back(cSocket);
 			}
-			else {
-				ClientSocket *cSocket = dynamic_cast<ClientSocket *>(socketIterator->value);
-				switch (cSocket->status) {
-					case ClientSocket::WaitRequest:
-						cSocket->status = ClientSocket::ReadRequest;
-						break ;
-					case ClientSocket::WaitExecWrite:
-						cSocket->status = ClientSocket::ExecWrite;
-						break ;
-					case ClientSocket::WaitExecRead:
-						cSocket->status = ClientSocket::ExecRead;
-						break ;
-					case ClientSocket::WaitResponse:
-						cSocket->status = ClientSocket::SendResponse;
-						break ;
-					default:
-						break ;
-				}
+		}
+		else {
+			ClientSocket *cSocket = dynamic_cast<ClientSocket *>(socketIterator->value);
+			switch (cSocket->status) {
+				case ClientSocket::WaitRequest:
+					cSocket->status = ClientSocket::ReadRequest;
+					break ;
+				case ClientSocket::WaitExecWrite:
+					cSocket->status = ClientSocket::ExecWrite;
+					break ;
+				case ClientSocket::WaitExecRead:
+					cSocket->status = ClientSocket::ExecRead;
+					break ;
+				case ClientSocket::WaitResponse:
+					cSocket->status = ClientSocket::SendResponse;
+					break ;
+				default:
+					break ;
 			}
+		}
 	}
 }
 

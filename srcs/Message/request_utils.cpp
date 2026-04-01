@@ -13,7 +13,7 @@ std::string	seekFile(std::string &pathfile)
 
 }
 
-//returns the correct cgi executable for the file type (for example, file == "input.py" will return "usr/bin/python3"
+//returns the correct cgi executable for the file type (for example, "input.py" will return "usr/bin/python3")
 std::string	extractCgi(std::string &file, ServerConfig &config)
 {
 	std::string extension;
@@ -28,8 +28,8 @@ std::string	extractCgi(std::string &file, ServerConfig &config)
 
 
 /**
- * Renvoie le chemin du fichier d'erreur à afficher, en cherchant d'abord dans la config du server, puis dans les fichiers d'erreur par défaut
- * Si aucun fichier d'erreur n'est trouvé, une InternalServerError est renvoyé
+ * Looks for config error files first, then default error files
+ * If no error file is found, send back InternalServerError
 */
 std::string	seekErrorFile(HttpError error, ServerConfig &config)
 {
@@ -49,7 +49,7 @@ std::string	seekErrorFile(HttpError error, ServerConfig &config)
     }
 }
 
-//a simple check for hexadecimal numbers (relevant to chunk_parse)
+//a simple check for hexadecimal numbers (chunk_parse dependent)
 static bool check_hex(ustring hex)
 {
 	if (hex.empty())
@@ -62,14 +62,14 @@ static bool check_hex(ustring hex)
 	}
 	return true;
 }
-//parsing of chunked body (ex :: hex+\r\n+chunk+...+0\r\n\r\n)
+
+//parsing of chunked body in 8 chunks increments (ex :: hex+\r\n+chunk+...+0\r\n\r\n)
 ustring chunk_parse(ustring &_body, ustring &new_body)
 {
 	if (_body.empty())
 		throw Request::MissingData();
 	unsigned int size = 0;
 	int count = 0;
-	//unsigned int sizerr = _body.size();
 	
 	if (_body.find((unsigned char *)"\r\n") == 0)
 		_body = _body.substr(2);
@@ -77,7 +77,7 @@ ustring chunk_parse(ustring &_body, ustring &new_body)
 		return new_body;
 	while (!_body.empty())
 	{
-		if (count > 8) {/*std::cout << "finish next time, body reduced by " << (sizerr - _body.size()) << std::endl;*/ throw Request::ChunkParsing(); }
+		if (count > 8) { throw Request::ChunkParsing(); } //de-chunk will be continued on next parse() call
 		if (_body.find((unsigned char *)"\r\n") == 0)
 			_body = _body.substr(2);
 		std::size_t pos = _body.find((unsigned char *)"\r\n");
@@ -103,8 +103,8 @@ ustring chunk_parse(ustring &_body, ustring &new_body)
 	return new_body;
 }
 
-//checks a key for alnum (-)
-bool check_key(std::string key) //wip, as im actually unsure what the authorized formatting is
+//check for alnum (-)
+bool check_key(std::string key)
 {
 	for (std::string::iterator it = key.begin(); it != key.end(); it++)
 	{
@@ -114,7 +114,7 @@ bool check_key(std::string key) //wip, as im actually unsure what the authorized
 	return true;
 }
 
-//trims the whitespaces
+//trims the whitespaces, checks for empty values
 bool check_val(std::string &val)
 {
 	size_t pos1 = 0;
@@ -136,6 +136,7 @@ bool check_val(std::string &val)
 	return true;
 }
 
+//separates the target (ex: /html/errors/error_411.html) into a locations list (ex: [/html, /errors, /error_411.html])
 std::list<std::string> target_list(std::string loc)
 {
 	std::list<std::string> full;
@@ -156,6 +157,7 @@ std::list<std::string> target_list(std::string loc)
 	return full;
 }
 
+//cuts past the cgi script called for the uri path_info
 std::string get_path_info(std::string loc)
 {
 	std::string path_info;

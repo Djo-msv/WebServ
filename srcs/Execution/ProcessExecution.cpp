@@ -19,7 +19,7 @@ void ProcessExecution::clear(void)
 	_pid = 0;
 }
 
-void ProcessExecution::setupProcess(bool pipein)
+void ProcessExecution::setupProcess(bool pipein) //pipe setup
 {
 	if (pipe(_pipeOut))
 		throw InternalServerError();
@@ -30,7 +30,7 @@ void ProcessExecution::setupProcess(bool pipein)
 	}
 }
 
-void ProcessExecution::startProcess(bool pipein, std::string cgi, std::string target, char **env) /* fork Process and exec CGI, and stock execve in/out fds */
+void ProcessExecution::startProcess(bool pipein, std::string cgi, std::string target, char **env) /* fork and exec CGI */
 {
 	const char **args;
 	

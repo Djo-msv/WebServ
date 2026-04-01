@@ -34,7 +34,6 @@ class Response
 		//getters
 		unsigned char *getResponse(std::map<std::string, std::string> &mime); //result
 		size_t getSize() const;
-		bool empty() const;
 	
 	private:
 		std::string _target; //target file to return

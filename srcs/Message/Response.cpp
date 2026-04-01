@@ -48,22 +48,18 @@ void Response::add(const unsigned char *buffer, size_t size)
 		//public getters
 
 size_t Response::getSize() const { return sizer; }
-bool Response::empty() const { return _body.empty(); }
 
 unsigned char *Response::getResponse(std::map<std::string, std::string> &mime)
 {
-	//classic recipe here for a static webpage response
+	//classic recipe for a static GET response (no exec) + exec handling below
 	if (_msg == NULL)
 	{
 		if (!exec) {
-			_headers += "HTTP/1.1 " + _status + "\r\nContent-Type: ";
-			if (_target.rfind('.') == std::string::npos || !mime.count(_target.substr(_target.rfind('.'))))
-				_headers += "*/*"; //or like, unknown ? i guess ?
-			else
-				_headers += mime.at(_target.substr(_target.rfind('.')));
+			_headers += "HTTP/1.1 " + _status;
+			if (_target.rfind('.') != std::string::npos && mime.count(_target.substr(_target.rfind('.'))))
+				_headers += "\r\nContent-Type: " + mime.at(_target.substr(_target.rfind('.')));
 			_headers += "\r\nTransfer-Encoding: chunked\r\n";
 			this->chunkBody();
-			std::cerr << "status :: " << _status << std::endl;
 		}
 		else { this->handleExec(); }
 		this->makeMsg();
@@ -112,15 +108,11 @@ void Response::makeMsg()
 		_msg[pos] = *it;
 		pos++;
 	}
-	if (exec) { std::cout << "body sent size :: " << _body.size() << std::endl; }
-	//else { std::cout << "not exec\n"; }*/
 }
-
-
 
 		//private message-making functions, in chronological order
 
-void Response::handleExec()
+void Response::handleExec() //
 {
 	if (_body.empty() || _body.find((unsigned char *)"\n") == ustring::npos) {
 		_body = (unsigned char *)"HTTP/1.1 500 Internal Server Error\r\nContent-Type: text/html\r\nContent-Length: 90\r\n\r\n<html><h1>The CGI program did not return anything or took too long to respond.</h1></html>";
@@ -151,11 +143,10 @@ void Response::readFile()
 	{
 		if( s.st_mode & S_IFDIR )
 		{
-			//list all directories as html text;
 			DIR *dir;
 			struct dirent *ent;
 			if ((dir = opendir (_target.c_str())) != NULL) {
-				/* print all the files and directories within directory */
+				//print all the files and directories within directory
 				while ((ent = readdir (dir)) != NULL) {
 					std::string name = ent->d_name;
 					if (name == "." || name == "..")
@@ -169,9 +160,10 @@ void Response::readFile()
 		else if ( s.st_mode & S_IFREG )
 		{
 			int fd = open(_target.c_str(), O_RDONLY);
-			if (fd == -1) // should not happen ever at this point, but in case
+			if (fd == -1)
 				return ;
 			unsigned char a;
+			//read file
 			try
 			{
 				while (read(fd, &a, 1))
@@ -182,7 +174,7 @@ void Response::readFile()
 	}
 }
 
-//for chunkBody(), future will be put in a response_utils.cpp or renamed request_utils.cpp
+//for chunkBody()
 ustring toHex(size_t num)
 {
 	ustring res;

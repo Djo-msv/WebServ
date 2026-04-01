@@ -76,8 +76,7 @@ void Request::clear()
 
 bool Request::keepAlive() const
 {
-	//i think we assume keep alive, but will double check
-	//think if that's the logic we should probably switch this bool around to a CloseConnection() bool for better readability
+	//assume keep-alive unless connection: close is a present header
 	if (headers.count("CONNECTION") && headers.at("CONNECTION") == "close")
 		return false;
 	return true;
@@ -106,7 +105,7 @@ ssize_t Request::getSize() const
 	return 0;
 }
 
-//big parse distribution
+//parse distribution
 void Request::parse(std::map<std::string, std::string> &mime)
 {
 	if (_status) //headers already parsed on a previous run, _env created etc.
@@ -133,7 +132,6 @@ void Request::parse(std::map<std::string, std::string> &mime)
 		header = (char *)(_request.substr(0, headerEnd).c_str());
 		_body = _request.substr(headerEnd + 4);
 	}
-	//std::cout << "request headers :: \n" << header << std::endl;
 	try {
 		this->parse_header(header);
 		_status = 1; //headers are parsed with no error
@@ -195,13 +193,13 @@ void Request::startline_check(std::string line)
 		throw BadRequest();
 	getline(l, current, '\r');
 	if (current != "HTTP/1.1" && current != "HTTP/1.*")
-		throw NotImplemented(); //wrong http version -> unauthorized ? not provided ?
+		throw NotImplemented();
 	getline(l, current);
 	if (!current.empty())
 		throw BadRequest();
 	this->target_work();
 }
-#include <iostream>
+
 void Request::target_work()
 {
 	if (_target[0] != '/')
@@ -232,8 +230,6 @@ void Request::target_work()
 	}
 	//target to full_path
 	_target = _config.getFullPath(location);
-	//debug read
-	//std::cout << "currently seeking :: " << _target << std::endl;
 	//error 404 catch
 	try { seekFile(_target); }
 	catch (std::exception &e) { throw ; }
@@ -266,7 +262,6 @@ void Request::adjust_exec(std::string path_info, std::string script_name)
 	headers.insert(std::pair<std::string, std::string>("SERVER_PROTOCOL", "HTTP/1.1"));
 	headers.insert(std::pair<std::string, std::string>("SERVER_PORT", ft_itoa(_config.sin_port)));
 	headers.insert(std::pair<std::string, std::string>("SERVER_NAME", "localhost"));
-	//lol ? + path_info is still required when empty ? or im getting it wrong
 	headers.insert(std::pair<std::string, std::string>("SERVER_SOFTWARE", "HOMEMADE/1.0"));
 	if (path_info.empty()) { path_info = script_name; }
 	headers.insert(std::pair<std::string, std::string>("PATH_INFO", path_info));
@@ -274,10 +269,6 @@ void Request::adjust_exec(std::string path_info, std::string script_name)
 	headers.insert(std::pair<std::string, std::string>("REQUEST_METHOD", _method));
 	if (!_query.empty())
 		headers.insert(std::pair<std::string, std::string>("QUERY_STRING", _query));
-	if (getenv("PATH")) {
-		std::string path = getenv("PATH");
-		headers.insert(std::pair<std::string, std::string>("PATH", path));
-	}
 }
 
 void Request::headers_add(std::string line)
@@ -292,12 +283,12 @@ void Request::headers_add(std::string line)
 		throw BadRequest();
 	//checking for a-num values (-)
 	if (!check_key(key))
-		throw BadRequest();// bad key formatting
+		throw BadRequest();
 	//checking for an empty value + trimming whitespaces
 	if (!check_val(val))
-		throw BadRequest();// value is empty
+		throw BadRequest();
 	
-	//turning 'Content-Length' into 'CONTENT_LENGTH' for future environment and lack of case-conflict
+	//turning 'Content-Length' into 'CONTENT_LENGTH' for future cgi environment and lack of case-conflict
 	std::transform(key.begin(), key.end(), key.begin(), ::toupper);
 	size_t n = key.find('-');
 	while (n != std::string::npos)
@@ -305,6 +296,7 @@ void Request::headers_add(std::string line)
 		key[n] = '_';
 		n = key.find('-');
 	}
+	//adding the HTTP prefix for HTTP-specific cgi environment variables
 	if (key != "CONTENT_LENGTH" && key != "CONTENT_TYPE")
 		key = "HTTP_" + key;
 	headers.insert(std::pair<std::string, std::string>(key, val));
@@ -313,12 +305,12 @@ void Request::headers_add(std::string line)
 void Request::mime_check(std::map<std::string, std::string> &mime)
 {
 	if (_target.rfind('.') == std::string::npos)
-		return ; //i think ? this is all very murky territory, needs testing - maybe BadRequest ?
+		return ;
 	std::string extension = _target.substr(_target.rfind('.'));
 	if (!mime.count(extension))
-		return ; //again, guessing here
+		return ;
 	if (!headers.count("HTTP_ACCEPT"))
-		return ; //no accept header, not sure what that would mean for me but i assume just no checking
+		return ;
 	extension = mime.at(extension);
 	std::stringstream line(headers.at("HTTP_ACCEPT"));
 	while (!line.eof()) {
@@ -329,7 +321,7 @@ void Request::mime_check(std::map<std::string, std::string> &mime)
 		if (type == extension)
 			return ;
 	}
-	throw BadRequest(); //again, guessing at the error
+	throw BadRequest(); //client requests a content-type it does not accept
 }
 
 void Request::parse_body()
@@ -338,14 +330,13 @@ void Request::parse_body()
 		if (this->getSize() == CHUNKED) {
 			//un-chunk the body
 			_body = chunk_parse(_body, _parse_body);
-			std::cout << "dechunk complete, body size = " << _body.size() << "\n";
-			//adjust size headers accordingly (in case of cgi)
+			//adjust size headers accordingly]
 			headers.erase(headers.find("HTTP_TRANSFER_ENCODING"));
 			headers.insert(std::pair<std::string, std::string>("CONTENT_LENGTH", ft_itoa(_body.size())));
 		}
 		else
 			this->body_check(this->getSize(), _body.size());
-		//create the unsigned char body to send to the cgi program (or download pure ?)
+		//create the unsigned char body to send to the cgi program
 		if (_body.size()) {
 			c_body = new unsigned char[_body.size()];
 			size_t i = 0;
@@ -363,13 +354,15 @@ void Request::body_check(size_t size_told, size_t real_size)
 {
 	if (real_size < size_told)
 		throw MissingData();
+	if (!size_told && real_size && !headers.count("CONTENT_LENGTH"))
+		throw LengthRequired();
 	if (real_size > size_told)
 		_body = _body.substr(0, size_told);
 }
 
 void Request::create_env()
 {
-	//here creating the char * environment which we can use for execve, in two steps as previously established
+	//here creating the char * environment which we use for execve, in two steps for ease of reading
 	_env = new std::string[headers.size()];
 	c_env = new const char*[headers.size() + 1];
 	size_t i = 0;

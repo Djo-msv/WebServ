@@ -1,27 +1,32 @@
-new constraints ::
-	every location has ::
-		flags
-		a root (optional)
-		an index (optional)
-	sub-folders can, if not explicitly stated, refer to the folders they're a part of (for index/flags/exec)
-	extensions can carry flags or execution value
-	configuration files dont *need* a timeout, index, exec info or error files
+cgi env variables still possibly missing ::
+	SERVER_SOFTWARE - name/version of HTTP server (??)
+	REMOTE_HOST — host name of the client, unset if server did not perform such lookup.
+	REMOTE_ADDR — IP address of the client (dot-decimal).
+	REMOTE_IDENT — see ident, only if server performed such lookup.
 
-solutions ::
-	instead of a single index -> map <location, index>
-	for locations roots -> map <location, alter>
-	sub-folders checks (already half implemented) -> i send a list instead of a single string, iterate on the list (+ previous, for details see the code in ServerConfig::isMethodAllowed)
-	for extensions (done) -> added check when checking methods/executability
-	non-mandatory info -> adjust functions like isExecFolder() or getIndex() for an appropriate return on no info
+supposedly, we want ::  "http://$SERVER_NAME:$SERVER_PORT$SCRIPT_NAME$PATH_INFO" to point to be a gettable url
 
+?????? lmao what ??? it's saying "PATH_INFO not found" but it's literally in the environment AND there isn't any path info !! i literally just put the script_name in there thats what they wanted
 
+question :: is it possible to put down a decimal number in the timeout variable ? next update we'll try that
+	answer is yes !! we can set it to .05 if we feel like rushing the fcking job
+	but it's not recommended (example POST 0, method is checked too fast "0" is left over on the read channel)
 
+next lets try to keep reading for a while after read == 0 on the execRead() if Response::_body.empty()
+	we'll need likely just an easy check in execRead() with an if(size && []) { return; }
+	we'll try to wait for a timeout version ? like, only stop reading if !size and timeout ?
 
-first steps ::
-	----- 	see below :: maybe at this point i just send the list prepped, iteration loop for the checks
-	retroactive flags check -->tested, should work well
-		implement that same retroactive method for the index search once index is a locations mapped list
-		and the same for the cgi folder check (hard-coded for now)
-	exec and allowed methods apply to extensions also
-	alter egos :: hard-code for now, but the logic is in
-	now to wait for the end of the 100,000,000 bytes testing
+success !!
+but, body returned is too short still (caused by the execwrite timeout yet again, 119,096/100,000,000 ; lot less)
+	trials ::
+		trying it out on a school computer
+		lengthening the timeout (attempted : 40, 60, 100)
+		idwdt but obviously next step would be alternating read/write once write has timed out, i guess (like read and then switch back to write ?)
+		disregard -1 entirely ? add a timeout spec for -1 return but attempt it regardless
+			nope
+
+currently monitoring the execwrite wait amounts to see if we get any or if it only times out
+	attempting setnonblock on exec side pipes during the ExecutionProcess::setupProcess() function
+
+as assumed, only one wait == timed out
+setnonblock did _not_ work

@@ -117,7 +117,7 @@ ServerConfig initServerConfig(MymlDictionary *serverRepertory)
 
 	try	{ initOptionnalConfig(serverRepertory, exec_folder, timeout, cgi_handlers, root_loc, locations, errorFiles); }
 	catch (MymlObject::BadCast &e) {
-		throw (MymlObject::BadCast("config optionnal argument error at server " +  serverRepertory->getKey() + ' ' + e.what()));
+		throw (MymlObject::BadCast("config optional argument error at server " +  serverRepertory->getKey() + ' ' + e.what()));
 	}
 	RETHROW (std::invalid_argument)
 	RETHROW (std::bad_alloc)

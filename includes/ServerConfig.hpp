@@ -35,7 +35,7 @@ class ServerConfig
 		
 
         static 		MethodFlag	stringToMethodFlag(const std::string &method);
-        bool		isMethodAllowed(std::list<std::string> &full, int method) const; // Method Flag conseillé mais pas forcé
+        bool		isMethodAllowed(std::list<std::string> &full, int method) const;
         std::string	getCgi(const std::string &extension) const;
         std::string	getFullPath(std::list<std::string> &full) const;
 		std::string	getRootFolder() const;

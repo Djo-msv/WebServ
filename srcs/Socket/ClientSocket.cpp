@@ -8,8 +8,8 @@ ClientSocket::ClientSocket(ServerSocket &serverSocket, int epoll, std::map<const
 
 ClientSocket::~ClientSocket(void) { std::cout << "deleting client of socket :: " << _socketFd << std::endl; }
 
-//this func :: deletes the old_fd from our epoll map (except pipes, which are automatically deleted), adds the new one with flags
-//it then erases the <old_fd, csocket> from the sockets map and replaces it with <new_fd, csocket>
+//deletes the old_fd from our epoll map (except pipes, which are automatically deleted), adds the new one with flags
+//then erases the <old_fd, csocket> from the sockets map and replaces it with <new_fd, csocket>
 void	ClientSocket::epollFdSwitch(int old_fd, int new_fd, int flags)
 {
 	SocketIterator it = sockets.find(old_fd);
@@ -22,15 +22,12 @@ void	ClientSocket::epollFdSwitch(int old_fd, int new_fd, int flags)
 	epoll_add(epollInstance, new_fd, flags);
 }
 
-//new function for error handling :: makes error response, switches status, updates epoll fd
-void	ClientSocket::ErrorHandling(HttpError &e, bool exec)
+//makes error response, switches status, updates epoll fd
+void	ClientSocket::errorHandling(HttpError &e)
 {
 	_response.makeErrorResponse(e, _serverSocket.getConfig());
 	status = WaitResponse;
-	if (exec)
-		epollFdSwitch(_exec.getFdIn(), _socketFd, EPOLLOUT | EPOLLET);
-	else
-		epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
+	epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
 }
 
 /**
@@ -84,13 +81,13 @@ void	ClientSocket::parseRequest()
 			epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
 		}
 	}
-	catch (Request::ChunkParsing &e) { status = ParseRequest; }
-	catch (Request::MissingData &e) { status = ReadRequest; }
+	catch (Request::ChunkParsing &e) { status = ParseRequest; } //currently dechunking the request body
+	catch (Request::MissingData &e) { status = ReadRequest; } //incomplete request
 	catch (Request::DeleteRequest &e) {
 		try { this->deleteFile(e.what()); }
 		RETHROW(std::bad_alloc)
 	}
-	catch (HttpError &e) { ErrorHandling(e, false); }
+	catch (HttpError &e) { errorHandling(e); }
 	catch (std::exception &e) { throw; }
 }
 
@@ -99,7 +96,7 @@ void	ClientSocket::deleteFile(const char *filename)
 {
 	InternalServerError e;
 	if (std::remove(filename))
-		ErrorHandling(e, false);
+		errorHandling(e);
 	else {
 		//here we handle the pivot into response
 		ustring response = (unsigned char *)"HTTP/1.1 204 No Content\r\n\r\n";
@@ -112,19 +109,18 @@ void	ClientSocket::deleteFile(const char *filename)
 	}
 }
 
-//starting the execution process here (write or exec + read)
+//starting the execution process here (exec + write or read)
 void	ClientSocket::startExec()
 {
-	//new version, we start the program immediately -- remember to take out the bool exec in ErrorHandling since we won't be needing it
-	bool body = _request.getBody();
-	try { _exec.setupProcess(body); }
-	catch (HttpError &e) { ErrorHandling(e, false); return ; }
+	bool body = _request.getBody(); //do we need to write to script ?
+	try { _exec.setupProcess(body); } //pipe setup
+	catch (HttpError &e) { errorHandling(e); return ; }
 	setnonblocking(_exec.getFdOut());
 	if (body)
 		setnonblocking(_exec.getFdIn());
 	try { _exec.startProcess(body, _request.getCgi(), _request.getTarget(), _request.getEnv()); }
-	catch (HttpError &e) { ErrorHandling(e, false); return ; }
-	RETHROW(std::bad_alloc)// ! Faut-il fermer _exec.getFdIn() ? Sachant que le throw bad alloc ne se fait qu'a l'initialisation de la liste d'args
+	catch (HttpError &e) { errorHandling(e); return ; }
+	RETHROW(std::bad_alloc)
 	if (body) {
 		status = WaitExecWrite;
 		epollFdSwitch(_socketFd, _exec.getFdIn(), EPOLLOUT | EPOLLET);
@@ -135,24 +131,21 @@ void	ClientSocket::startExec()
 	}
 }
 
-//new cgi write
+//cgi write
 void	ClientSocket::execWrite()
 {
 	resetTimeout();
-	//std::cout << "timeout has been reset on execwrite\n";
 	unsigned char *body = _request.getBody();
 	ssize_t size = _request.getSize() - _sendpos;
 	if (size > BUF_SIZE)
 		size = BUF_SIZE;
 	if (size) {
-		if ((size = write(_exec.getFdIn(), (&body[_sendpos]), size)) == -1) {
-			std::cout << "waiting execwrite\n";
+		if ((size = write(_exec.getFdIn(), (&body[_sendpos]), size)) == -1)
 			status = WaitExecWrite;
-		}
 		else
 			_sendpos += size;
 	}
-	else { //write is done, start up the process appropriate status/epoll switching and close
+	else { //write is done, appropriate status/epoll switching and close
 		close(_exec.getFdIn());
 		_sendpos = 0;
 		epollFdSwitch(_exec.getFdIn(), _exec.getFdOut(), EPOLLIN | EPOLLET);
@@ -162,8 +155,8 @@ void	ClientSocket::execWrite()
 
 void	ClientSocket::writeToRead()
 {
+	//write is done (timeout), appropriate status/epoll switching and close
 	close(_exec.getFdIn());
-	std::cout << "\n--writing to cgi is over (timeout), amount written = " << _sendpos << ", switching to read--\n";
 	_sendpos = 0;
 	epollFdSwitch(_exec.getFdIn(), _exec.getFdOut(), EPOLLIN | EPOLLET);
 	status = WaitExecRead;
@@ -192,6 +185,7 @@ void	ClientSocket::execRead()
 
 void	ClientSocket::readToWrite()
 {
+	//read is done (timeout), appropriate status/epoll switching and close
 	close(_exec.getFdOut());
 	epollFdSwitch(_exec.getFdOut(), _socketFd, EPOLLOUT | EPOLLET);
 	status = WaitResponse;
@@ -213,7 +207,6 @@ void ClientSocket::sendResponse()
 			status = WaitResponse;
 		else
 			_sendpos += size;
-		resetTimeout();
 	}
 	else { //write is done, reset for next request or close the connection
 		_sendpos = 0;
@@ -242,12 +235,7 @@ void ClientSocket::resetTimeout()
 	timeout = std::time(NULL) + _serverSocket.getConfig().getTimeout();
 }
 
-bool ClientSocket::hasTimedOut()
-{
-	//std::cout << (timeout <= std::time(NULL)) << std::endl;
-	//std::cout << "timeout : " << timeout << "Current Time : " << std::time(NULL) << std::endl;
-	return (timeout <= std::time(NULL));
-}
+bool ClientSocket::hasTimedOut() const { return (timeout <= std::time(NULL)); }
 
 int ClientSocket::createSocket(ServerSocket & serverSocket)
 {

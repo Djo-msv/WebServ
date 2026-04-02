@@ -1,14 +1,19 @@
 #include <request_utils.hpp>
 
-//checks if file exists and if we have read permission
-std::string	seekFile(std::string &pathfile)
+//checks if file exists and if we have read permission (GET) or write permission (POST)
+std::string	seekFile(std::string &pathfile, bool post)
 {
 	struct stat file_stat;
 	if (stat(pathfile.c_str(), &file_stat) == -1)
 		throw FileNotFound();
 	
-	if (file_stat.st_mode & S_IRUSR)
-		return (pathfile);
+	if (!post && file_stat.st_mode & S_IRUSR)
+		return pathfile;
+	if (post && (file_stat.st_mode & S_IWUSR)) {
+		if (!(file_stat.st_mode & S_IFREG))
+			throw NotImplemented();
+		return pathfile;
+	}
 	throw Forbidden();
 
 }
@@ -36,13 +41,13 @@ std::string	seekErrorFile(HttpError error, ServerConfig &config)
     std::string pathfile;
     try {
         pathfile = config.getErrorFile(error.getErrorCode());
-        return seekFile(pathfile);
+        return seekFile(pathfile, false);
     }
     catch(const HttpError &e) {
         if (error.getErrorCode() == 500)
             throw InternalServerError();
         pathfile = error.getDefaultFile();
-        try {  return seekFile(pathfile); }
+        try {  return seekFile(pathfile, false); }
         catch(const HttpError& e) {
             throw InternalServerError();
         }

@@ -30,7 +30,6 @@ class Request
 
 		void	add(const unsigned char *buffer, size_t size);
 		void	parse(std::map<std::string, std::string> &mime);
-		void	read() const;
 		void	clear();
 		
 		std::string	getTarget() const;
@@ -42,6 +41,7 @@ class Request
 		char	**getEnv() const;
 		
 		bool	isExec() const;
+		bool	isPost() const;
 		bool	keepAlive() const;
 		
 		ssize_t 		getSize() const;

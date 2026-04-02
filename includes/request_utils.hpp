@@ -11,7 +11,7 @@
 
 std::string	extractCgi(std::string &file, ServerConfig &config);
 std::string	seekErrorFile(HttpError error, ServerConfig &config);
-std::string	seekFile(std::string &pathfile);
+std::string	seekFile(std::string &pathfile, bool post);
 
 ustring	chunk_parse(ustring &_body, ustring &new_body);
 bool check_key(std::string key);

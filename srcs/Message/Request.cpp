@@ -92,6 +92,8 @@ char **Request::getEnv() const { return (char **)c_env; }
 
 bool Request::isExec() const { return exec; }
 
+bool Request::isPost() const { return (_method == "POST"); }
+
 unsigned char *Request::getBody() const { return c_body; }
 
 std::string Request::getCgi() const { return _cgi; }
@@ -116,7 +118,7 @@ void Request::parse(std::map<std::string, std::string> &mime)
 			throw DeleteRequest(_target);
 		if (exec)
 			this->create_env();
-		else
+		else if (_method == "GET")
 			this->mime_check(mime);
 		return ;
 	}
@@ -140,7 +142,7 @@ void Request::parse(std::map<std::string, std::string> &mime)
 			throw DeleteRequest(_target);
 		if (exec)
 			this->create_env();
-		else
+		else if (_method == "GET")
 			this->mime_check(mime);
 	}
 	catch (MissingData &e) {
@@ -230,12 +232,14 @@ void Request::target_work()
 	}
 	//target to full_path
 	_target = _config.getFullPath(location);
-	//error 404 catch
-	try { seekFile(_target); }
+	//NotFound / Forbidden catch
+	try { seekFile(_target, (_method == "POST")); }
 	catch (std::exception &e) { throw ; }
 	//check_exec, adjust
 	if (_config.isExecFolder(location, _config.stringToMethodFlag(_method)))
 		this->adjust_exec(path_info, script_name);
+	else if (_method == "POST" && !_query.empty()) //in case of malformed POST request
+		_body = (unsigned char *)_query.c_str() + _body;
 }
 
 bool Request::needsIndex(std::string full_target)
@@ -375,28 +379,7 @@ void Request::create_env()
 	c_env[i] = NULL;
 }
 
-
-//error checking only
-void Request::read() const
-{
-	std::cout << "this request ";
-	if (exec)
-		std::cout << "needs execution";
-	else
-		std::cout << "needs no execution";
-	std::cout << ", has method : " << _method << ", target : " << _target << ", and map ::\n";
-	if (!headers.empty())
-	{
-		for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); it++)
-			std::cout << it->first << "; " << it->second << std::endl;
-	}
-	std::cout << "and the body, in body.txt\n";
-	int fd = open("body.txt", O_WRONLY);
-	write(fd, c_body, _body.size());
-	close(fd);
-}
-
+//class exceptions :: more data needed, more parsing needed && request is delete
 Request::MissingData::MissingData() : std::out_of_range("data missing from request !") {}
 Request::ChunkParsing::ChunkParsing() : std::out_of_range("parsing of the chunked body is unfinished !") {}
-
 Request::DeleteRequest::DeleteRequest(std::string target) : std::out_of_range(target.c_str()) {}

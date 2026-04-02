@@ -55,11 +55,14 @@ unsigned char *Response::getResponse(std::map<std::string, std::string> &mime)
 	if (_msg == NULL)
 	{
 		if (!exec) {
-			_headers += "HTTP/1.1 " + _status;
-			if (_target.rfind('.') != std::string::npos && mime.count(_target.substr(_target.rfind('.'))))
-				_headers += "\r\nContent-Type: " + mime.at(_target.substr(_target.rfind('.')));
-			_headers += "\r\nTransfer-Encoding: chunked\r\n";
-			this->chunkBody();
+			if (_post) { _headers = "HTTP/1.1 204 No Content\r\n\r\n"; _body.clear(); }
+			else {
+				_headers = "HTTP/1.1 " + _status;
+				if (_target.rfind('.') != std::string::npos && mime.count(_target.substr(_target.rfind('.'))))
+					_headers += "\r\nContent-Type: " + mime.at(_target.substr(_target.rfind('.')));
+				_headers += "\r\nTransfer-Encoding: chunked\r\n";
+				this->chunkBody();
+			}
 		}
 		else { this->handleExec(); }
 		this->makeMsg();
@@ -72,9 +75,17 @@ unsigned char *Response::getResponse(std::map<std::string, std::string> &mime)
 bool Response::makeResponse(Request *req)
 {
 	exec = req->isExec();
+	_post = req->isPost();
 	_target = req->getTarget();
-	if (!exec)
-		this->readFile();
+	try {
+		if (!exec) {
+			if (_post)
+				this->postFile(req->getBody(), req->getSize());
+			else
+				this->readFile();
+		}
+	}
+	catch (std::exception &e) { throw ; }
 	return exec;
 }
 
@@ -82,7 +93,10 @@ void Response::makeErrorResponse(HttpError &error, ServerConfig &s)
 {
 	_status = error.what();
 	try { _target = seekErrorFile(error, s); this->readFile(); }
-	catch (InternalServerError &e) {_status = e.what(); _target = ""; this->add((unsigned char *)(e.getDefaultFile().c_str()), e.getDefaultFile().size());}
+	catch (InternalServerError &e) {
+		_status = e.what(); _target = "";
+		this->add((unsigned char *)(e.getDefaultFile().c_str()), e.getDefaultFile().size());
+	}
 }
 
 		//allocating the (unsigned char*) message to return 
@@ -112,7 +126,7 @@ void Response::makeMsg()
 
 		//private message-making functions, in chronological order
 
-void Response::handleExec() //
+void Response::handleExec() //status check and handling
 {
 	if (_body.empty() || _body.find((unsigned char *)"\n") == ustring::npos) {
 		_body = (unsigned char *)"HTTP/1.1 500 Internal Server Error\r\nContent-Type: text/html\r\nContent-Length: 90\r\n\r\n<html><h1>The CGI program did not return anything or took too long to respond.</h1></html>";
@@ -171,11 +185,38 @@ void Response::readFile()
 			} RETHROW(std::bad_alloc)
 			close(fd);
 		}
+		else
+			throw InternalServerError();
 	}
+	else
+		throw FileNotFound();
+}
+
+void Response::postFile(unsigned char *body, size_t length)
+{
+	if (_target.empty()) //no _body to make || _body is from default
+		return ;
+	struct stat s;
+	if ( stat(_target.c_str(), &s) == 0 && (s.st_mode & S_IFREG))
+	{
+		int fd = open(_target.c_str(), O_WRONLY | O_APPEND);
+		if (fd != -1) {
+			//append content to the target file
+			if (write(fd, body, length) == -1) {
+				close(fd);
+				throw InternalServerError();
+			}
+			close(fd);
+		}
+		else
+			throw InternalServerError();
+	}
+	else
+		throw FileNotFound();
 }
 
 //for chunkBody()
-ustring toHex(size_t num)
+static ustring toHex(size_t num)
 {
 	ustring res;
 	ustring nest;

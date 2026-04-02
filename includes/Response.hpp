@@ -45,11 +45,13 @@ class Response
 		unsigned char *_msg;
 		
 		bool exec; //is there an exec to run ? (makeResponse return)
+		bool _post; //is the no exec request a POST request ?
 		size_t sizer;
 		
 		void handleExec(); //if exec, check the cgi return for 1)empty body 2)status in "status: []" form
-		void readFile(); //if target, reads the target file into a body string
-		void chunkBody(); //chunks body, by BUF_SIZE
+		void readFile(); //if GET target, reads the target file into a body string
+		void postFile(unsigned char *body, size_t length); //if POST target, appends content to file
+		void chunkBody();
 };
 
 #endif

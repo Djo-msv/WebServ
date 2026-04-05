@@ -49,7 +49,7 @@ clean up notes :: 02/04
 	left a)creating socket b)resetting socket messages
 	ServerConfig.cpp ::
 	maybe a few explanatory comments might help
-	unsure if we need the ::isExecFolder() last two conditions in last if (just last should do)
+	unsure if we need the ::isExecFolder() last two conditions in last if (just last should do) -> fixed
 	ServerSocket.cpp ::
 	listen 5 on queue seems very small to me for some reason
 	Socket.cpp ignored;
@@ -57,3 +57,12 @@ clean up notes :: 02/04
 	pretty self-explanatory, but comments are never wasted
 	socket_parsing.cpp ::
 	same
+
+clean up notes :: 05/04
+	ServerConfig.cpp ::
+	added comment of locations delete in the destructor since we have leaks
+	however, adding these delete creates invalid reads since the destructor is apparently called before
+	proposed solutions ::
+		pointers everywhere (starting from the initServerConfig return)
+		deep copy constructor(s)
+

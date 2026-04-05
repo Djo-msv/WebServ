@@ -5,7 +5,10 @@ ServerConfig::ServerConfig(int port, location root_location, std::map<std::strin
 		sin_family(AF_INET), sin_port(port), root_location(root_location), locations(locations),
 		cgi_extensions(cgi_extensions), error_files(error_files), exec_folder(exec_folder), timeout(timeout) {}
 
-ServerConfig::~ServerConfig() {}
+ServerConfig::~ServerConfig() {
+	//for (std::map<std::string, location *>::iterator it = locations.begin(); it != locations.end(); it++)
+	//	delete it->second;
+}
 
 bool ServerConfig::isMethodAllowed(std::list<std::string> &full, int method) const
 {
@@ -101,7 +104,7 @@ bool ServerConfig::isExecFolder(std::list<std::string> &full, int method) const
         if (extension.find('.') != std::string::npos) {
             extension = extension.substr(extension.rfind('.'));
             if (!extension.empty() && extension == exec_folder && locations.count(extension)
-                    && locations.at(extension)->allowed_methods && locations.at(extension)->allowed_methods & method)
+                    && (locations.at(extension)->allowed_methods & method) == true)
                 return true;
         }
         if (*itt == exec_folder) {  return true; }

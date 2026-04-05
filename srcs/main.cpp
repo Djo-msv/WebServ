@@ -170,13 +170,21 @@ int	main(int argc, char **argv)
 		mime = initMimetype();
 		try {
 			initServerSockets(tree);
-			signal(SIGINT, stopServer);
-			signal(SIGPIPE, SIG_IGN);
-			manageRequests();
 		}
 		CATCH_AND_HANDLE(std::runtime_error)
 		CATCH_AND_HANDLE(std::bad_alloc)
 	}
+	catch (std::exception &e) {
+		std::cout << e.what() << std::endl;
+		return (1);
+	}
+	try {
+		signal(SIGINT, stopServer);
+		signal(SIGPIPE, SIG_IGN);
+		manageRequests();
+	}
+	CATCH_AND_HANDLE(std::runtime_error)
+	CATCH_AND_HANDLE(std::bad_alloc)
 	catch (std::exception &e) {
 		std::cout << e.what() << std::endl;
 		return (1);

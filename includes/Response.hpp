@@ -10,6 +10,9 @@
 # include <fcntl.h>
 # include <unistd.h>
 # include <dirent.h>
+# ifndef BUF_SIZE
+#  define BUF_SIZE 1024
+# endif
 
 #define RETHROW(ExceptionType) \
 	catch (const ExceptionType& e) { \

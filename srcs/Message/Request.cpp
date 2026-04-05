@@ -48,6 +48,7 @@ void Request::add(const unsigned char *buffer, size_t size)
 	for (size_t i = 0; i != size; i++)
 		_request.push_back(buffer[i]);
 }
+
 //clear func, self exp
 void Request::clear()
 {

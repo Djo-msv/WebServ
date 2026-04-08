@@ -6,8 +6,8 @@ ServerConfig::ServerConfig(int port, location root_location, std::map<std::strin
 		cgi_extensions(cgi_extensions), error_files(error_files), exec_folder(exec_folder), timeout(timeout) {}
 
 ServerConfig::~ServerConfig() {
-	//for (std::map<std::string, location *>::iterator it = locations.begin(); it != locations.end(); it++)
-	//	delete it->second;
+	for (std::map<std::string, location *>::iterator it = locations.begin(); it != locations.end(); it++)
+		delete it->second;
 }
 
 bool ServerConfig::isMethodAllowed(std::list<std::string> &full, int method) const

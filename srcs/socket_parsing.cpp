@@ -96,7 +96,7 @@ void	initOptionnalConfig(MymlDictionary *serverRepertory, std::string &exec_fold
 	} RETHROW(MymlObject::BadCast)
 }
 
-ServerConfig initServerConfig(MymlDictionary *serverRepertory)
+ServerConfig *initServerConfig(MymlDictionary *serverRepertory)
 {
 	std::map<std::string, std::string>	cgi_handlers;
 	std::map<int, std::string>			errorFiles;
@@ -121,5 +121,5 @@ ServerConfig initServerConfig(MymlDictionary *serverRepertory)
 	}
 	RETHROW (std::invalid_argument)
 	RETHROW (std::bad_alloc)
-	return (ServerConfig(port, root_loc, locations, cgi_handlers, exec_folder, errorFiles, timeout));
+	return (new ServerConfig(port, root_loc, locations, cgi_handlers, exec_folder, errorFiles, timeout));
 }

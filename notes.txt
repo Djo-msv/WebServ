@@ -15,7 +15,7 @@ question :: is it possible to put down a decimal number in the timeout variable 
 02/04, adding static POST requests
 
 changed seekFile to have a bool post for request changes
-response needs a ->ifPost() from request
+response needs an ->ifPost() from request
 
 compilation went fine now retesting
 	testing for post success x
@@ -32,7 +32,9 @@ clean up notes :: 01/04
 	main.cpp :: 
 	if (waitRequest.timeout()) { status = Done; } --> no Bad Request return ? (ex the request has no sep)
 		possible solution :: { parse(); } //with a argument-dependent parse (MissingData becomes BadRequest throws)
+		or not, given client side just waits and displays whatever it received as plain text
 	to avoid valgrind leaks, maybe we change the signal for stopping the server ? (SIGQUIT or sthg maybe)
+		-> current program on current machine no longer triggers leaks, to test on school equipment
 	Request.cpp ::
 	SERVER_SOFTWARE cgi env variable might need renaming
 	getting rid of the PATH env var in cgi
@@ -64,5 +66,5 @@ clean up notes :: 05/04
 	however, adding these delete creates invalid reads since the destructor is apparently called before
 	proposed solutions ::
 		pointers everywhere (starting from the initServerConfig return)
-		deep copy constructor(s)
+		achieved !!
 

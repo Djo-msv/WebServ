@@ -26,6 +26,10 @@ MymlTree::MymlTree(std::list<Token> &tokens)
 	}
 }
 
+//MymlTree:MymlTree(const MymlTree &other)
+//{
+	
+
 MymlTree::~MymlTree(void)
 {
 	delete _root;

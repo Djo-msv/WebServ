@@ -146,7 +146,7 @@ void initServerSockets(Parser &tree)
 
 		MymlDictionary *serverRepertory = (*it)->getAsDictionnary();
 		try	{
-			ServerConfig config = initServerConfig(serverRepertory);
+			ServerConfig *config = initServerConfig(serverRepertory);
 			ServerSocket *socket = new ServerSocket(config, epollInstance);
 			sockets.insert(std::make_pair(socket->getSocketFd(), socket));
 		}

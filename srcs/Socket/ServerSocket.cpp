@@ -2,13 +2,13 @@
 #include <errno.h>
 #include <cstring>
 
-ServerSocket::ServerSocket(ServerConfig config, const int epollInstance) : Socket(createSocket(config)), _config(config)
+ServerSocket::ServerSocket(ServerConfig *config, const int epollInstance) : Socket(createSocket(config)), _config(config)
 {
 	// sin_family is always AF_INET.
 	// SOCK_STREAM is to tell the socket to use TCP protocol.
 
 	setnonblocking(_socketFd);
-	sockaddr_in serverAddress = setupSocketAddress(_config);
+	sockaddr_in serverAddress = setupSocketAddress();
 	//this allows us to bypass the "address already in use" warning and just re-bind it
 	int yes = 1;
 	setsockopt(_socketFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes);
@@ -22,29 +22,29 @@ ServerSocket::ServerSocket(ServerConfig config, const int epollInstance) : Socke
 
 	epoll_add(epollInstance, _socketFd, EPOLLIN | EPOLLET);
 
-	std::cout << "Server started on port " << config.sin_port << std::endl;
+	std::cout << "Server started on port " << config->sin_port << std::endl;
 }
 
-ServerSocket::~ServerSocket(void) {}
+ServerSocket::~ServerSocket(void) { delete _config; }
 
-ServerConfig &ServerSocket::getConfig(void) { return (_config); }
+ServerConfig &ServerSocket::getConfig(void) { return (*_config); }
 
-sockaddr_in ServerSocket::setupSocketAddress(ServerConfig config)
+sockaddr_in ServerSocket::setupSocketAddress(void)
 {
 	sockaddr_in serverAddress;
 
-	serverAddress.sin_family = config.sin_family;
-	serverAddress.sin_port = htons(config.sin_port); /* sin_port is port number. */
+	serverAddress.sin_family = _config->sin_family;
+	serverAddress.sin_port = htons(_config->sin_port); /* sin_port is port number. */
 	serverAddress.sin_addr.s_addr = INADDR_ANY; /* INADDR_ANY : accept connection from any IP address */
 
 	return (serverAddress);
 }
 
-int ServerSocket::createSocket(ServerConfig &config)
+int ServerSocket::createSocket(ServerConfig *config)
 {
 	int socketFd;
 
-	if ((socketFd = socket(config.sin_family, SOCK_STREAM, 0)) == -1) {
+	if ((socketFd = socket(config->sin_family, SOCK_STREAM, 0)) == -1) {
 		throw SocketError("Error during socket creation. Error code : " + ft_itoa(errno));
 	}
 

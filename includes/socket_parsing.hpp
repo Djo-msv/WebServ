@@ -7,6 +7,6 @@
 #include "Parser/Tree/MymlList.hpp"
 #include "Parser/Tree/MymlPair.hpp"
 
-ServerConfig initServerConfig(MymlDictionary *serverRepertory);
+ServerConfig *initServerConfig(MymlDictionary *serverRepertory);
 
 #define IGNORE(ExceptionType) catch (const ExceptionType& ignored) {}

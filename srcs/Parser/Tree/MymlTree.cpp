@@ -227,6 +227,7 @@ std::pair<std::string, MymlObject*> MymlTree::parseDictionaryArg(std::list<Token
 **/
 MymlObject *MymlTree::parseList(const std::string &key, std::list<Token>::iterator &begin, size_t level)
 {
+	size_t	current_level;
 	MymlObject *list = NULL;
 	try {list = new MymlList(key);}
 	catch (const std::bad_alloc& e){
@@ -236,7 +237,7 @@ MymlObject *MymlTree::parseList(const std::string &key, std::list<Token>::iterat
 	}
 	std::list<Token>::iterator	it = begin;
 
-	while (level == nbSpace(it)) {
+	while (level == (current_level = nbSpace(it))) {
 		if (isDictionary(it)) {
 			delete list;
 			_error->unexpectedToken(it);
@@ -250,6 +251,10 @@ MymlObject *MymlTree::parseList(const std::string &key, std::list<Token>::iterat
 		}
 		begin = it;
 	}
+	if (level < current_level) {
+		delete list;
+		_error->unexpectedToken(it);
+	}
 	return (list);
 }
 
@@ -260,6 +265,7 @@ MymlObject *MymlTree::parseList(const std::string &key, std::list<Token>::iterat
 **/
 MymlObject *MymlTree::parseDictionary(const std::string &key, std::list<Token>::iterator &begin, size_t level)
 {
+	size_t	current_level;
 	MymlObject *dictionary = NULL;
 	try {dictionary = new MymlDictionary(key);}
 	catch (const std::bad_alloc& e){
@@ -270,7 +276,7 @@ MymlObject *MymlTree::parseDictionary(const std::string &key, std::list<Token>::
 	
 	std::list<Token>::iterator	it = begin;
 
-	while (level == nbSpace(it)) {
+	while (level == (current_level = nbSpace(it))) {
 		if (!isDictionary(it)) {
 			delete dictionary;
 			_error->unexpectedToken(it);
@@ -283,6 +289,10 @@ MymlObject *MymlTree::parseDictionary(const std::string &key, std::list<Token>::
 			throw BadParsingError(e.what());
 		}
 		begin = it;
+	}
+	if (level < current_level) {
+		delete dictionary;
+		_error->unexpectedToken(it);
 	}
 	return (dictionary);
 }

@@ -58,10 +58,8 @@ Parser::Parser(const std::string path) : _tree(NULL)
 			printTree(*it, 0);
 	}
 	catch (const std::runtime_error &e) {
-		std::cout << "\e[1;31m" << "error :" << "\e[0m" << std::endl;
-		std::cout << e.what() << std::endl;
 		_tokens.clear();
-		throw std::invalid_argument(std::string("error :") + e.what());
+		throw std::invalid_argument(e.what());
 	}
 }
 

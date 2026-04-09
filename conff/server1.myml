@@ -17,7 +17,9 @@ server1 :
 				- GET
 				- POST
 		- /logs :
-			allow_methods : POST
+			allow_methods :
+				- POST
+				- GET
 			index : findout.txt
 	cgi_handlers :
 		- .py : /usr/bin/python3

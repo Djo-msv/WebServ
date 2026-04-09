@@ -195,6 +195,8 @@ void Request::startline_check(std::string line)
 	if (_target.empty() || l.eof())
 		throw BadRequest();
 	getline(l, current, '\r');
+	if (current.length() < 8 || current.substr(0, 5) != "HTTP/")
+		throw BadRequest();
 	if (current != "HTTP/1.1" && current != "HTTP/1.*")
 		throw NotImplemented();
 	getline(l, current);

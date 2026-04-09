@@ -35,12 +35,12 @@ class BadRequest : public HttpError {
 
 class NotAllowed : public HttpError {
     public:
-        NotAllowed() : HttpError("405 Method Not Allowed", "./errors/400_def.html", 405) {};
+        NotAllowed() : HttpError("405 Method Not Allowed", "./errors/405_def.html", 405) {};
 };
 
 class LengthRequired : public HttpError {
     public:
-        LengthRequired() : HttpError("411 Length Required", "./errors/400_def.html", 411) {};
+        LengthRequired() : HttpError("411 Length Required", "./errors/411_def.html", 411) {};
 };
 
 

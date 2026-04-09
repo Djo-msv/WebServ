@@ -84,7 +84,10 @@ void	ClientSocket::parseRequest()
 		}
 	}
 	catch (Request::ChunkParsing &e) { status = ParseRequest; } // currently dechunking the request body
-	catch (Request::MissingData &e) { status = ReadRequest; } //incomplete request
+	catch (Request::MissingData &e) {
+		if (this->hasTimedOut()) { status = Done; }
+		else {status = ReadRequest; }
+		} //incomplete request
 	catch (Request::DeleteRequest &e) {
 		try { this->deleteFile(e.what()); }
 		RETHROW(std::bad_alloc)

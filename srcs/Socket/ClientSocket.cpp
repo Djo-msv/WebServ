@@ -8,8 +8,10 @@ ClientSocket::ClientSocket(ServerSocket &serverSocket, int epoll, std::map<const
 
 ClientSocket::~ClientSocket(void) { std::cout << "deleting client of socket :: " << _socketFd << std::endl; }
 
-//deletes the old_fd from our epoll map (except pipes, which are automatically deleted), adds the new one with flags
-//then erases the <old_fd, csocket> from the sockets map and replaces it with <new_fd, csocket>
+/*
+ * deletes the old_fd from our epoll map (except pipes, which are automatically deleted), adds the new one with flags
+ * then erases the <old_fd, csocket> from the sockets map and replaces it with <new_fd, csocket>
+*/
 void	ClientSocket::epollFdSwitch(int old_fd, int new_fd, int flags)
 {
 	SocketIterator it = sockets.find(old_fd);
@@ -73,7 +75,7 @@ void	ClientSocket::parseRequest()
 {
 	try {
 		_request.parse(mime);
-		//based on response :: exec/no exec
+		// returns if exec should be started
 		if (_response.makeResponse(&_request))
 			this->startExec();
 		else {
@@ -81,7 +83,7 @@ void	ClientSocket::parseRequest()
 			epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
 		}
 	}
-	catch (Request::ChunkParsing &e) { status = ParseRequest; } //currently dechunking the request body
+	catch (Request::ChunkParsing &e) { status = ParseRequest; } // currently dechunking the request body
 	catch (Request::MissingData &e) { status = ReadRequest; } //incomplete request
 	catch (Request::DeleteRequest &e) {
 		try { this->deleteFile(e.what()); }
@@ -91,7 +93,6 @@ void	ClientSocket::parseRequest()
 	catch (std::exception &e) { throw; }
 }
 
-//function for the DELETE method exception :: delete file
 void	ClientSocket::deleteFile(const char *filename)
 {
 	InternalServerError e;
@@ -131,7 +132,6 @@ void	ClientSocket::startExec()
 	}
 }
 
-//cgi write
 void	ClientSocket::execWrite()
 {
 	resetTimeout();
@@ -153,9 +153,9 @@ void	ClientSocket::execWrite()
 	}
 }
 
+//write is done (timeout), appropriate status/epoll switching and close
 void	ClientSocket::writeToRead()
 {
-	//write is done (timeout), appropriate status/epoll switching and close
 	close(_exec.getFdIn());
 	_sendpos = 0;
 	epollFdSwitch(_exec.getFdIn(), _exec.getFdOut(), EPOLLIN | EPOLLET);
@@ -244,7 +244,7 @@ int ClientSocket::createSocket(ServerSocket & serverSocket)
 	
 	sSocketFd = serverSocket.getSocketFd();
 
-	// recover the value of client fd, variables that are set to NULL represent the client informations could be useful later...
+	// recover the value of client fd, variables that are set to NULL represent the client informations
 	cSocketFd = accept(sSocketFd, NULL, NULL);
 	if (cSocketFd == -1) {
 		close(cSocketFd);

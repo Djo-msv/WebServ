@@ -73,7 +73,7 @@ void Request::clear()
 	headers.clear();
 }
 
-		// public getters
+// --------------------- Getters ------------------
 
 bool Request::keepAlive() const
 {
@@ -108,7 +108,9 @@ ssize_t Request::getSize() const
 	return 0;
 }
 
-//parse distribution
+/*
+ * Checks the parsing stage of the request and returns to the correct parsing function
+ */
 void Request::parse(std::map<std::string, std::string> &mime)
 {
 	if (_status) //headers already parsed on a previous run, _env created etc.
@@ -154,9 +156,7 @@ void Request::parse(std::map<std::string, std::string> &mime)
 	catch (std::exception &e) { throw ; }
 }
 
-
-
-		//private parsing functions, in chronological order ::
+// ---------------------- Parsing --------------------
 
 void	Request::parse_header(std::string header)
 {
@@ -353,8 +353,9 @@ void Request::parse_body()
 	}
 	catch (std::exception &e) { throw ; }
 }
-
-//is the body the size given in header ?
+/*
+ * Checks that the body size aligns with the header expected size
+ */
 void Request::body_check(size_t size_told, size_t real_size)
 {
 	if (real_size < size_told)
@@ -365,9 +366,11 @@ void Request::body_check(size_t size_told, size_t real_size)
 		_body = _body.substr(0, size_told);
 }
 
+/*
+ * Creates the environnment that will be passed to the exceve
+ */
 void Request::create_env()
 {
-	//here creating the char * environment which we use for execve, in two steps for ease of reading
 	_env = new std::string[headers.size()];
 	c_env = new const char*[headers.size() + 1];
 	size_t i = 0;
@@ -380,7 +383,8 @@ void Request::create_env()
 	c_env[i] = NULL;
 }
 
-//class exceptions :: more data needed, more parsing needed && request is delete
+//----------------- Exception ----------------
+
 Request::MissingData::MissingData() : std::out_of_range("data missing from request !") {}
 Request::ChunkParsing::ChunkParsing() : std::out_of_range("parsing of the chunked body is unfinished !") {}
 Request::DeleteRequest::DeleteRequest(std::string target) : std::out_of_range(target.c_str()) {}

@@ -1,6 +1,8 @@
 #include <request_utils.hpp>
 
-//checks if file exists and if we have read permission (GET) or write permission (POST)
+/*
+ * Checks if file exists and if we have read permission (GET) or write permission (POST)
+ */
 std::string	seekFile(std::string &pathfile, bool post)
 {
 	struct stat file_stat;
@@ -18,7 +20,10 @@ std::string	seekFile(std::string &pathfile, bool post)
 
 }
 
-//returns the correct cgi executable for the file type (for example, "input.py" will return "usr/bin/python3")
+/* 
+ * Returns the correct cgi executable for the file type using its extension
+ * for example, "input.py" will return "usr/bin/python3"
+ */
 std::string	extractCgi(std::string &file, ServerConfig &config)
 {
 	std::string extension;
@@ -32,10 +37,10 @@ std::string	extractCgi(std::string &file, ServerConfig &config)
 }
 
 
-/**
+/*
  * Looks for config error files first, then default error files
  * If no error file is found, send back InternalServerError
-*/
+ */
 std::string	seekErrorFile(HttpError error, ServerConfig &config)
 {
     std::string pathfile;
@@ -54,7 +59,9 @@ std::string	seekErrorFile(HttpError error, ServerConfig &config)
     }
 }
 
-//a simple check for hexadecimal numbers (chunk_parse dependent)
+/*
+ * Checks the string is an hexadecimal number
+ */
 static bool check_hex(ustring hex)
 {
 	if (hex.empty())
@@ -68,8 +75,10 @@ static bool check_hex(ustring hex)
 	return true;
 }
 
-//parsing of chunked body in 8 chunks increments (ex :: hex+\r\n+chunk+...+0\r\n\r\n)
-ustring chunk_parse(ustring &_body, ustring &new_body)
+/*
+ * Parses chunked body, 8 chunks at a time for optimisation purposes
+ */
+ ustring chunk_parse(ustring &_body, ustring &new_body)
 {
 	if (_body.empty())
 		throw Request::MissingData();
@@ -108,7 +117,9 @@ ustring chunk_parse(ustring &_body, ustring &new_body)
 	return new_body;
 }
 
-//check for alnum (-)
+/*
+ * checks that the header key is an alnum
+ */
 bool check_key(std::string key)
 {
 	for (std::string::iterator it = key.begin(); it != key.end(); it++)
@@ -119,7 +130,9 @@ bool check_key(std::string key)
 	return true;
 }
 
-//trims the whitespaces, checks for empty values
+/*
+ * trims the whitespaces, checks for empty values
+ */
 bool check_val(std::string &val)
 {
 	size_t pos1 = 0;
@@ -141,7 +154,10 @@ bool check_val(std::string &val)
 	return true;
 }
 
-//separates the target (ex: /html/errors/error_411.html) into a locations list (ex: [/html, /errors, /error_411.html])
+/*
+ * Tokenizes the target into a list of directories
+ * Example : turns "/html/errors/error_411.html" into a list [/html, /errors, /error_411.html] 
+ */
 std::list<std::string> target_list(std::string loc)
 {
 	std::list<std::string> full;
@@ -162,7 +178,6 @@ std::list<std::string> target_list(std::string loc)
 	return full;
 }
 
-//cuts past the cgi script called for the uri path_info
 std::string get_path_info(std::string loc)
 {
 	std::string path_info;

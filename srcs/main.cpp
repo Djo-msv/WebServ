@@ -5,12 +5,12 @@ std::map<const int, Socket *>	sockets;
 std::deque<ClientSocket *>		pendingClientSockets;
 const int 						epollInstance = epoll_create(1);
 
-void	stopServer(int)
+void	stopServer(int i)
 {
 	for (SocketIterator it = sockets.begin(); it != sockets.end(); ++it)
 		delete it->value;
 	close(epollInstance);
-	exit(0);
+	exit(i);
 }
 
 void handleError(const char* msg)
@@ -29,7 +29,6 @@ void closeSocketconnection(ClientSocket *cSocket)
 	delete cSocket;
 }
 
-//this function now does the reads + fd_switches (obv once the parsing is separate the switch-case will be post parsing instead of readrequest
 void	managePendingClients()
 {	
 	static size_t i = 0;
@@ -134,10 +133,8 @@ void	manageRequests()
 }
 
 
-
-void initServerSockets(Parser &tree)
+void initServerSockets(std::list<MymlObject *> *root)
 {
-	std::list<MymlObject *> *root = tree.getRoot();
 
 	for (std::list<MymlObject *>::iterator it = root->begin(); it != root->end(); ++it)
 	{
@@ -169,14 +166,14 @@ int	main(int argc, char **argv)
 		Parser	tree(argv[1]);
 		mime = initMimetype();
 		try {
-			initServerSockets(tree);
+			initServerSockets(tree.getRoot());
 		}
 		CATCH_AND_HANDLE(std::runtime_error)
 		CATCH_AND_HANDLE(std::bad_alloc)
 	}
 	catch (std::exception &e) {
 		std::cout << e.what() << std::endl;
-		return (1);
+		stopServer(1);
 	}
 	try {
 		signal(SIGINT, stopServer);

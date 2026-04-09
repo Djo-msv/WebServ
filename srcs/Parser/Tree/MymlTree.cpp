@@ -25,9 +25,6 @@ MymlTree::MymlTree(std::list<Token> &tokens)
 		}
 	}
 }
-
-//MymlTree:MymlTree(const MymlTree &other)
-//{
 	
 
 MymlTree::~MymlTree(void)
@@ -36,9 +33,9 @@ MymlTree::~MymlTree(void)
 }
 
 /*
- * *Takes an line of token and check if it's an define or a value
+ * Takes an line of token and check if it's an define or a value
  * return an Object of the define or value
-**/
+ */
 MymlObject *MymlTree::parseListArg(std::list<Token>::iterator &begin, std::list<Token>::iterator &it, size_t level)
 {
 	(void)begin;
@@ -67,13 +64,13 @@ MymlObject *MymlTree::parseListArg(std::list<Token>::iterator &begin, std::list<
 	}
 	// is value
 	for(;it->_type != INDENTATION && it->_type == END_OF_LINE; it++){};
-	return (new MymlObject(key)); // !
+	return (new MymlObject(key));
 }
 
-/**
- * *Takes an line of token and check if it's an define or a dictionary value
- * return an pair of value for the dictionary
-**/
+/*
+ * Takes a line of token and check if it's an define or a dictionary value
+ * return a pair of value for the dictionary
+ */
 std::pair<std::string, MymlObject*> MymlTree::parseDictionaryArg(std::list<Token>::iterator &begin, std::list<Token>::iterator &it, size_t level)
 {
 	(void)begin;

@@ -24,7 +24,7 @@ Response& Response::operator=(const Response &other)
 	}
 	return *this;
 }
-//self-exp clear function
+
 void Response::clear()
 {
 	_target.clear();
@@ -38,14 +38,16 @@ void Response::clear()
 	sizer = 0;
 }
 
-//replaces += overload for non NULL-terminated buffers
+/*
+ * Concatenates new data to read data
+ */
 void Response::add(const unsigned char *buffer, size_t size)
 {
 	for (size_t i = 0; i != size; i++)
 		_body.push_back(buffer[i]);
 }
 
-		//public getters
+//-------------------------- Public Getters -----------------------
 
 size_t Response::getSize() const { return sizer; }
 
@@ -70,7 +72,7 @@ unsigned char *Response::getResponse(std::map<std::string, std::string> &mime)
 	return _msg;
 }
 
-		//response-maker && error-response-maker, respectively
+//------------------- Response Management functions ---------------------
 
 bool Response::makeResponse(Request *req)
 {
@@ -99,8 +101,6 @@ void Response::makeErrorResponse(HttpError &error, ServerConfig &s)
 	}
 }
 
-		//allocating the (unsigned char*) message to return 
-
 void Response::makeMsg()
 {
 	sizer = _body.size();
@@ -124,7 +124,7 @@ void Response::makeMsg()
 	}
 }
 
-		//private message-making functions, in chronological order
+//------------------ Execution Response Managers -------------
 
 void Response::handleExec() //status check and handling
 {
@@ -150,7 +150,7 @@ void Response::handleExec() //status check and handling
 
 void Response::readFile()
 {
-	if (_target.empty()) //no _body to make || _body is from default
+	if (_target.empty()) //no _body to make || Hardcoded body
 		return ;
 	struct stat s;
 	if ( stat(_target.c_str(), &s) == 0 )
@@ -194,7 +194,7 @@ void Response::readFile()
 
 void Response::postFile(unsigned char *body, size_t length)
 {
-	if (_target.empty()) //no _body to make || _body is from default
+	if (_target.empty())
 		return ;
 	struct stat s;
 	if ( stat(_target.c_str(), &s) == 0 && (s.st_mode & S_IFREG))
@@ -215,7 +215,6 @@ void Response::postFile(unsigned char *body, size_t length)
 		throw FileNotFound();
 }
 
-//for chunkBody()
 static ustring toHex(size_t num)
 {
 	ustring res;

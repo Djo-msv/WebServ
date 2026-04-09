@@ -18,7 +18,7 @@ Tokenizer::Tokenizer(std::string &file, std::list<Token> &tokens)
 			&Tokenizer::typeOfValue
 		};
 
-	/* aply function until the end of the string */
+	/* apply function until the end of the string */
 	while (!file.empty())
 	{
 		int		i = 0;

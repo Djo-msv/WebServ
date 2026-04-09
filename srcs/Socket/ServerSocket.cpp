@@ -16,8 +16,8 @@ ServerSocket::ServerSocket(ServerConfig *config, const int epollInstance) : Sock
 	if (bind(_socketFd, (struct sockaddr*) &serverAddress, sizeof(serverAddress)) == -1)
 		throw BindError("Error while binding adress to the server socket. Error code : " + std::string(strerror(errno)));
 
-	// listen at the server socket and allow 5 connexions in queue
-	if (listen(_socketFd, 5) == -1)
+	// listen at the server socket and allow 20 connexions in queue
+	if (listen(_socketFd, 20) == -1)
 		throw ListenError("Error while setting socket to listening. Error : " + std::string(strerror(errno)));
 
 	epoll_add(epollInstance, _socketFd, EPOLLIN | EPOLLET);

@@ -13,10 +13,6 @@ class ParserError
 		ParserError(std::list<Token> &tokens);
 		~ParserError();
 
-		void badIndetation(const std::list<Token>::iterator &token);
-		void missingClosing(const std::list<Token>::iterator &token);
-		void badCast(const std::list<Token>::iterator &token);
-		
 		void unexpectedToken(const std::list<Token>::iterator &token);
 	
 	private :

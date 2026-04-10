@@ -68,7 +68,6 @@ SRCS_FILES:=	main.cpp \
 				Parser/Lexer/Parser.cpp \
 				Parser/Lexer/Tokenizer.cpp \
 				Parser/Lexer/File.cpp \
-				Parser/Lexer/Lexer.cpp \
 				Parser/Lexer/TokenTransformer.cpp \
 				Parser/ParserError.cpp \
 				Socket/ClientSocket.cpp \

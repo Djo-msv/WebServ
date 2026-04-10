@@ -93,9 +93,10 @@ bool Response::makeResponse(Request *req)
 
 void Response::makeErrorResponse(HttpError &error, ServerConfig &s)
 {
+	InternalServerError e;
 	_status = error.what();
 	try { _target = seekErrorFile(error, s); this->readFile(); }
-	catch (InternalServerError &e) {
+	catch (HttpError &en) {
 		_status = e.what(); _target = "";
 		this->add((unsigned char *)(e.getDefaultFile().c_str()), e.getDefaultFile().size());
 	}

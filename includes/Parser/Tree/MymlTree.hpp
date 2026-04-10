@@ -33,8 +33,8 @@ class MymlTree
 		MymlObject *inlineDefine(std::list<Token>::iterator &begin, std::string &key);
 		MymlObject *parseDictionary(const std::string &key, std::list<Token>::iterator &begin, size_t level);
 		MymlObject *parseList(const std::string &key, std::list<Token>::iterator &begin, size_t level);
-		std::pair<std::string, MymlObject*> parseDictionaryArg(std::list<Token>::iterator &begin, std::list<Token>::iterator &it, size_t level);
-		MymlObject *parseListArg(std::list<Token>::iterator &begin, std::list<Token>::iterator &it, size_t level);
+		std::pair<std::string, MymlObject*> parseDictionaryArg(std::list<Token>::iterator &it, size_t level);
+		MymlObject *parseListArg(std::list<Token>::iterator &it, size_t level);
 
 		class BadParsingError : public std::runtime_error {
 			public :

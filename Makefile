@@ -124,7 +124,6 @@ $(NAME): $(OBJS)
 	'   \ `\___x___/\ \____\\ \_,__/    \ `\____\ \____\\ \_\  \ \___/ ' \
 	'    `\/__//__/  \/____/ \/___/      \/_____/\/____/ \/_/   \/__/  '
 	@echo "$(NOC)"
-	@if [ 0 -eq 0 ]; then echo "os : Linux"; else echo "os : Mac/Win"; fi
 
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(DIRS)

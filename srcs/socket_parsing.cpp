@@ -130,5 +130,5 @@ ServerConfig *initServerConfig(MymlDictionary *serverRepertory)
 	}
 	RETHROW (std::invalid_argument)
 	RETHROW (std::bad_alloc)
-	return (new ServerConfig(port, root_loc, locations, cgi_handlers, exec_folder, max_body, errorFiles, timeout));
+	return (new ServerConfig(port, root_loc, locations, cgi_handlers, exec_folder, upload_folder, max_body, errorFiles, timeout));
 }

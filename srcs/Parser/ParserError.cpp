@@ -42,21 +42,6 @@ std::string ParserError::PrintLine(const std::list<Token>::iterator &line, const
 	return (buffer);
 }
 
-void ParserError::badIndetation(const std::list<Token>::iterator &token)
-{
-	(void)token;
-}
-
-void ParserError::missingClosing(const std::list<Token>::iterator &token)
-{
-	(void)token;
-}
-
-void ParserError::badCast(const std::list<Token>::iterator &token)
-{
-	(void)token;
-}
-
 void ParserError::unexpectedToken(const std::list<Token>::iterator &token)
 {
 	std::ostringstream str;

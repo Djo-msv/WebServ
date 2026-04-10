@@ -20,7 +20,6 @@ server1 :
 			allow_methods :
 				- POST
 				- GET
-			index : findout.txt
 	cgi_handlers :
 		- .py : /usr/bin/python3
 	execution_folder : /scripts

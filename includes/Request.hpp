@@ -37,6 +37,7 @@ class Request
 		std::string	getQuery() const;
 		unsigned char	*getBody() const;
 		std::string	getCgi() const;
+		std::string	getPathInfo() const;
 		
 		char	**getEnv() const;
 		
@@ -72,6 +73,7 @@ class Request
 		std::string		_cgi;
 		std::string		_target;
 		std::string		_query;
+		std::string		path_info;
 		std::string		*_env;
 		int				_status;
 

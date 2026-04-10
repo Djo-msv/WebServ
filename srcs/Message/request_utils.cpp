@@ -8,11 +8,15 @@ std::string	seekFile(std::string &pathfile, bool post)
 	struct stat file_stat;
 	if (stat(pathfile.c_str(), &file_stat) == -1)
 		throw FileNotFound();
-	
 	if (!post && file_stat.st_mode & S_IRUSR)
 		return pathfile;
-	if (post && (file_stat.st_mode & S_IWUSR)) {
-		if (!(file_stat.st_mode & S_IFREG))
+	if (post) {
+		if (file_stat.st_mode & S_IFREG) {
+			if (file_stat.st_mode & S_IWUSR) { return pathfile; }
+			else { throw Forbidden(); }
+		}
+		//here check for upload file
+		else if (!(file_stat.st_mode & S_IFDIR))
 			throw NotImplemented();
 		return pathfile;
 	}

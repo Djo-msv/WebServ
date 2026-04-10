@@ -58,6 +58,7 @@ void Request::clear()
 		delete[] c_body;
 	c_body = NULL;
 	_method.clear();
+	path_info.clear();
 	_cgi.clear();
 	_target.clear();
 	_query.clear();
@@ -98,6 +99,8 @@ bool Request::isPost() const { return (_method == "POST"); }
 unsigned char *Request::getBody() const { return c_body; }
 
 std::string Request::getCgi() const { return _cgi; }
+
+std::string Request::getPathInfo() const { return path_info; }
 
 ssize_t Request::getSize() const
 {
@@ -200,7 +203,7 @@ void Request::startline_check(std::string line)
 	if (current != "HTTP/1.1" && current != "HTTP/1.*")
 		throw NotImplemented();
 	getline(l, current);
-	if (!current.empty())// && !l.eof()) -> unnecessary, i think
+	if (!current.empty())
 		throw BadRequest();
 	this->target_work();
 }
@@ -212,11 +215,12 @@ void Request::target_work()
 	//make location list
 	std::list<std::string> location = target_list(_target);
 	//cut path_info and update target + list + script_name
-	std::string path_info = get_path_info(_config.getFullPath(location));
+	path_info = get_path_info(_config.getFullPath(location));
 	if (!path_info.empty() && _target.find(path_info) != std::string::npos) {
 		_target = _target.substr(0, _target.rfind(path_info));
 		location = target_list(_target);
-		if (!_config.isExecFolder(location, _config.stringToMethodFlag(_method))) {
+		//later upload check here
+		if (_method != "POST" && !_config.isExecFolder(location, _config.stringToMethodFlag(_method))) {
 			_target += path_info;
 			location = target_list(_target);
 		}
@@ -227,30 +231,36 @@ void Request::target_work()
 		throw NotAllowed();
 	//add index
 	std::string index;
-	if (_target == "/" || needsIndex(_config.getFullPath(location))) {
+	//later this POST check goes to upload check (if upload and path_info, ignore the need for index, else add
+	try { if (_method != "POST" && (_target == "/" || needsIndex(_config.getFullPath(location)))) {
 		index = _config.getIndex(location);
 		if (!index.empty() && index[0] != '/')
 			index = "/" + index;
 		if (!index.empty()) { location.push_front(index); script_name += index; }
-	}
+	} }
+	catch (HttpError &e) { throw; }
 	//target to full_path
 	_target = _config.getFullPath(location);
+	if (!path_info.empty() && _target.find(path_info) != std::string::npos)
+		_target = _target.substr(0, _target.rfind(path_info));
 	//NotFound / Forbidden catch
 	try { seekFile(_target, (_method == "POST")); }
 	catch (std::exception &e) { throw ; }
 	//check_exec, adjust
 	if (_config.isExecFolder(location, _config.stringToMethodFlag(_method)))
 		this->adjust_exec(path_info, script_name);
-	else if (_method == "POST" && !_query.empty()) //in case of malformed POST request
-		_body = (unsigned char *)_query.c_str() + _body;
 }
 
 bool Request::needsIndex(std::string full_target)
 {
-	if (*(_target.rbegin()) == '/') { return false; }
 	struct stat s;
 	if ( stat(full_target.c_str(), &s) != 0 ) { throw FileNotFound(); }
 	if( s.st_mode & S_IFDIR ) {
+		if (*(_target.rbegin()) == '/') {
+			//here the check on whether the location auth folder listing, if not seek index
+			//_config.canList() a bool return, checks only the last folder
+			return false;
+		}
 		_target += "/";
 		return true;
 	}
@@ -323,10 +333,17 @@ void Request::mime_check(std::map<std::string, std::string> &mime)
 	while (!line.eof()) {
 		std::string type;
 		getline(line, type, ',');
+		if (type.length() >= 3 && type.substr(0, 3) == "*/*") { return ; }
 		if (type.empty())
 			break ;
 		if (type == extension)
 			return ;
+		if (type.find('/') && type.find('/') != std::string::npos
+			&& extension.find('/') && extension.find('/') != std::string::npos
+			&& type.substr(0, type.find('/')) == extension.substr(0, extension.find('/'))) {
+			if (type.find('/') != type.length() -1 && type.substr(type.find('/'), 1) == "*")
+				return ;
+		}
 	}
 	throw BadRequest(); //client requests a content-type it does not accept
 }
@@ -344,6 +361,7 @@ void Request::parse_body()
 		else
 			this->body_check(this->getSize(), _body.size());
 		//create the unsigned char body to send to the cgi program
+		//here the maxBody check and throw 413 Content Too Large if it is
 		if (_body.size()) {
 			c_body = new unsigned char[_body.size()];
 			size_t i = 0;

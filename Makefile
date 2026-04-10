@@ -141,12 +141,12 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(DIRS)
 
 
 clean:
-	@echo "$(RED)Remove objects$(NOC)"
+	@echo "$(RED)Removing objects..$(NOC)"
 	@rm -rf $(BUILD_DIR) 
 	@rm -rf $(BUILD_DIR_BONUS)
 
 fclean: clean
-	@echo "$(RED)Remove binary$(NOC)"
+	@echo "$(RED)Removing binary...$(NOC)"
 	@rm -f $(NAME)
 	@rm -f $(BONUS_NAME)
 

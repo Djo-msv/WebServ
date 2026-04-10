@@ -323,10 +323,16 @@ void Request::mime_check(std::map<std::string, std::string> &mime)
 	while (!line.eof()) {
 		std::string type;
 		getline(line, type, ',');
+		if (type.length() >= 3 && type.substr(0, 3) == "*/*") { return ; }
 		if (type.empty())
 			break ;
 		if (type == extension)
 			return ;
+		if (type.find('/') && type.find('/') != std::string::npos
+			&& extension.find('/') && extension.find('/') != std::string::npos
+			&& type.substr(0, type.find('/')) == extension.substr(0, extension.find('/'))) {
+			if (type.find('/') != type.length() -1 && type.substr(type.find('/'), 1) == "*")
+				return ;
 	}
 	throw BadRequest(); //client requests a content-type it does not accept
 }

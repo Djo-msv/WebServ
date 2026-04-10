@@ -34,7 +34,7 @@ int	MymlPair::getKeyAsInt(void)
 	if (*it == '-')
 		it++;
 	for (; it != getKey().end(); it++) {
-		if (!*it) { break ; }
+		if (!*it) { break; }
 		if (!isdigit(*it))
 			throw BadCast("the value [" + getKey() + "] is not an integer !");
 	}

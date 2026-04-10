@@ -151,9 +151,8 @@ MymlObject *MymlTree::inlineDefine(std::list<Token>::iterator &begin, std::strin
  * Takes an line of token and check if it's an define or a value
  * return an Object of the define or value
  */
-MymlObject *MymlTree::parseListArg(std::list<Token>::iterator &begin, std::list<Token>::iterator &it, size_t level)
+MymlObject *MymlTree::parseListArg(std::list<Token>::iterator &it, size_t level)
 {
-	(void)begin;
 	std::string	key;
 	std::string value;
 
@@ -188,9 +187,8 @@ MymlObject *MymlTree::parseListArg(std::list<Token>::iterator &begin, std::list<
  * Takes a line of token and check if it's an define or a dictionary value
  * return a pair of value for the dictionary
  */
-std::pair<std::string, MymlObject*> MymlTree::parseDictionaryArg(std::list<Token>::iterator &begin, std::list<Token>::iterator &it, size_t level)
+std::pair<std::string, MymlObject*> MymlTree::parseDictionaryArg(std::list<Token>::iterator &it, size_t level)
 {
-	(void)begin;
 	std::string	key;
 	std::string value;
 	std::pair<std::string, MymlObject*>	obj;
@@ -244,7 +242,7 @@ MymlObject *MymlTree::parseList(const std::string &key, std::list<Token>::iterat
 			_error->unexpectedToken(it);
 		}; // throw error
 		try {
-			list->insert(parseListArg(begin, it, level));
+			list->insert(parseListArg(it, level));
 		}
 		catch (const std::runtime_error &e) {
 			delete list;
@@ -283,7 +281,7 @@ MymlObject *MymlTree::parseDictionary(const std::string &key, std::list<Token>::
 			_error->unexpectedToken(it);
 		}
 		try {
-			dictionary->insert(parseDictionaryArg(begin, it, level));
+			dictionary->insert(parseDictionaryArg(it, level));
 		}
 		catch (const std::runtime_error &e) {
 			delete dictionary;

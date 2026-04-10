@@ -82,7 +82,7 @@ ServerConfig::MethodFlag ServerConfig::stringToMethodFlag(const std::string &met
     if (method == "DELETE") return DELETE;
     throw NotAllowed();
 }
-
+#include <iostream>
 std::string ServerConfig::getErrorFile(int errorCode) const
 {
     std::map<int, std::string>::const_iterator it = error_files.find(errorCode);

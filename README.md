@@ -187,7 +187,10 @@ server1 :
 
 ## Resources
 
+- Linux Manual (epoll, sockets)
 - [RFC 2616 – HTTP/1.1](https://datatracker.ietf.org/doc/html/rfc2616)
 - [RFC 9112 – HTTP/1.1 Message Syntax and Routing](https://www.rfc-editor.org/rfc/rfc9112.html)
+- [French tutorial on Yaml syntax](https://blog.stephane-robert.info/docs/developper/autres-langages/yaml/) by Stephane Robert
+- [Ansible Yaml documentation](https://docs.ansible.com/projects/ansible/latest/reference_appendices/YAMLSyntax.html)
 
 > **AI usage:** AI tools were used strictly for documentation purposes — simplifying RFC comprehension, helping create an early socket-testing program to better understand socket behaviour, and assisting in writing this README.

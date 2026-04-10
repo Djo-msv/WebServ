@@ -200,7 +200,7 @@ void Request::startline_check(std::string line)
 	if (current != "HTTP/1.1" && current != "HTTP/1.*")
 		throw NotImplemented();
 	getline(l, current);
-	if (!current.empty())
+	if (!current.empty())// && !l.eof()) -> unnecessary, i think
 		throw BadRequest();
 	this->target_work();
 }

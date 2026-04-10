@@ -28,7 +28,7 @@ void	TokenTransformer::remover(std::list<Token> &tokens, std::list<Token>::itera
 		else
 			_status = NULL_STATUE;
 	}
-	if (((*it)._type == END_OF_LINE || ((*it)._type == END_OF_FILE)) && _status != STOP_LINE)
+	if (((*it)._type == END_OF_LINE || ((*it)._type == END_OF_FILE)) && _status == NULL_STATUE)
 		_status = NEW_LINE;
 
 	// remove comment
@@ -44,7 +44,7 @@ void	TokenTransformer::remover(std::list<Token> &tokens, std::list<Token>::itera
 void	TokenTransformer::indentationTransformer(std::list<Token>::iterator &it)
 {
 	if ((*it)._type == SPACE && _status == STOP_LINE)
-		throw BadParsing((*it)._token);
+		throw BadParsing(std::string("bad Token"));
 	else if ((*it)._type == SPACE && _status == NEW_LINE) {
 		(*it)._type = INDENTATION;
 		(*it)._level = strlen(((*it)._token).c_str());
@@ -93,15 +93,13 @@ void	TokenTransformer::quoteTransformer(std::list<Token> &tokens, std::list<Toke
 	}
 	if (_status == SINGLE_QUOTE_STATUE) {
 		if ((*it)._type == END_OF_LINE || (*it)._type == END_OF_FILE)
-			throw BadParsing(value);
+			throw BadParsing(std::string("Unclosed quote"));
 		value += (*it)._token;
 		it = tokens.erase(it);
 	}
 	if (_status == DOUBLE_QUOTE_STATUE) {
 		if ((*it)._type == END_OF_LINE || (*it)._type == END_OF_FILE)
-		{
-			throw BadParsing(value);
-		}
+			throw BadParsing(std::string("Unclosed double quote"));
 		if ((*it)._type == BACK_SLASH) {
 			if ((*it)._token == "\\n")
 				value += '\n';
@@ -112,7 +110,7 @@ void	TokenTransformer::quoteTransformer(std::list<Token> &tokens, std::list<Toke
 			else if ((*it)._token == "\\\"")
 				value += '"';
 			else
-				throw BadParsing((*it)._token);
+				throw BadParsing(std::string("Unknow character : \\") + it->_token);
 		}
 		else
 			value += (*it)._token;
@@ -127,7 +125,7 @@ void	TokenTransformer::castTransformer(std::list<Token> &tokens, std::list<Token
 		if ((*it)._type != END_OF_LINE && (*it)._type != END_OF_FILE)
 			(*it)._type = STRING;
 		else
-			throw BadParsing((*it)._token);
+			throw BadParsing(std::string("Cannot cast empty caracter to string"));
 	}
 	if ((*it)._type == INTEGER_CAST) {
 		it = tokens.erase(it);
@@ -136,13 +134,13 @@ void	TokenTransformer::castTransformer(std::list<Token> &tokens, std::list<Token
 			(*it)._type = INTEGER;
 		}
 		else
-			throw BadParsing((*it)._token);
+			throw BadParsing(std::string("Cannot cast empty caracter to integer"));
 	}
 	if ((*it)._type == FLOAT_CAST) {
 		it = tokens.erase(it);
 		if ((*it)._type != END_OF_LINE && (*it)._type != END_OF_FILE)
 			(*it)._type = FLOAT;
 		else
-			throw BadParsing((*it)._token);
+			throw BadParsing(std::string("Cannot cast empty caracter to float"));
 	}
 }

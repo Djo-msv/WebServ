@@ -127,7 +127,7 @@ void	Tokenizer::basicToken(std::string &file, std::list<Token> &tokens)
 
 bool	Tokenizer::isString(char c)
 {
-	char	specialChar[] = " \t\'\"\\()[]{}";
+	char	specialChar[] = " \n,\t\'\"\\()[]{}:";
 	if (isprint(c)) {
 		for (int i = 0; specialChar[i]; i++) {
 			if (c == specialChar[i])

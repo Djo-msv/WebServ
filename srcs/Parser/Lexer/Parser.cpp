@@ -31,7 +31,7 @@ void	printTree(MymlObject *value, size_t level)
 		std::cout << "value [" << value->getAsString() << "]" << std::endl;
 }
 
-Parser::Parser(const std::string path)
+Parser::Parser(const std::string path) : _tree(NULL)
 {
 	File files(path);
 	std::list<std::string> filesvalue = files.getFile();
@@ -44,6 +44,8 @@ Parser::Parser(const std::string path)
 		TokenTransformer rewrite(_tokens);
 	}
 	catch (const std::runtime_error &e) {
+		std::cout << "\e[1;31m" << "error :" << "\e[0m" << std::endl;
+		std::cout << e.what() << std::endl;
 		_tokens.clear();
 		throw e;
 	}
@@ -55,9 +57,9 @@ Parser::Parser(const std::string path)
 		for(std::list<MymlObject*>::iterator it = _root->begin(); it != _root->end(); it++)
 			printTree(*it, 0);
 	}
-	catch (std::runtime_error &e) {
+	catch (const std::runtime_error &e) {
 		_tokens.clear();
-		throw std::invalid_argument(std::string("error :") + e.what());
+		throw std::invalid_argument(e.what());
 	}
 }
 
@@ -69,5 +71,6 @@ std::list<MymlObject *> *Parser::getRoot()
 
 Parser::~Parser()
 {
-	delete _tree;
+	if (_tree)
+		delete _tree;
 }

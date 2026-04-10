@@ -82,7 +82,7 @@ bool Response::makeResponse(Request *req)
 	try {
 		if (!exec) {
 			if (_post)
-				this->postFile(req->getBody(), req->getSize());
+				this->postFile(req->getBody(), req->getSize(), req->getPathInfo());
 			else
 				this->readFile();
 		}
@@ -193,7 +193,7 @@ void Response::readFile()
 		throw FileNotFound();
 }
 
-void Response::postFile(unsigned char *body, size_t length)
+void Response::postFile(unsigned char *body, size_t length, std::string path_info)
 {
 	if (_target.empty())
 		return ;
@@ -201,6 +201,20 @@ void Response::postFile(unsigned char *body, size_t length)
 	if ( stat(_target.c_str(), &s) == 0 && (s.st_mode & S_IFREG))
 	{
 		int fd = open(_target.c_str(), O_WRONLY | O_APPEND);
+		if (fd != -1) {
+			//append content to the target file
+			if (write(fd, body, length) == -1) {
+				close(fd);
+				throw InternalServerError();
+			}
+			close(fd);
+		}
+		else
+			throw InternalServerError();
+	}
+	else if (stat(_target.c_str(), &s) == 0 && (s.st_mode & S_IFDIR) && !path_info.empty()) {
+		_target += path_info;
+		int fd = open(_target.c_str(), O_WRONLY | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
 		if (fd != -1) {
 			//append content to the target file
 			if (write(fd, body, length) == -1) {

@@ -110,7 +110,10 @@ all: $(NAME)
 $(DIRS):
 	@mkdir -p $@
 
-$(NAME): $(OBJS)
+check :
+	@if [ $(OS) -eq 0 ]; then echo "os : Linux"; else exit 1; fi
+
+$(NAME): check $(OBJS)
 	@echo "\n$(GREEN)Create binaries$(NOC)"
 	@$(CXX) $(CFLAGS) $(OBJS) $(INC) -o $@ $(LIBS) $(LDFLAGS) -lm
 	@echo "$(PURPLE) $(BOLD)"

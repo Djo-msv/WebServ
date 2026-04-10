@@ -3,7 +3,7 @@ server1 :
 	root : ./server00
 	index : /html/index.html
 	timeout : 40
-#	allow_methods : GET
+	allow_methods : GET
 	locations :
 		- /html :
 			allow_methods : GET
@@ -20,9 +20,6 @@ server1 :
 			allow_methods :
 				- POST
 				- GET
-			index : findout.txt
 	cgi_handlers :
 		- .py : /usr/bin/python3
-	error_files :
-		- 404 : /html/errors/404.html
 	execution_folder : /scripts

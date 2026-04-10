@@ -39,6 +39,13 @@ Example:
 
 Stop the server at any time with `Ctrl+C`.
 
+### Accessing the Server
+
+Once the server is running, you can reach it in your browser or with a client like `curl`:
+
+- **Locally (same machine):** `http://localhost:<port>`
+- **On a local network:** retrieve the machine's IP address with `ip a`, then use `http://<ip_address>:<port>`
+
 For the full configuration reference, see the [Documentation](#documentation) section below.
 
 ---
@@ -176,4 +183,11 @@ server1 :
         - 404 : ./errors/404.html
 ```
 
+---
 
+## Resources
+
+- [RFC 2616 – HTTP/1.1](https://datatracker.ietf.org/doc/html/rfc2616)
+- [RFC 9112 – HTTP/1.1 Message Syntax and Routing](https://www.rfc-editor.org/rfc/rfc9112.html)
+
+> **AI usage:** AI tools were used strictly for documentation purposes — simplifying RFC comprehension, helping create an early socket-testing program to better understand socket behaviour, and assisting in writing this README.

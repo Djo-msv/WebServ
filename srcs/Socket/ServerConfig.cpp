@@ -87,7 +87,7 @@ std::string ServerConfig::getErrorFile(int errorCode) const
 {
     std::map<int, std::string>::const_iterator it = error_files.find(errorCode);
     if (it != error_files.end()) {
-        return it->value;
+        return (root_location.root + it->value);
     }
     throw FileNotFound();
 }

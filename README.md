@@ -47,7 +47,7 @@ For the full configuration reference, see the [Documentation](#documentation) se
 
 ### MYML Configuration File
 
-WebServ uses a custom YAML-like format called **MYML** (`.myml`) to configure servers. Indentation is used to define hierarchy (use tabs).
+WebServ uses a custom YAML-like format called **MYML** (`.myml`) to configure servers. Indentation is used to define hierarchy (use tabs or spaces).
 
 A configuration file can define one or more servers. Each server is declared as a top-level dictionary:
 

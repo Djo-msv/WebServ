@@ -1,9 +1,11 @@
 #include <ServerConfig.hpp>
 
 ServerConfig::ServerConfig(int port, location root_location, std::map<std::string, location *> locations,
-			std::map<std::string, std::string> cgi_extensions, std::string exec_folder, std::map<int, std::string> error_files, time_t timeout) :
+			std::map<std::string, std::string> cgi_extensions, std::string exec_folder, std::string upload_folder,
+			ssize_t max_body, std::map<int, std::string> error_files, time_t timeout) :
 		sin_family(AF_INET), sin_port(port), root_location(root_location), locations(locations),
-		cgi_extensions(cgi_extensions), error_files(error_files), exec_folder(exec_folder), timeout(timeout) {}
+		cgi_extensions(cgi_extensions), error_files(error_files), exec_folder(exec_folder), upload_folder(upload_folder),
+		max_body(max_body), timeout(timeout) {}
 
 ServerConfig::~ServerConfig() {
 	for (std::map<std::string, location *>::iterator it = locations.begin(); it != locations.end(); it++)
@@ -55,6 +57,7 @@ std::string ServerConfig::getFullPath(std::list<std::string> &full) const
 {
     std::string path;
     std::string back;
+
     if (!full.empty()) { back = full.back(); }
     if (full.size() > 1) {
         for (std::list<std::string>::const_iterator itt = full.begin(); itt != --full.end(); itt++)
@@ -96,7 +99,7 @@ std::string ServerConfig::getRootFolder() const { return (root_location.root); }
 
 time_t	ServerConfig::getTimeout(void) const { return (timeout); }
 
-bool ServerConfig::isExecFolder(std::list<std::string> &full, int method) const
+bool	ServerConfig::isExecFolder(std::list<std::string> &full, int method) const
 {
     if (full.empty()) { return false; }
     for (std::list<std::string>::const_iterator itt = full.begin(); itt != full.end(); itt++) {
@@ -110,4 +113,16 @@ bool ServerConfig::isExecFolder(std::list<std::string> &full, int method) const
         if (*itt == exec_folder) {  return true; }
     }
     return false;
+}
+
+
+bool	ServerConfig::canList(std::string loc)
+{
+	if (loc == "/")
+		return (root_location.should_list);
+	
+	std::map<std::string, location *>::const_iterator result = locations.find(loc);
+	if (result == locations.cend())
+		return (false);
+	return (result->second->should_list); 
 }

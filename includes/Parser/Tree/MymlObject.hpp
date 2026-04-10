@@ -18,9 +18,10 @@ class MymlObject // class mère
 		virtual void insert(const std::pair<std::string, MymlObject *> value);
 
 		std::string	getAsString();
-		int	getAsInt();
-		double getAsFloat();
-		bool getAsBool();
+		int		getAsInt();
+		ssize_t getAsLong();
+		double 	getAsFloat();
+		bool 	getAsBool();
 
 		bool	isList();
 		bool	isDictionnary();

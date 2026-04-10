@@ -21,6 +21,7 @@ class MymlDictionary : public MymlObject
 	
 		std::string getValueAsString(std::string key);
 		int getValueAsInt(std::string key);
+		ssize_t getValueAsLong(std::string key);
 		double getValueAsFloat(std::string key);
 
 		MymlObject *getValue(std::string key);

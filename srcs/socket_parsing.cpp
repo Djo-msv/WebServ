@@ -20,11 +20,14 @@ location	*parse_location(MymlDictionary *location_repertory, location root_loc)
 	std::string index("");
 	std::string root;
 	int			flags;
+	bool		should_list = root_loc.should_list;
 
 	try
 	{
 		if (location_repertory->has("index"))
 			index = location_repertory->getValueAsString("index");
+		if (location_repertory->has("list_files"))
+			should_list = location_repertory->getValueAsString("list_files") == "true" ? true : false;
 		if (location_repertory->has("root"))
 		{
 			if (location_repertory->has("alias"))
@@ -40,6 +43,7 @@ location	*parse_location(MymlDictionary *location_repertory, location root_loc)
 
 	location *loc = new location;
 	loc->allowed_methods = flags;
+	loc->should_list = should_list;
 	loc->index = index;
 	loc->root = root;
 	return (loc);
@@ -81,6 +85,8 @@ void	initOptionnalConfig(MymlDictionary *serverRepertory, std::string &exec_fold
 	{
 		try { root_loc.allowed_methods = getFlags(serverRepertory); } IGNORE(std::invalid_argument)
 		try { root_loc.index = serverRepertory->getValueAsString("index"); } IGNORE(std::invalid_argument)
+		root_loc.should_list = false;
+		try { root_loc.should_list = serverRepertory->getValueAsString("list_files") == "true" ? true : false;} IGNORE(std::invalid_argument)
 		try { exec_folder = serverRepertory->getValueAsString("execution_folder"); } IGNORE(std::invalid_argument)
 		try { timeout = serverRepertory->getValueAsInt("timeout"); } IGNORE(std::invalid_argument)
 		try { initCgiHandlers(serverRepertory, cgi_handlers); } IGNORE(std::invalid_argument)
@@ -103,6 +109,8 @@ ServerConfig *initServerConfig(MymlDictionary *serverRepertory)
 	std::map<std::string, location *> 	locations;
 	location							root_loc = (location){0, "", ""};
 	std::string 						exec_folder;
+	std::string							upload_folder;
+	ssize_t 							max_body = -1;
 	time_t	timeout = 15;
 	int		port;
 	
@@ -114,12 +122,13 @@ ServerConfig *initServerConfig(MymlDictionary *serverRepertory)
 	catch (std::invalid_argument &e) { throw std::invalid_argument(std::string("missing mandatory argument : ") + e.what()); }
 	RETHROW (MymlObject::BadCast)
 	RETHROW (std::bad_alloc)
-
+	try { max_body =  serverRepertory->getValueAsLong("max_body"); } IGNORE (std::invalid_argument)
+	try { upload_folder =  serverRepertory->getValueAsString("upload_folder"); } IGNORE (std::invalid_argument)
 	try	{ initOptionnalConfig(serverRepertory, exec_folder, timeout, cgi_handlers, root_loc, locations, errorFiles); }
 	catch (MymlObject::BadCast &e) {
 		throw (MymlObject::BadCast("config optional argument error at server " +  serverRepertory->getKey() + ' ' + e.what()));
 	}
 	RETHROW (std::invalid_argument)
 	RETHROW (std::bad_alloc)
-	return (new ServerConfig(port, root_loc, locations, cgi_handlers, exec_folder, errorFiles, timeout));
+	return (new ServerConfig(port, root_loc, locations, cgi_handlers, exec_folder, max_body, errorFiles, timeout));
 }

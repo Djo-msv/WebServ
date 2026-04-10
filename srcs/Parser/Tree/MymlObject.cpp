@@ -71,6 +71,19 @@ int	MymlObject::getAsInt(void)
 	return (std::atoi(_value.c_str()));
 }
 
+ssize_t MymlObject::getAsLong(void)
+{
+	std::string::iterator it = _value.begin();
+
+	if (*it == '-')
+		it++;
+	for (; it != _value.end(); it++) {
+		if (!isdigit(*it))
+			throw BadCast("the value [" + _value + "] is not an integer !");
+	}
+	return (std::atoll(_value.c_str()));
+}
+
 double	MymlObject::getAsFloat(void)
 {
 	int dot = 0;

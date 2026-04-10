@@ -72,6 +72,14 @@ int MymlDictionary::getValueAsInt(std::string key)
 	return (map->second->getAsInt());
 }
 
+ssize_t MymlDictionary::getValueAsLong(std::string key)
+{
+	std::map<std::string, MymlObject*>::iterator map = _dictionary->find(key);
+	if (map == _dictionary->end())
+		throw std::invalid_argument("Cannot find " + key + " inside map of the dictionary " + _key + " !");
+	return (map->second->getAsLong());
+}
+
 double MymlDictionary::getValueAsFloat(std::string key)
 {
 	std::map<std::string, MymlObject*>::iterator map = _dictionary->find(key);

@@ -2,16 +2,21 @@
 
 # Webserv
 
-1. General Instructions
-   - 1.1 [Compilation](#compilation)
-   - 1.2 [Usage](#usage)
-   - 1.3 [Configuration](#configuration)
-2. HTTP Related
-   - 2.1 [Request Handling](#request-handling)
-   - 2.2 [Response Handling](#response-handling)
-3. Advanced Features
-   - 3.1 [SSL Support](#ssl-support)
-   - 3.2 [Logging](#logging)
+-  [Description](#description)
+-  [General Instructions](#general-instructions)
+    - [Compilation](#compilation)
+    - [Running WebServ](#running-webserv)
+    - [Accessing the Server](#accessing-the-server)
+-  [Documentation](#documentation)
+    -  [MYML Configuration File](#myml-configuration-file)
+    -  [Mandatory arguments](#mandatory-arguments)
+    -  [Optional arguments](#optional-arguments)
+      -  [HTTP Methods](#http-methods)
+      -  [Locations](#locations)
+      -  [CGI Handlers](#cgi-handlers)
+      -  [Custom Error Files](#custom-error-files)
+    -  [Full example](#full-example)
+-  [Resources](#resources)
 
 ## Description
 
@@ -98,9 +103,29 @@ A configuration file can define one or more servers. Each server is declared as 
 | `execution_folder`  | string         | Path (relative to root) of the folder used for CGI script execution.                        |
 | `error_files`       | list           | Maps HTTP error codes to custom error page file paths (see [Error Files](#error-files)).   |
 
+
 ---
 
-#### Locations
+##### HTTP Methods
+
+HTTP Methods can be specified as a single value or as a MYML list:
+
+```
+# Single method
+allow_methods : GET
+
+# Multiple methods
+allow_methods :
+    - GET
+    - POST
+    - DELETE
+```
+> **Note:** : If placed at the root repository, it will act as default for all location. On the contrary if allowed_methods is not specified. No methods will be allowed by
+> default and the server's index won't be accessible  
+
+---
+
+##### Locations
 
 The `locations` block is a list of path-based or extension-based routing rules. Each entry is a dictionary keyed by a URL path (e.g. `/uploads`) or a file extension (e.g. `.py`).
 
@@ -115,18 +140,18 @@ locations :
         allow_methods : POST
 ```
 
-| Location key     | Type           | Description                                                                                               |
-|------------------|----------------|-----------------------------------------------------------------------------------------------------------|
-| `allow_methods`  | string or list | HTTP methods allowed for this location. Accepted values: `GET`, `POST`, `DELETE`.                        |
-| `index`          | string         | Default file to serve for this location.                                                                  |
-| `root`           | string         | Overrides the server root for this location. The location path is appended. Cannot be used with `alias`. |
-| `alias`          | string         | Sets a fixed folder path for this location without appending the location path. Cannot be used with `root`. |
+| Location key     | Type           | Description                                                                                                              |
+|------------------|----------------|--------------------------------------------------------------------------------------------------------------------------|
+| `allow_methods`  | string or list | HTTP methods allowed for this location. Accepted values: `GET`, `POST`, `DELETE`. Overrides the server root allow_method |
+| `index`          | string         | Default file to serve for this location.                                                                                 |
+| `root`           | string         | Overrides the server root for this location. The location path is appended. Cannot be used with `alias`.                 |
+| `alias`          | string         | Sets a fixed folder path for this location without appending the location path. Cannot be used with `root`.              |
 
 > **Note:** `root` and `alias` are mutually exclusive within the same location block.
 
 ---
 
-#### CGI Handlers
+##### CGI Handlers
 
 The `cgi_handlers` block maps file extensions to the executable that will handle them:
 
@@ -138,7 +163,7 @@ cgi_handlers :
 
 ---
 
-#### Error Files
+##### Custom Error Files
 
 The `error_files` block maps HTTP status codes to custom HTML error pages:
 
@@ -146,23 +171,6 @@ The `error_files` block maps HTTP status codes to custom HTML error pages:
 error_files :
     - 404 : ./errors/404.html
     - 500 : ./errors/500.html
-```
-
----
-
-#### `allow_methods` — single value vs list
-
-Methods can be specified as a single value or as a MYML list:
-
-```
-# Single method
-allow_methods : GET
-
-# Multiple methods
-allow_methods :
-    - GET
-    - POST
-    - DELETE
 ```
 
 ---

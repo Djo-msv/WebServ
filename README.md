@@ -2,16 +2,21 @@
 
 # Webserv
 
-1. General Instructions
-   - 1.1 [Compilation](#compilation)
-   - 1.2 [Usage](#usage)
-   - 1.3 [Configuration](#configuration)
-2. HTTP Related
-   - 2.1 [Request Handling](#request-handling)
-   - 2.2 [Response Handling](#response-handling)
-3. Advanced Features
-   - 3.1 [SSL Support](#ssl-support)
-   - 3.2 [Logging](#logging)
+- [Description](#description)
+- [General Instructions](#general-instructions)
+  - [Compilation](#compilation)
+  - [Running WebServ](#running-webserv)
+  - [Accessing the Server](#accessing-the-server)
+- [Documentation](#documentation)
+  - [MYML Configuration File](#myml-configuration-file)
+  - [Mandatory arguments](#mandatory-arguments)
+  - [Optional arguments](#optional-arguments)
+  - [Locations](#locations)
+  - [CGI Handlers](#cgi-handlers)
+  - [Error Files](#error-files)
+  - [`allow_methods` — single value vs list](#allow_methods--single-value-vs-list)
+  - [Full example](#full-example)
+- [Resources](#resources)
 
 ## Description
 

@@ -207,7 +207,7 @@ void Request::startline_check(std::string line)
 	if (!current.empty())
 		throw BadRequest();
 }
-#include <iostream>
+
 void Request::target_work()
 {
 	if (_target[0] != '/')

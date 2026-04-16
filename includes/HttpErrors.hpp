@@ -43,16 +43,11 @@ class LengthRequired : public HttpError {
         LengthRequired() : HttpError("411 Length Required", "./errors/411_def.html", 411) {};
 };
 
+class TooLarge : public HttpError {
+    public:
+        TooLarge() : HttpError("413 Content Too Large", "./errors/413_def.html", 413) {};
+};
 
 /*
-    200 OK
-    400 Bad Request
-	403 Forbidden
-    404 Not Found
-	500 Internal Server Error
-    501 Not Implemented (method isn't allowed for this server/location, encoding isn't handled, etc.)
-    414 URI Too Long
-    301 Moved Permanently
-    204 No Content
-    411 Length Required (message body but no length provided)
+    next up :: 301 Moved Permanently
 */

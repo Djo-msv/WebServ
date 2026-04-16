@@ -1,0 +1,31 @@
+still needed ::
+	redirect returns -> beginning of target_work(), we'll make it a Delete-type exception
+
+distribution tree, execution && method dependent ::
+	path_info first, location adjustment (including redirect returns ofc)
+	execution check :: if (extension->exec && extension->method) or (location->exec && location->method) -> execution run ;
+	location->method
+	check_index
+	method DELETE :: if (file_found()) -> return ;
+	method GET :: if (file_found(read)) -> return;
+	method POST ::
+		if (body.empty()) { add query; } //added later ; end of body_parse()
+		if (!path_info && file_found(write)) -> return ;
+	method else :: throw NotAllowed()
+
+additional needed info ::
+	redirects !!!
+	need to make sure the upload_folder is in the location map with an automatic POST allowed method
+	more parsing error leaks
+
+tests ::
+	so far so good on the usual tester stuff
+	Content Too Large sent back Internal Server Error not sure why ? -> fixed
+	all tests needed ::
+		static get x
+		static get / post dir listing x
+		cgi get / post x
+		static post create x
+		static post append x
+		static incorrect post create x
+	another siege run

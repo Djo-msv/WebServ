@@ -1,27 +1,21 @@
 #include <request_utils.hpp>
 
 /*
- * Checks if file exists and if we have read permission (GET) or write permission (POST)
+ * Checks if a file exists (DELETE) and if we have read permission (GET) or write permission (POST)
  */
-std::string	seekFile(std::string &pathfile, bool post)
+void	seekFile(std::string &pathfile, std::string method)
 {
 	struct stat file_stat;
 	if (stat(pathfile.c_str(), &file_stat) == -1)
 		throw FileNotFound();
-	if (!post && file_stat.st_mode & S_IRUSR)
-		return pathfile;
-	if (post) {
-		if (file_stat.st_mode & S_IFREG) {
-			if (file_stat.st_mode & S_IWUSR) { return pathfile; }
-			else { throw Forbidden(); }
-		}
-		//here check for upload file
-		else if (!(file_stat.st_mode & S_IFDIR))
-			throw NotImplemented();
-		return pathfile;
-	}
-	throw Forbidden();
-
+	if (!(file_stat.st_mode & S_IFREG))
+		throw NotImplemented();
+	if (method == "DELETE") { return; }
+	if (method == "POST" && !(file_stat.st_mode & S_IWUSR))
+		throw Forbidden();
+	if (method == "GET" && !(file_stat.st_mode & S_IRUSR))
+		throw Forbidden();
+	return ;
 }
 
 /* 
@@ -50,13 +44,14 @@ std::string	seekErrorFile(HttpError error, ServerConfig &config)
     std::string pathfile;
     try {
         pathfile = config.getErrorFile(error.getErrorCode());
-        return seekFile(pathfile, false);
+        seekFile(pathfile, "GET");
+        return pathfile;
     }
     catch(const HttpError &e) {
         if (error.getErrorCode() == 500)
             throw InternalServerError();
         pathfile = error.getDefaultFile();
-        try {  return seekFile(pathfile, false); }
+        try {  seekFile(pathfile, "GET"); return pathfile; }
         catch(const HttpError& e) {
             throw InternalServerError();
         }
@@ -185,14 +180,11 @@ std::list<std::string> target_list(std::string loc)
 std::string get_path_info(std::string loc)
 {
 	std::string path_info;
-	std::string last_dir;
 	struct stat s;
 	size_t pos;
 	while ((pos = loc.rfind('/')) != std::string::npos && pos > 1) {
 		if (stat(loc.c_str(), &s) == 0) {
-			if(last_dir.empty() && s.st_mode & S_IFDIR)
-				last_dir = loc;
-			else if (s.st_mode & S_IFREG)
+			if((s.st_mode & S_IFDIR) || (s.st_mode & S_IFREG))
 				break ;
 		}
 		else

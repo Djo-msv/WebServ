@@ -52,7 +52,7 @@ MymlDictionary *MymlDictionary::getValueAsDictionary(std::string key)
 {
 	MymlDictionary *list = dynamic_cast<MymlDictionary*>(getValue(key));
 	if (!list)
-		throw BadCast(std::string("the value [" + key + "] is not an list"));
+		throw BadCast(std::string("the value [" + key + "] is not an Dictionnary"));
 	return (list);
 }
 

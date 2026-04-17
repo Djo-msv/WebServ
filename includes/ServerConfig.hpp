@@ -14,7 +14,8 @@
 
 struct location
 {
-    int			allowed_methods;
+    uint		allowed_methods;
+	uint		redirect;
 	bool		should_list;
     std::string	root;
     std::string	index;
@@ -54,6 +55,12 @@ class ServerConfig
 		sa_family_t                         sin_family;
         int                          		sin_port;
 
+		class NotImplemented : public std::invalid_argument
+		{
+			public :
+				NotImplemented() : invalid_argument("Method not recognised or not Implemented") {}
+		};
+
     private:
 		location							root_location;
 		std::map<std::string, location *>	locations;
@@ -64,3 +71,5 @@ class ServerConfig
 		ssize_t 							max_body;
 		time_t								timeout;
 };
+
+

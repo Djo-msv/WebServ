@@ -48,6 +48,7 @@ class TooLarge : public HttpError {
         TooLarge() : HttpError("413 Content Too Large", "./errors/413_def.html", 413) {};
 };
 
-/*
-    next up :: 301 Moved Permanently
-*/
+class Redirect : public HttpError {
+    public:
+        Redirect(std::string target, std::string stat) : HttpError(stat, target, 300) {};
+};

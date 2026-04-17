@@ -212,6 +212,15 @@ void Request::target_work()
 {
 	if (_target[0] != '/')
 		_target = "/" + _target;
+	
+	//here redirect check and handling
+	try { _config.isRedirect(_target); }
+	catch (std::exception &e) {
+		if (headers.count("CONNECTION")) { headers.erase(headers.find("CONNECTION")); }
+		headers.insert(std::pair<std::string, std::string>("CONNECTION", "close"));
+		throw ;
+	}
+	
 	//make location list
 	std::list<std::string> location = target_list(_target);
 	//cut path_info and update target + list + script_name
@@ -322,7 +331,7 @@ void Request::headers_add(std::string line)
 		n = key.find('-');
 	}
 	//adding the HTTP prefix for HTTP-specific cgi environment variables
-	if (key != "CONTENT_LENGTH" && key != "CONTENT_TYPE")
+	if (key != "CONTENT_LENGTH" && key != "CONTENT_TYPE" && key != "CONNECTION")
 		key = "HTTP_" + key;
 	headers.insert(std::pair<std::string, std::string>(key, val));
 }

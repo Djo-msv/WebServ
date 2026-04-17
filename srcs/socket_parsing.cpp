@@ -46,7 +46,6 @@ location	*parse_location(MymlDictionary *location_repertory, location root_loc)
 		MymlDictionary *redir = location_repertory->getValueAsDictionary("redirect");
 		root = redir->getValueAsString("url");
 		redirect = redir->getValueAsInt("code");
-		(void) redirect;
 	}
 	else
 		root = root_loc.root + location_repertory->getKey();
@@ -57,6 +56,7 @@ location	*parse_location(MymlDictionary *location_repertory, location root_loc)
 	loc->should_list = should_list;
 	loc->index = index;
 	loc->root = root;
+	loc->redirect = redirect;
 	return (loc);
 }
 

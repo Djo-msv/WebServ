@@ -87,13 +87,25 @@ void	ClientSocket::parseRequest()
 	catch (Request::MissingData &e) {
 		if (this->hasTimedOut()) { status = Done; }
 		else {status = ReadRequest; }
-		} //incomplete request
+	} //incomplete request
+	catch (Redirect &e) { this->redirect(e.what(), e.getDefaultFile()); return ;}
 	catch (Request::DeleteRequest &e) {
 		try { this->deleteFile(e.what()); }
 		RETHROW(std::bad_alloc)
 	}
 	catch (HttpError &e) { errorHandling(e); }
 	catch (std::exception &e) { throw; }
+}
+
+void	ClientSocket::redirect(std::string status, std::string target)
+{
+	std::string msg = "HTTP/1.1 " + status + "\r\nLocation: " + target + "\r\n\r\n";
+	try {
+		_response.add((unsigned char *)msg.c_str(), msg.size());
+		_response.makeMsg();
+	} RETHROW(std::bad_alloc)
+	this->status = WaitResponse; 
+	epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
 }
 
 void	ClientSocket::deleteFile(const char *filename)
@@ -108,7 +120,7 @@ void	ClientSocket::deleteFile(const char *filename)
 			_response.add(response.c_str(), response.size());
 			_response.makeMsg();
 		} RETHROW(std::bad_alloc)
-		status = WaitResponse;
+		this->status = WaitResponse;
 		epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
 	}
 }

@@ -129,3 +129,38 @@ bool	ServerConfig::canList(std::string loc)
 bool	ServerConfig::isUploadFolder(std::string loc) const { return (upload_folder == loc); }
 
 ssize_t	ServerConfig::getMaxBody() const { return max_body; }
+#include <iostream>
+void	ServerConfig::isRedirect(std::string target)
+{
+	int code = 0;
+	std::string redir;
+	if (target == "/") { code = root_location.redirect; redir = root_location.root; }
+	else {
+		std::map<std::string, location *>::const_iterator result = locations.find(target);
+		if (result == locations.end()) { return ; }
+		code = result->second->redirect;
+		redir = result->second->root;
+	}
+	if (!code) { return ; }
+	std::string status;
+	switch (code) {
+		case 301 :
+			status = "301 Moved Permanently";
+			break ;
+		case 302 :
+			status = "302 Found";
+			break ;
+		case 303 :
+			status = "303 See Other";
+			break ;
+		case 307 :
+			status = "307 Temporary Redirect";
+			break ;
+		case 308 :
+			status = "308 Permanent Redirect";
+			break ;
+		default :
+			throw InternalServerError();
+	}
+	throw Redirect(redir.c_str(), status);
+}

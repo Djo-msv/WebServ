@@ -15,7 +15,7 @@
 struct location
 {
     uint		allowed_methods;
-	uint		redirect;
+	int		redirect;
 	bool		should_list;
     std::string	root;
     std::string	index;
@@ -50,6 +50,7 @@ class ServerConfig
 		bool		canList(std::string location);
 		bool		isUploadFolder(std::string loc) const;
 		ssize_t		getMaxBody() const;
+		void		isRedirect(std::string target);
 
         struct sockaddr_in					sin;
         socklen_t							sin_len;

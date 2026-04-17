@@ -4,7 +4,13 @@ server1 :
 	timeout : 40
 	allow_methods : GET
 	max_body : 40000000
+	list_files : true
 	locations :
+		- /old_html :
+			redirect :
+				code : 307
+				url : /html
+			allow_methods : GET
 		- /html :
 			allow_methods : GET
 			index : index.html

@@ -29,6 +29,8 @@ class ClientSocket : public Socket
 		void	readRequest();
 		//parseRequest, with optional switch-back to readRequest if more data is needed
 		void	parseRequest();
+		//for redirections, immediate response pivot
+		void	redirect(std::string status, std::string target);
 		//for the DELETE method, deletes file and adjusts response accordingly
 		void	deleteFile(const char *filename);
 		//writing to cgi pipein + appropriate _status, epoll and sockets update && starting cgi once write is over

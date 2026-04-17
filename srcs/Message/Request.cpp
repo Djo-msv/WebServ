@@ -118,7 +118,7 @@ void Request::parse(std::map<std::string, std::string> &mime)
 {
 	if (_status) //headers already parsed on a previous run, _env created etc.
 	{
-		try { this->parse_body(); }
+		try { this->parse_body(); this->target_work(); }
 		catch (std::exception &e) { throw ; }
 		if (_method == "DELETE")
 			throw DeleteRequest(_target);
@@ -144,6 +144,7 @@ void Request::parse(std::map<std::string, std::string> &mime)
 		this->parse_header(header);
 		_status = 1; //headers are parsed with no error
 		this->parse_body();
+		this->target_work();
 		if (_method == "DELETE")
 			throw DeleteRequest(_target);
 		if (exec)
@@ -205,7 +206,6 @@ void Request::startline_check(std::string line)
 	getline(l, current);
 	if (!current.empty())
 		throw BadRequest();
-	this->target_work();
 }
 
 void Request::target_work()
@@ -219,36 +219,48 @@ void Request::target_work()
 	if (!path_info.empty() && _target.find(path_info) != std::string::npos) {
 		_target = _target.substr(0, _target.rfind(path_info));
 		location = target_list(_target);
-		//later upload check here
-		if (_method != "POST" && !_config.isExecFolder(location, _config.stringToMethodFlag(_method))) {
-			_target += path_info;
-			location = target_list(_target);
-		}
 	}
 	std::string script_name = _target;
+	//changes changes
+	_target = _config.getFullPath(location);
+	std::string front = "/";
+	if (!location.empty()) { front = location.front(); }
+	//execution check
+	if (_config.isExecFolder(location, _config.stringToMethodFlag(_method))) {
+		if (needsIndex(_target)) {
+			std::string index = _config.getIndex(location);
+			if (index.empty()) {
+				if (_config.canList(front)) { _method = "GET"; return ;}
+				throw Forbidden();
+			}
+			if (index[0] == '/') { index.erase(index.begin()); }
+			_target += index;
+			script_name += index;
+		}
+		this->adjust_exec(path_info, script_name);
+		return ;
+	}
 	// method check
 	if (!_config.isMethodAllowed(location, _config.stringToMethodFlag(_method)))
 		throw NotAllowed();
-	//add index
-	std::string index;
-	//later this POST check goes to upload check (if upload and path_info, ignore the need for index, else add
-	try { if (_method != "POST" && (_target == "/" || needsIndex(_config.getFullPath(location)))) {
-		index = _config.getIndex(location);
-		if (!index.empty() && index[0] != '/')
-			index = "/" + index;
-		if (!index.empty()) { location.push_front(index); script_name += index; }
-	} }
-	catch (HttpError &e) { throw; }
-	//target to full_path
-	_target = _config.getFullPath(location);
-	if (!path_info.empty() && _target.find(path_info) != std::string::npos)
-		_target = _target.substr(0, _target.rfind(path_info));
-	//NotFound / Forbidden catch
-	try { seekFile(_target, (_method == "POST")); }
-	catch (std::exception &e) { throw ; }
-	//check_exec, adjust
-	if (_config.isExecFolder(location, _config.stringToMethodFlag(_method)))
-		this->adjust_exec(path_info, script_name);
+	//path_info only relevant to POST-ing files, discard otherwise
+	if (!_config.isUploadFolder(front) && !path_info.empty())
+		throw FileNotFound();
+	//index add, if index needed
+	if (path_info.empty() && needsIndex(_target)) {
+		std::string index = _config.getIndex(location);
+		if (index.empty()) {
+			if (_config.canList(front)) { _method = "GET"; return ;}
+			throw Forbidden();
+		}
+		if (index[0] == '/') { index.erase(index.begin()); }
+		_target += index;
+	}
+	//seekFile (files only)
+	if (_method != "POST" || path_info.empty()) {
+		try { seekFile(_target, _method); }
+		catch (std::exception &e) { throw ; }
+	}
 }
 
 bool Request::needsIndex(std::string full_target)
@@ -256,12 +268,8 @@ bool Request::needsIndex(std::string full_target)
 	struct stat s;
 	if ( stat(full_target.c_str(), &s) != 0 ) { throw FileNotFound(); }
 	if( s.st_mode & S_IFDIR ) {
-		if (*(_target.rbegin()) == '/') {
-			//here the check on whether the location auth folder listing, if not seek index
-			//_config.canList() a bool return, checks only the last folder
-			return false;
-		}
-		_target += "/";
+		if (*(_target.rbegin()) != '/')
+			_target += "/";
 		return true;
 	}
 	return false;
@@ -271,7 +279,7 @@ void Request::adjust_exec(std::string path_info, std::string script_name)
 {
 	exec = true;
 	//looking for cgi executable file
-	try { _cgi = extractCgi(_target, _config); }
+	try { seekFile(_target, "GET"); _cgi = extractCgi(_target, _config); }
 	catch (std::exception &e) { throw ; }
 	//adding relevant variables :: cgi version, redirect status, query string, method request, etc.
 	headers.insert(std::pair<std::string, std::string>("REDIRECT_STATUS", "true"));
@@ -360,8 +368,15 @@ void Request::parse_body()
 		}
 		else
 			this->body_check(this->getSize(), _body.size());
+		if (_method == "POST" && _body.empty() && !_query.empty()) {
+			if (headers.count("CONTENT_LENGTH")) { headers.erase(headers.find("CONTENT_LENGTH")); }
+			_body += (unsigned char *)_query.c_str();
+			headers.insert(std::pair<std::string, std::string>("CONTENT_LENGTH", ft_itoa(_body.size())));
+		}
+		//max body size check
+		if (_config.getMaxBody() > -1 && _config.getMaxBody() < this->getSize())
+			throw TooLarge();
 		//create the unsigned char body to send to the cgi program
-		//here the maxBody check and throw 413 Content Too Large if it is
 		if (_body.size()) {
 			c_body = new unsigned char[_body.size()];
 			size_t i = 0;

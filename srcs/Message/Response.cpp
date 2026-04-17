@@ -1,12 +1,12 @@
 #include "Response.hpp"
 
-Response::Response() : _status("200 OK"), _msg(NULL), exec(false), sizer(0) {}
+Response::Response() : _status("200 OK"), _msg(NULL), exec(false), _post(false), sizer(0) {}
 
 Response::~Response() { if (_msg) { delete[] _msg; } }
 
 Response::Response(const Response &other) : _target(other._target), _status(other._status), \
 					_headers(other._headers), _body(other._body), exec(other.exec), \
-					sizer(other.sizer) {}
+					_post(other._post), sizer(other.sizer) {}
 
 Response& Response::operator=(const Response &other)
 {
@@ -17,6 +17,7 @@ Response& Response::operator=(const Response &other)
 		_status = other._status;
 		_body = other._body;
 		exec = other.exec;
+		_post = other._post;
 		if (_msg)
 			delete[] _msg;
 		_msg = NULL;
@@ -36,6 +37,7 @@ void Response::clear()
 	_msg = NULL;
 	exec = false;
 	sizer = 0;
+	_post = false;
 }
 
 /*
@@ -93,12 +95,16 @@ bool Response::makeResponse(Request *req)
 
 void Response::makeErrorResponse(HttpError &error, ServerConfig &s)
 {
+	_post = false;
 	InternalServerError e;
 	_status = error.what();
 	try { _target = seekErrorFile(error, s); this->readFile(); }
 	catch (HttpError &en) {
-		_status = e.what(); _target = "";
-		this->add((unsigned char *)(e.getDefaultFile().c_str()), e.getDefaultFile().size());
+		try { _target = seekErrorFile(en, s); this->readFile(); }
+		catch (HttpError &err) {
+			_status = e.what(); _target = "";
+			this->add((unsigned char *)(e.getDefaultFile().c_str()), e.getDefaultFile().size());
+		}
 	}
 }
 
@@ -213,6 +219,7 @@ void Response::postFile(unsigned char *body, size_t length, std::string path_inf
 			throw InternalServerError();
 	}
 	else if (stat(_target.c_str(), &s) == 0 && (s.st_mode & S_IFDIR) && !path_info.empty()) {
+		if (path_info.rfind('/') != path_info.find('/')) { throw NotImplemented(); }
 		_target += path_info;
 		int fd = open(_target.c_str(), O_WRONLY | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
 		if (fd != -1) {

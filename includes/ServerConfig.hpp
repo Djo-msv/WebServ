@@ -48,6 +48,8 @@ class ServerConfig
 		std::string getUploadFolder(void) const;
 		time_t		getTimeout(void) const;
 		bool		canList(std::string location);
+		bool		isUploadFolder(std::string loc) const;
+		ssize_t		getMaxBody() const;
 
         struct sockaddr_in					sin;
         socklen_t							sin_len;

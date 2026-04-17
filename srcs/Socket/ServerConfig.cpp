@@ -85,7 +85,7 @@ ServerConfig::MethodFlag ServerConfig::stringToMethodFlag(const std::string &met
     if (method == "DELETE") return DELETE;
     throw ServerConfig::NotImplemented();
 }
-#include <iostream>
+
 std::string ServerConfig::getErrorFile(int errorCode) const
 {
     std::map<int, std::string>::const_iterator it = error_files.find(errorCode);
@@ -115,7 +115,6 @@ bool	ServerConfig::isExecFolder(std::list<std::string> &full, int method) const
     return false;
 }
 
-
 bool	ServerConfig::canList(std::string loc)
 {
 	if (loc == "/")
@@ -126,3 +125,7 @@ bool	ServerConfig::canList(std::string loc)
 		return (false);
 	return (result->second->should_list); 
 }
+
+bool	ServerConfig::isUploadFolder(std::string loc) const { return (upload_folder == loc); }
+
+ssize_t	ServerConfig::getMaxBody() const { return max_body; }

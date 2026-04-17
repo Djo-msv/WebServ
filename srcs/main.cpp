@@ -144,6 +144,7 @@ void initServerSockets(std::list<MymlObject *> *root)
 		MymlDictionary *serverRepertory = (*it)->getAsDictionnary();
 		try	{
 			ServerConfig *config = initServerConfig(serverRepertory);
+			std::cout << serverRepertory->getKey() << " ";
 			ServerSocket *socket = new ServerSocket(config, epollInstance);
 			sockets.insert(std::make_pair(socket->getSocketFd(), socket));
 		}

@@ -75,7 +75,7 @@ std::string ServerConfig::getCgi(const std::string &extension) const
     if (it != cgi_extensions.end()) {
         return it->value;
     }
-    throw NotImplemented();
+    throw ServerConfig::NotImplemented();
 }
 
 ServerConfig::MethodFlag ServerConfig::stringToMethodFlag(const std::string &method)
@@ -83,7 +83,7 @@ ServerConfig::MethodFlag ServerConfig::stringToMethodFlag(const std::string &met
     if (method == "GET") return GET;
     if (method == "POST") return POST;
     if (method == "DELETE") return DELETE;
-    throw NotAllowed();
+    throw ServerConfig::NotImplemented();
 }
 #include <iostream>
 std::string ServerConfig::getErrorFile(int errorCode) const
@@ -122,7 +122,7 @@ bool	ServerConfig::canList(std::string loc)
 		return (root_location.should_list);
 	
 	std::map<std::string, location *>::const_iterator result = locations.find(loc);
-	if (result == locations.cend())
+	if (result == locations.end())
 		return (false);
 	return (result->second->should_list); 
 }

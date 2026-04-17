@@ -1,5 +1,7 @@
 #include "socket_parsing.hpp"
 
+
+
 int		getFlags(MymlDictionary *repertory)
 {
 	int flags = 0;
@@ -8,7 +10,9 @@ int		getFlags(MymlDictionary *repertory)
 	if (methods->isList()) {
 		MymlList *flags_list = methods->getAsList();
 		for (std::list<MymlObject*>::iterator it = flags_list->begin(); it != flags_list->end(); it++)
-			flags |= ServerConfig::stringToMethodFlag((*it)->getAsString());
+		{
+			try { flags |= ServerConfig::stringToMethodFlag((*it)->getAsString());} RETHROW(NotAllowed)
+		}
 	}
 	else
 		flags |= ServerConfig::stringToMethodFlag(methods->getAsString());
@@ -19,27 +23,34 @@ location	*parse_location(MymlDictionary *location_repertory, location root_loc)
 {
 	std::string index("");
 	std::string root;
+	int			redirect = 0;
 	int			flags;
 	bool		should_list = root_loc.should_list;
 
-	try
+	if (location_repertory->has("index"))
+		index = location_repertory->getValueAsString("index");
+	if (location_repertory->has("list_files"))
+		should_list = location_repertory->getValueAsString("list_files") == "true" ? true : false;
+	if (location_repertory->has("root"))
 	{
-		if (location_repertory->has("index"))
-			index = location_repertory->getValueAsString("index");
-		if (location_repertory->has("list_files"))
-			should_list = location_repertory->getValueAsString("list_files") == "true" ? true : false;
-		if (location_repertory->has("root"))
-		{
-			if (location_repertory->has("alias"))
-				throw (std::invalid_argument("logic error : you cannot define both alias and root at the same time"));
-			root = location_repertory->getValueAsString("root") + location_repertory->getKey();
-		} else if (location_repertory->has("alias"))
-			root = location_repertory->getValueAsString("alias");
-		else
-			root = root_loc.root + location_repertory->getKey();
-		flags = getFlags(location_repertory);
+		if (location_repertory->has("alias") || location_repertory->has("redirect"))
+			throw (std::invalid_argument(EXCLUSIVE_RULE_ERROR));
+		root = location_repertory->getValueAsString("root") + location_repertory->getKey();
+	} else if (location_repertory->has("alias"))
+	{
+		if (location_repertory->has("redirect"))
+			throw (std::invalid_argument(EXCLUSIVE_RULE_ERROR));
+		root = location_repertory->getValueAsString("alias");
 	}
-	catch(const std::exception &e) { throw e; }
+	else if (location_repertory->has("redirect")){
+		MymlDictionary *redir = location_repertory->getValueAsDictionary("redirect");
+		root = redir->getValueAsString("url");
+		redirect = redir->getValueAsInt("code");
+		(void) redirect;
+	}
+	else
+		root = root_loc.root + location_repertory->getKey();
+	flags = getFlags(location_repertory);
 
 	location *loc = new location;
 	loc->allowed_methods = flags;
@@ -77,29 +88,38 @@ void	initCgiHandlers(MymlDictionary *serverRepertory, std::map<std::string, std:
 	RETHROW (MymlObject::BadCast)
 }
 
+void	free_locations(std::map<std::string, location *> &server_locations)
+{
+	for (std::map<std::string, location *>::iterator it = server_locations.begin(); it != server_locations.end(); ++it)
+	{
+		delete it->value;
+	}
+}
+
 void	initOptionnalConfig(MymlDictionary *serverRepertory, std::string &exec_folder, time_t &timeout,
 	std::map<std::string, std::string> &cgi_handlers, location &root_loc,
 	std::map<std::string, location *> &server_locations, std::map<int, std::string> &error_files)
 {
-	try
-	{
-		try { root_loc.allowed_methods = getFlags(serverRepertory); } IGNORE(std::invalid_argument)
-		try { root_loc.index = serverRepertory->getValueAsString("index"); } IGNORE(std::invalid_argument)
-		root_loc.should_list = false;
-		try { root_loc.should_list = serverRepertory->getValueAsString("list_files") == "true" ? true : false;} IGNORE(std::invalid_argument)
-		try { exec_folder = serverRepertory->getValueAsString("execution_folder"); } IGNORE(std::invalid_argument)
-		try { timeout = serverRepertory->getValueAsInt("timeout"); } IGNORE(std::invalid_argument)
-		try { initCgiHandlers(serverRepertory, cgi_handlers); } IGNORE(std::invalid_argument)
-		try {
-			MymlList *locations = serverRepertory->getValueAsList("locations");
-			for (std::list<MymlObject *>::iterator it = locations->begin(); it != locations->end(); ++it)
-			{
-				MymlDictionary *dict = (*it)->getAsDictionnary();
-				server_locations[dict->getKey()] = parse_location(dict, root_loc);
-			}
-		} IGNORE(std::invalid_argument)
-		try { init_error_files(serverRepertory, error_files); } IGNORE(std::invalid_argument)
-	} RETHROW(MymlObject::BadCast)
+	try { root_loc.allowed_methods = getFlags(serverRepertory); } IGNORE(std::invalid_argument)
+	try { root_loc.index = serverRepertory->getValueAsString("index"); } IGNORE(std::invalid_argument)
+	try { root_loc.should_list = serverRepertory->getValueAsString("list_files") == "true" ? true : false;} IGNORE(std::invalid_argument)
+	try { exec_folder = serverRepertory->getValueAsString("execution_folder"); } IGNORE(std::invalid_argument)
+	try { timeout = serverRepertory->getValueAsInt("timeout"); } IGNORE(std::invalid_argument)
+	try { initCgiHandlers(serverRepertory, cgi_handlers); } IGNORE(std::invalid_argument)
+	try {
+		MymlList *locations = serverRepertory->getValueAsList("locations");
+		for (std::list<MymlObject *>::iterator it = locations->begin(); it != locations->end(); ++it)
+		{
+			MymlDictionary *dict = (*it)->getAsDictionnary();
+			if (server_locations.find(dict->getKey()) != server_locations.end())
+				throw std::invalid_argument("The same location was defined two times");
+			server_locations[dict->getKey()] = parse_location(dict, root_loc);
+		}
+	}
+	catch (const ServerConfig::NotImplemented &e) { free_locations(server_locations); throw e; }
+	catch (const MymlObject::BadCast &e) { free_locations(server_locations); throw e; }
+	catch (const std::invalid_argument &e) { free_locations(server_locations); throw e; }
+	try { init_error_files(serverRepertory, error_files); } IGNORE(std::invalid_argument)
 }
 
 ServerConfig *initServerConfig(MymlDictionary *serverRepertory)
@@ -107,7 +127,7 @@ ServerConfig *initServerConfig(MymlDictionary *serverRepertory)
 	std::map<std::string, std::string>	cgi_handlers;
 	std::map<int, std::string>			errorFiles;
 	std::map<std::string, location *> 	locations;
-	location							root_loc = (location){0, "", ""};
+	location							root_loc = (location){0, 0, 0, "", ""};
 	std::string 						exec_folder;
 	std::string							upload_folder;
 	ssize_t 							max_body = -1;
@@ -117,9 +137,22 @@ ServerConfig *initServerConfig(MymlDictionary *serverRepertory)
 	try
 	{
 		port = serverRepertory->getValueAsInt("port");
-		root_loc.root = serverRepertory->getValueAsString("root");
+		if (serverRepertory->has("alias"))
+			throw std::invalid_argument("alias rule is not allowed at server root");
+		if (serverRepertory->has("root"))
+		{
+			if (serverRepertory->has("redirect"))
+				throw std::invalid_argument(EXCLUSIVE_RULE_ERROR);
+			root_loc.root = serverRepertory->getValueAsString("root");
+		}
+		else if (serverRepertory->has("redirect"))
+		{
+			MymlDictionary *redir = serverRepertory->getValueAsDictionary("redirect");
+			root_loc.root = redir->getValueAsString("url");
+			root_loc.redirect = redir->getValueAsInt("code");
+		}
 	}
-	catch (std::invalid_argument &e) { throw std::invalid_argument(std::string("missing mandatory argument : ") + e.what()); }
+	catch (std::invalid_argument &e) { throw std::invalid_argument(std::string("mandatory argument error : ") + e.what()); }
 	RETHROW (MymlObject::BadCast)
 	RETHROW (std::bad_alloc)
 	try { max_body =  serverRepertory->getValueAsLong("max_body"); } IGNORE (std::invalid_argument)
@@ -128,7 +161,5 @@ ServerConfig *initServerConfig(MymlDictionary *serverRepertory)
 	catch (MymlObject::BadCast &e) {
 		throw (MymlObject::BadCast("config optional argument error at server " +  serverRepertory->getKey() + ' ' + e.what()));
 	}
-	RETHROW (std::invalid_argument)
-	RETHROW (std::bad_alloc)
 	return (new ServerConfig(port, root_loc, locations, cgi_handlers, exec_folder, upload_folder, max_body, errorFiles, timeout));
 }

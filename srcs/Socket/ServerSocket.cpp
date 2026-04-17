@@ -22,7 +22,7 @@ ServerSocket::ServerSocket(ServerConfig *config, const int epollInstance) : Sock
 
 	epoll_add(epollInstance, _socketFd, EPOLLIN | EPOLLET);
 
-	std::cout << "Server started on port " << config->sin_port << std::endl;
+	std::cout << "started on port : " << config->sin_port << std::endl;
 }
 
 ServerSocket::~ServerSocket(void) { delete _config; }

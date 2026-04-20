@@ -29,6 +29,8 @@ MymlTree::MymlTree(std::list<Token> &tokens)
 						_error->unespectedToken(it);
 				}
 			}
+			else
+				throw (BadParsingError("Do you really want to break everything?"));
 		}
 	}	
 	catch (const std::runtime_error &e) {

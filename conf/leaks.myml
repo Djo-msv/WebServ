@@ -1,0 +1,7 @@
+server447 :
+	not a server
+	still not a server
+	port : 7540
+	root : .
+	index : index.html
+	notaserver : the_sequel

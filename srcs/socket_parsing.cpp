@@ -118,7 +118,7 @@ void	initOptionnalConfig(MymlDictionary *serverRepertory, std::string &exec_fold
 			server_locations[dict->getKey()] = parse_location(dict, root_loc);
 		}
 	}
-	catch (const ServerConfig::NotImplemented &e) { free_locations(server_locations); throw e; }
+	catch (const ServerConfig::ConfigNotImplemented &e) { free_locations(server_locations); throw e; }
 	catch (const MymlObject::BadCast &e) { free_locations(server_locations); throw e; }
 	catch (const std::invalid_argument &e) { free_locations(server_locations); throw e; }
 	try { init_error_files(serverRepertory, error_files); } IGNORE(std::invalid_argument)

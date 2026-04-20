@@ -75,7 +75,7 @@ std::string ServerConfig::getCgi(const std::string &extension) const
     if (it != cgi_extensions.end()) {
         return it->value;
     }
-    throw ServerConfig::NotImplemented();
+    throw NotImplemented();
 }
 
 ServerConfig::MethodFlag ServerConfig::stringToMethodFlag(const std::string &method)
@@ -83,7 +83,7 @@ ServerConfig::MethodFlag ServerConfig::stringToMethodFlag(const std::string &met
     if (method == "GET") return GET;
     if (method == "POST") return POST;
     if (method == "DELETE") return DELETE;
-    throw ServerConfig::NotImplemented();
+    throw ServerConfig::ConfigNotImplemented();
 }
 
 std::string ServerConfig::getErrorFile(int errorCode) const

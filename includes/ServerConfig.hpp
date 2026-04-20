@@ -58,10 +58,10 @@ class ServerConfig
 		sa_family_t                         sin_family;
         int                          		sin_port;
 
-		class NotImplemented : public std::invalid_argument
+		class ConfigNotImplemented : public std::invalid_argument
 		{
 			public :
-				NotImplemented() : invalid_argument("Method not recognised or not Implemented") {}
+				ConfigNotImplemented() : invalid_argument("Method not recognised or not Implemented") {}
 		};
 
     private:

@@ -64,8 +64,12 @@ std::string ServerConfig::getFullPath(std::list<std::string> &full) const
             path = *itt + path;
     }
     std::map<std::string, location *>::const_iterator it;
-    if ((it = locations.find(back)) != locations.end()) { path = it->value->root + path; }
-    else { path = root_location.root + back + path; }
+    if ((it = locations.find(back)) != locations.end()){
+		path = it->value->root + path;
+	}
+    else {
+		path = root_location.root + back + path;
+	}
     return path;
 }
 

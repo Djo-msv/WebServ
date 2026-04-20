@@ -15,7 +15,7 @@
 struct location
 {
     uint		allowed_methods;
-	int		redirect;
+	int			redirect;
 	bool		should_list;
     std::string	root;
     std::string	index;

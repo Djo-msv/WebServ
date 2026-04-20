@@ -234,8 +234,10 @@ void Request::target_work()
 	_target = _config.getFullPath(location);
 	std::string front = "/";
 	if (!location.empty()) { front = location.front(); }
-	//execution check
-	if (_config.isExecFolder(location, _config.stringToMethodFlag(_method))) {
+	//execution check + method Not Implemented (Allowed)
+	try { exec = _config.isExecFolder(location, _config.stringToMethodFlag(_method)); }
+	catch (ServerConfig::NotImplemented &e) { throw NotAllowed(); }
+	if (exec) {
 		if (needsIndex(_target)) {
 			std::string index = _config.getIndex(location);
 			if (index.empty()) {

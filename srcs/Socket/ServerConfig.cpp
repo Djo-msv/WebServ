@@ -75,7 +75,7 @@ std::string ServerConfig::getCgi(const std::string &extension) const
     if (it != cgi_extensions.end()) {
         return it->value;
     }
-    throw ServerConfig::NotImplemented();
+    throw NotImplemented();
 }
 
 ServerConfig::MethodFlag ServerConfig::stringToMethodFlag(const std::string &method)
@@ -129,7 +129,7 @@ bool	ServerConfig::canList(std::string loc)
 bool	ServerConfig::isUploadFolder(std::string loc) const { return (upload_folder == loc); }
 
 ssize_t	ServerConfig::getMaxBody() const { return max_body; }
-#include <iostream>
+
 void	ServerConfig::isRedirect(std::string target)
 {
 	int code = 0;

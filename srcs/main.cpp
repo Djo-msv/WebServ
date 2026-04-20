@@ -19,7 +19,6 @@ void handleError(const char* msg)
 		delete it->value;
 	close(epollInstance);
 	std::cerr << msg << std::endl;
-	exit(1);
 }
 
 void closeSocketconnection(ClientSocket *cSocket)
@@ -135,7 +134,6 @@ void	manageRequests()
 
 void initServerSockets(std::list<MymlObject *> *root)
 {
-
 	for (std::list<MymlObject *>::iterator it = root->begin(); it != root->end(); ++it)
 	{
 		if (!(*it)->isDictionnary())
@@ -169,12 +167,12 @@ int	main(int argc, char **argv)
 		try {
 			initServerSockets(tree.getRoot());
 		}
-		CATCH_AND_HANDLE(std::runtime_error)
-		CATCH_AND_HANDLE(std::bad_alloc)
+		catch (std::runtime_error &e) {handleError(e.what()); return (1);}
+		catch (std::bad_alloc &e) {handleError(e.what()); return (1);}
 	}
 	catch (std::exception &e) {
 		std::cout << e.what() << std::endl;
-		stopServer(1);
+		return (1);
 	}
 	try {
 		signal(SIGINT, stopServer);

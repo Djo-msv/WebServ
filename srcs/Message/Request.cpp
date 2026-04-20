@@ -236,7 +236,7 @@ void Request::target_work()
 	if (!location.empty()) { front = location.front(); }
 	//execution check + method Not Implemented (Allowed)
 	try { exec = _config.isExecFolder(location, _config.stringToMethodFlag(_method)); }
-	catch (ServerConfig::NotImplemented &e) { throw NotAllowed(); }
+	catch (ServerConfig::ConfigNotImplemented &e) { throw NotAllowed(); }
 	if (exec) {
 		if (needsIndex(_target)) {
 			std::string index = _config.getIndex(location);

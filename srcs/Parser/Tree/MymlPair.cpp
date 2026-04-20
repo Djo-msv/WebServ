@@ -29,11 +29,12 @@ MymlObject *MymlPair::getValue(void)
 }
 int	MymlPair::getKeyAsInt(void)
 {
-	std::string::iterator it = getKey().begin();
+	std::string::iterator it = _pair.first.begin();
 
 	if (*it == '-')
 		it++;
 	for (; it != getKey().end(); it++) {
+		if (!*it) { break; }
 		if (!isdigit(*it))
 			throw BadCast("the value [" + getKey() + "] is not an integer !");
 	}

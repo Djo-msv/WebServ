@@ -1,0 +1,56 @@
+-------------------------
+
+twobytwotable: [ test:'a1', map:{key1:l1 , key2:l2, key3:l3}, 'b1', 'b2']
+
+server2 :
+	- value1
+	- value2
+	- dictionary : pair
+		key1 : "value1 test"
+		key2 : value2
+	- value3
+
+randomValue
+
+------------------------------------------
+
+above example does not trigger an error (cant see the actual results cause this branch doesn't show the tree)
+
+also server1 as is still has the "[404] isn't an int" message
+
+------------------------------------------
+twobytwotable: [ test:'a1', map:{key1:l1 , key2:l2, key3:l3}, 'b1', 'b2']
+
+server2 :
+	- value1
+			
+	- value2
+	- dictionary :
+		key1 : "value1 test"
+		key2 : value2
+	- value3
+
+randomValue
+
+---------------------------------------------------
+
+above does not trigger an error either
+
+--------------------------------------------------
+twobytwotable: [ test:'a1', map:{key1:l1 , key2:l2, key3:l3}, 'b1', 'b2']
+
+server2 :
+	- value1
+	- value2
+				- value3
+	- dictionary :
+		key1 : "value1 test"
+		key2 : value2
+	- value3
+
+randomValue
+---------------------------------------------------
+
+above does not trigger error (incorrect indent + actual value)
+
+also unrelated but parsing errors dont trigger program shutdown (think Kami might have fixed that ?)

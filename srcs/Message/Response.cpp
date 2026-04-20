@@ -1,12 +1,12 @@
 #include "Response.hpp"
 
-Response::Response() : _status("200 OK"), _msg(NULL), exec(false), sizer(0) {}
+Response::Response() : _status("200 OK"), _msg(NULL), exec(false), _post(false), sizer(0) {}
 
 Response::~Response() { if (_msg) { delete[] _msg; } }
 
 Response::Response(const Response &other) : _target(other._target), _status(other._status), \
 					_headers(other._headers), _body(other._body), exec(other.exec), \
-					sizer(other.sizer) {}
+					_post(other._post), sizer(other.sizer) {}
 
 Response& Response::operator=(const Response &other)
 {
@@ -17,6 +17,7 @@ Response& Response::operator=(const Response &other)
 		_status = other._status;
 		_body = other._body;
 		exec = other.exec;
+		_post = other._post;
 		if (_msg)
 			delete[] _msg;
 		_msg = NULL;
@@ -24,7 +25,7 @@ Response& Response::operator=(const Response &other)
 	}
 	return *this;
 }
-//self-exp clear function
+
 void Response::clear()
 {
 	_target.clear();
@@ -36,58 +37,76 @@ void Response::clear()
 	_msg = NULL;
 	exec = false;
 	sizer = 0;
+	_post = false;
 }
 
-//replaces += overload for non NULL-terminated buffers
+/*
+ * Concatenates new data to read data
+ */
 void Response::add(const unsigned char *buffer, size_t size)
 {
 	for (size_t i = 0; i != size; i++)
 		_body.push_back(buffer[i]);
 }
 
-		//public getters
+//-------------------------- Public Getters -----------------------
 
 size_t Response::getSize() const { return sizer; }
 
 unsigned char *Response::getResponse(std::map<std::string, std::string> &mime)
 {
-	//classic recipe here for a static webpage response
+	//classic recipe for a static GET response (no exec) + exec handling below
 	if (_msg == NULL)
 	{
 		if (!exec) {
-			_headers += "HTTP/1.1 " + _status + "\r\nContent-Type: ";
-			if (_target.rfind('.') == std::string::npos || !mime.count(_target.substr(_target.rfind('.'))))
-				_headers += "*/*"; //or like, unknown ? i guess ?
-			else
-				_headers += mime.at(_target.substr(_target.rfind('.')));
-			_headers += "\r\nTransfer-Encoding: chunked\r\n";
-			this->chunkBody();
+			if (_post) { _headers = "HTTP/1.1 204 No Content\r\n\r\n"; _body.clear(); }
+			else {
+				_headers = "HTTP/1.1 " + _status;
+				if (_target.rfind('.') != std::string::npos && mime.count(_target.substr(_target.rfind('.'))))
+					_headers += "\r\nContent-Type: " + mime.at(_target.substr(_target.rfind('.')));
+				_headers += "\r\nTransfer-Encoding: chunked\r\n";
+				this->chunkBody();
+			}
 		}
-		//\r\nContent-Length: " + ft_itoa(_body.size() - 2) + "\r\n";
+		else { this->handleExec(); }
 		this->makeMsg();
 	}
 	return _msg;
 }
 
-		//response-maker && error-response-maker, respectively
+//------------------- Response Management functions ---------------------
 
 bool Response::makeResponse(Request *req)
 {
 	exec = req->isExec();
+	_post = req->isPost();
 	_target = req->getTarget();
-	if (!exec)
-		this->readFile();
+	try {
+		if (!exec) {
+			if (_post)
+				this->postFile(req->getBody(), req->getSize(), req->getPathInfo());
+			else
+				this->readFile();
+		}
+	}
+	catch (std::exception &e) { throw ; }
 	return exec;
 }
 
 void Response::makeErrorResponse(HttpError &error, ServerConfig &s)
 {
+	_post = false;
+	InternalServerError e;
 	_status = error.what();
 	try { _target = seekErrorFile(error, s); this->readFile(); }
-	catch (InternalServerError &e) {_status = e.what(); _target = ""; this->add((unsigned char *)(e.getDefaultFile().c_str()), e.getDefaultFile().size());}
+	catch (HttpError &en) {
+		try { _target = seekErrorFile(en, s); this->readFile(); }
+		catch (HttpError &err) {
+			_status = e.what(); _target = "";
+			this->add((unsigned char *)(e.getDefaultFile().c_str()), e.getDefaultFile().size());
+		}
+	}
 }
-
-		//allocating the (unsigned char*) message to return 
 
 void Response::makeMsg()
 {
@@ -112,28 +131,113 @@ void Response::makeMsg()
 	}
 }
 
+//------------------ Execution Response Managers -------------
 
-
-		//private message-making functions, in chronological order
+void Response::handleExec() //status check and handling
+{
+	if (_body.empty() || _body.find((unsigned char *)"\n") == ustring::npos) {
+		_body = (unsigned char *)"HTTP/1.1 500 Internal Server Error\r\nContent-Type: text/html\r\nContent-Length: 90\r\n\r\n<html><h1>The CGI program did not return anything or took too long to respond.</h1></html>";
+		return ;
+	}
+	ustring fin = (unsigned char *)"\r\n";
+	if (_body.find(fin) == ustring::npos) { fin = (unsigned char *)"\n"; }
+	std::string stat = (char *)_body.substr(0, _body.find(fin)).c_str();
+	if (stat.size() > 9 && stat.substr(0, 8) == "HTTP/1.1") { return; }
+	if (stat.size() > 8) {
+		if (stat.substr(0, 7) != "Status:" && stat.substr(0, 7) != "status:") { stat = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n"; }
+		else {
+			stat = stat.substr(7);
+			if (stat[0] != ' ') { stat = " " + stat; }
+			stat = "HTTP/1.1" + stat;
+			_body = _body.substr(_body.find(fin));
+		}
+		_body = (unsigned char*)stat.c_str() + _body;
+	}
+}
 
 void Response::readFile()
 {
-	if (_target.empty()) //no _body to make || _body is from default
+	if (_target.empty()) //no _body to make || Hardcoded body
 		return ;
-	int fd = open(_target.c_str(), O_RDONLY);
-	if (fd == -1) // should not happen ever at this point, but in case
-		return ;
-	unsigned char a;
-	try
+	struct stat s;
+	if ( stat(_target.c_str(), &s) == 0 )
 	{
-		while (read(fd, &a, 1))
-			_body.push_back(a);
-	} RETHROW(std::bad_alloc)
-	close(fd);
+		if( s.st_mode & S_IFDIR )
+		{
+			DIR *dir;
+			struct dirent *ent;
+			if ((dir = opendir (_target.c_str())) != NULL) {
+				//print all the files and directories within directory
+				while ((ent = readdir (dir)) != NULL) {
+					std::string name = ent->d_name;
+					if (name == "." || name == "..")
+						continue;
+					_body += (unsigned char *)ent->d_name;
+					_body.push_back('\n');
+				}
+				closedir (dir);
+			}
+		}
+		else if ( s.st_mode & S_IFREG )
+		{
+			int fd = open(_target.c_str(), O_RDONLY);
+			if (fd == -1)
+				return ;
+			unsigned char a;
+			//read file
+			try
+			{
+				while (read(fd, &a, 1))
+					_body.push_back(a);
+			} RETHROW(std::bad_alloc)
+			close(fd);
+		}
+		else
+			throw InternalServerError();
+	}
+	else
+		throw FileNotFound();
 }
 
-//for chunkBody(), future will be put in a response_utils.cpp or renamed request_utils.cpp
-ustring toHex(size_t num)
+void Response::postFile(unsigned char *body, size_t length, std::string path_info)
+{
+	if (_target.empty())
+		return ;
+	struct stat s;
+	if ( stat(_target.c_str(), &s) == 0 && (s.st_mode & S_IFREG))
+	{
+		int fd = open(_target.c_str(), O_WRONLY | O_APPEND);
+		if (fd != -1) {
+			//append content to the target file
+			if (write(fd, body, length) == -1) {
+				close(fd);
+				throw InternalServerError();
+			}
+			close(fd);
+		}
+		else
+			throw InternalServerError();
+	}
+	else if (stat(_target.c_str(), &s) == 0 && (s.st_mode & S_IFDIR) && !path_info.empty()) {
+		if (path_info.rfind('/') != path_info.find('/')) { throw NotImplemented(); }
+		_target += path_info;
+		int fd = open(_target.c_str(), O_WRONLY | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
+		if (fd != -1) {
+			//append content to the target file
+			if (write(fd, body, length) == -1) {
+				close(fd);
+				throw InternalServerError();
+			}
+			close(fd);
+		}
+		else
+			throw InternalServerError();
+	}
+	else
+		throw FileNotFound();
+}
+
+static ustring toHex(size_t num)
 {
 	ustring res;
 	ustring nest;

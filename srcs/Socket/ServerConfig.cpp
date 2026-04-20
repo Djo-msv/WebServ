@@ -1,52 +1,170 @@
 #include <ServerConfig.hpp>
 
-ServerConfig::ServerConfig(int port, std::map<std::string, std::string> cgiHandlers, std::map<std::string, int> requestsFlag, 
-	std::string index_file, std::string rootFolder, std::string execFolder, std::map<int, std::string> errorFiles, time_t timeout) :
-	sin_family(AF_INET), sin_port(port), cgiExtensions(cgiHandlers), requestsFlag(requestsFlag), errorFiles(errorFiles), index_file(index_file),
-	execFolder(execFolder), rootFolder(rootFolder), timeout(timeout) {}
+ServerConfig::ServerConfig(int port, location root_location, std::map<std::string, location *> locations,
+			std::map<std::string, std::string> cgi_extensions, std::string exec_folder, std::string upload_folder,
+			ssize_t max_body, std::map<int, std::string> error_files, time_t timeout) :
+		sin_family(AF_INET), sin_port(port), root_location(root_location), locations(locations),
+		cgi_extensions(cgi_extensions), error_files(error_files), exec_folder(exec_folder), upload_folder(upload_folder),
+		max_body(max_body), timeout(timeout) {}
 
-ServerConfig::~ServerConfig() {}
+ServerConfig::~ServerConfig() {
+	for (std::map<std::string, location *>::iterator it = locations.begin(); it != locations.end(); it++)
+		delete it->second;
+}
 
-bool ServerConfig::isMethodAllowed(const std::string &location, int method) const
+bool ServerConfig::isMethodAllowed(std::list<std::string> &full, int method) const
 {
-    std::map<std::string, int>::const_iterator it = requestsFlag.find(location);
-    if (it != requestsFlag.end()) {
-        return it->value & method;
+    std::map<std::string, location *>::const_iterator it;
+    std::string loc;
+
+    for (std::list<std::string>::const_iterator itt = full.begin(); itt != full.end(); itt++) {
+        if (!loc.empty() && (it = locations.find(*itt + loc)) != locations.end() && it->value->allowed_methods)
+            return it->value->allowed_methods & method;
+        if ((it = locations.find(*itt)) != locations.end() && it->value->allowed_methods)
+            return it->value->allowed_methods & method;
+        if ((*itt).find('.') != std::string::npos) {
+            std::string ext = (*itt).substr((*itt).rfind('.'));
+            if ((it = locations.find(ext)) != locations.end() && it->value->allowed_methods
+                    && it->value->allowed_methods & method)
+                return true;
+        }
+        loc = *itt;
     }
+    if (root_location.allowed_methods)
+        return root_location.allowed_methods & method;
     return false;
 }
 
+std::string ServerConfig::getIndex(std::list<std::string> &full) const
+{
+    std::map<std::string, location *>::const_iterator it;
+    std::string loc;
+
+    for (std::list<std::string>::const_iterator itt = full.begin(); itt != full.end(); itt++) {
+        if (itt->empty()) { continue; }
+        if (!loc.empty() && (it = locations.find(*itt + loc)) != locations.end() && !it->value->index.empty())
+            return it->value->index;
+        if ((it = locations.find(*itt)) != locations.end() && !it->value->index.empty())
+            return it->value->index;
+        loc = *itt;
+    }
+    if (!root_location.index.empty())
+        return root_location.index;
+    return "";
+}
+
+std::string ServerConfig::getFullPath(std::list<std::string> &full) const
+{
+    std::string path;
+    std::string back;
+
+    if (!full.empty()) { back = full.back(); }
+    if (full.size() > 1) {
+        for (std::list<std::string>::const_iterator itt = full.begin(); itt != --full.end(); itt++)
+            path = *itt + path;
+    }
+    std::map<std::string, location *>::const_iterator it;
+    if ((it = locations.find(back)) != locations.end()){
+		path = it->value->root + path;
+	}
+    else {
+		path = root_location.root + back + path;
+	}
+    return path;
+}
 
 std::string ServerConfig::getCgi(const std::string &extension) const
 {
-    std::map<std::string, std::string>::const_iterator it = cgiExtensions.find(extension);
-    if (it != cgiExtensions.end()) {
+    std::map<std::string, std::string>::const_iterator it = cgi_extensions.find(extension);
+    if (it != cgi_extensions.end()) {
         return it->value;
     }
-    throw NotImplemented();//std::invalid_argument("No CGI handler found for extension: " + extension);
+    throw NotImplemented();
 }
 
-ServerConfig::RequestFlag ServerConfig::stringToRequestFlag(const std::string &method)
+ServerConfig::MethodFlag ServerConfig::stringToMethodFlag(const std::string &method)
 {
     if (method == "GET") return GET;
     if (method == "POST") return POST;
     if (method == "DELETE") return DELETE;
-    throw NotImplemented();//std::invalid_argument("Invalid HTTP method: " + method);
+    throw ServerConfig::ConfigNotImplemented();
 }
 
 std::string ServerConfig::getErrorFile(int errorCode) const
 {
-    std::map<int, std::string>::const_iterator it = errorFiles.find(errorCode);
-    if (it != errorFiles.end()) {
-        return it->value;
+    std::map<int, std::string>::const_iterator it = error_files.find(errorCode);
+    if (it != error_files.end()) {
+        return (root_location.root + it->value);
     }
     throw FileNotFound();
 }
 
-std::string ServerConfig::getRootFolder() const { return (rootFolder); }
+std::string ServerConfig::getRootFolder() const { return (root_location.root); }
 
 time_t	ServerConfig::getTimeout(void) const { return (timeout); }
 
-bool ServerConfig::isExecFolder(std::string location) const { return (execFolder == location); }
+bool	ServerConfig::isExecFolder(std::list<std::string> &full, int method) const
+{
+    if (full.empty()) { return false; }
+    for (std::list<std::string>::const_iterator itt = full.begin(); itt != full.end(); itt++) {
+        std::string extension = *itt;
+        if (extension.find('.') != std::string::npos) {
+            extension = extension.substr(extension.rfind('.'));
+            if (!extension.empty() && extension == exec_folder && locations.count(extension)
+                    && (locations.at(extension)->allowed_methods & method) == true)
+                return true;
+        }
+        if (*itt == exec_folder) {  return true; }
+    }
+    return false;
+}
 
-std::string ServerConfig::getIndex() const { return (index_file); }
+bool	ServerConfig::canList(std::string loc)
+{
+	if (loc == "/")
+		return (root_location.should_list);
+	
+	std::map<std::string, location *>::const_iterator result = locations.find(loc);
+	if (result == locations.end())
+		return (false);
+	return (result->second->should_list); 
+}
+
+bool	ServerConfig::isUploadFolder(std::string loc) const { return (upload_folder == loc); }
+
+ssize_t	ServerConfig::getMaxBody() const { return max_body; }
+
+void	ServerConfig::isRedirect(std::string target)
+{
+	int code = 0;
+	std::string redir;
+	if (target == "/") { code = root_location.redirect; redir = root_location.root; }
+	else {
+		std::map<std::string, location *>::const_iterator result = locations.find(target);
+		if (result == locations.end()) { return ; }
+		code = result->second->redirect;
+		redir = result->second->root;
+	}
+	if (!code) { return ; }
+	std::string status;
+	switch (code) {
+		case 301 :
+			status = "301 Moved Permanently";
+			break ;
+		case 302 :
+			status = "302 Found";
+			break ;
+		case 303 :
+			status = "303 See Other";
+			break ;
+		case 307 :
+			status = "307 Temporary Redirect";
+			break ;
+		case 308 :
+			status = "308 Permanent Redirect";
+			break ;
+		default :
+			throw InternalServerError();
+	}
+	throw Redirect(redir.c_str(), status);
+}

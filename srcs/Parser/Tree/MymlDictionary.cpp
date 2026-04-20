@@ -52,7 +52,7 @@ MymlDictionary *MymlDictionary::getValueAsDictionary(std::string key)
 {
 	MymlDictionary *list = dynamic_cast<MymlDictionary*>(getValue(key));
 	if (!list)
-		throw BadCast(std::string("the value [" + key + "] is not an list"));
+		throw BadCast(std::string("the value [" + key + "] is not an Dictionnary"));
 	return (list);
 }
 
@@ -72,10 +72,24 @@ int MymlDictionary::getValueAsInt(std::string key)
 	return (map->second->getAsInt());
 }
 
+ssize_t MymlDictionary::getValueAsLong(std::string key)
+{
+	std::map<std::string, MymlObject*>::iterator map = _dictionary->find(key);
+	if (map == _dictionary->end())
+		throw std::invalid_argument("Cannot find " + key + " inside map of the dictionary " + _key + " !");
+	return (map->second->getAsLong());
+}
+
 double MymlDictionary::getValueAsFloat(std::string key)
 {
 	std::map<std::string, MymlObject*>::iterator map = _dictionary->find(key);
 	if (map == _dictionary->end())
 		throw std::invalid_argument("Cannot find " + key + " inside map of the dictionary " + _key + " !");
 	return (map->second->getAsFloat());
+}
+
+
+bool	MymlDictionary::has(std::string key)
+{
+	return (_dictionary->find(key) != _dictionary->end());
 }

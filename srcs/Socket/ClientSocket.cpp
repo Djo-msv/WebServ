@@ -8,8 +8,10 @@ ClientSocket::ClientSocket(ServerSocket &serverSocket, int epoll, std::map<const
 
 ClientSocket::~ClientSocket(void) { std::cout << "deleting client of socket :: " << _socketFd << std::endl; }
 
-//this func :: deletes the old_fd from our epoll map (except pipes, which are automatically deleted), adds the new one with flags
-//it then erases the <old_fd, csocket> from the sockets map and replaces it with <new_fd, csocket>
+/*
+ * deletes the old_fd from our epoll map (except pipes, which are automatically deleted), adds the new one with flags
+ * then erases the <old_fd, csocket> from the sockets map and replaces it with <new_fd, csocket>
+*/
 void	ClientSocket::epollFdSwitch(int old_fd, int new_fd, int flags)
 {
 	SocketIterator it = sockets.find(old_fd);
@@ -22,15 +24,12 @@ void	ClientSocket::epollFdSwitch(int old_fd, int new_fd, int flags)
 	epoll_add(epollInstance, new_fd, flags);
 }
 
-//new function for error handling :: makes error response, switches status, updates epoll fd
-void	ClientSocket::ErrorHandling(HttpError &e, bool exec)
+//makes error response, switches status, updates epoll fd
+void	ClientSocket::errorHandling(HttpError &e)
 {
 	_response.makeErrorResponse(e, _serverSocket.getConfig());
 	status = WaitResponse;
-	if (exec)
-		epollFdSwitch(_exec.getFdIn(), _socketFd, EPOLLOUT | EPOLLET);
-	else
-		epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
+	epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
 }
 
 /**
@@ -76,7 +75,7 @@ void	ClientSocket::parseRequest()
 {
 	try {
 		_request.parse(mime);
-		//based on response :: exec/no exec
+		// returns if exec should be started
 		if (_response.makeResponse(&_request))
 			this->startExec();
 		else {
@@ -84,24 +83,36 @@ void	ClientSocket::parseRequest()
 			epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
 		}
 	}
+	catch (Request::ChunkParsing &e) { status = ParseRequest; } // currently dechunking the request body
 	catch (Request::MissingData &e) {
-		status = ReadRequest;
-		//do the timeout specification here
-	}
+		if (this->hasTimedOut()) { status = Done; }
+		else {status = ReadRequest; }
+	} //incomplete request
+	catch (Redirect &e) { this->redirect(e.what(), e.getDefaultFile()); return ;}
 	catch (Request::DeleteRequest &e) {
 		try { this->deleteFile(e.what()); }
 		RETHROW(std::bad_alloc)
 	}
-	catch (HttpError &e) { ErrorHandling(e, false); }
+	catch (HttpError &e) { errorHandling(e); }
 	catch (std::exception &e) { throw; }
 }
 
-//function for the DELETE method exception :: delete file
+void	ClientSocket::redirect(std::string status, std::string target)
+{
+	std::string msg = "HTTP/1.1 " + status + "\r\nLocation: " + target + "\r\n\r\n";
+	try {
+		_response.add((unsigned char *)msg.c_str(), msg.size());
+		_response.makeMsg();
+	} RETHROW(std::bad_alloc)
+	this->status = WaitResponse; 
+	epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
+}
+
 void	ClientSocket::deleteFile(const char *filename)
 {
 	InternalServerError e;
 	if (std::remove(filename))
-		ErrorHandling(e, false);
+		errorHandling(e);
 	else {
 		//here we handle the pivot into response
 		ustring response = (unsigned char *)"HTTP/1.1 204 No Content\r\n\r\n";
@@ -109,50 +120,47 @@ void	ClientSocket::deleteFile(const char *filename)
 			_response.add(response.c_str(), response.size());
 			_response.makeMsg();
 		} RETHROW(std::bad_alloc)
-		status = WaitResponse;
+		this->status = WaitResponse;
 		epoll_mod(epollInstance, _socketFd, EPOLLOUT | EPOLLET);
 	}
 }
 
-//starting the execution process here (write or exec + read)
+//starting the execution process here (exec + write or read)
 void	ClientSocket::startExec()
 {
-	bool body = _request.getBody();
-	try { _exec.setupProcess(body); }
-	catch (HttpError &e) { ErrorHandling(e, false); return ; }
-	if (!body) {
-		status = WaitExecRead;
-		setnonblocking(_exec.getFdOut());
-		try { _exec.startProcess(false, _request.getCgi(), _request.getTarget(), _request.getEnv()); }
-		catch (HttpError &e) { ErrorHandling(e, false); return ; }
-		RETHROW(std::bad_alloc)
-		epollFdSwitch(_socketFd, _exec.getFdOut(), EPOLLIN | EPOLLET);
+	bool body = _request.getBody(); //do we need to write to script ?
+	try { _exec.setupProcess(body); } //pipe setup
+	catch (HttpError &e) { errorHandling(e); return ; }
+	setnonblocking(_exec.getFdOut());
+	if (body)
+		setnonblocking(_exec.getFdIn());
+	try { _exec.startProcess(body, _request.getCgi(), _request.getTarget(), _request.getEnv()); }
+	catch (HttpError &e) { errorHandling(e); return ; }
+	RETHROW(std::bad_alloc)
+	if (body) {
+		status = WaitExecWrite;
+		epollFdSwitch(_socketFd, _exec.getFdIn(), EPOLLOUT | EPOLLET);
 	}
 	else {
-		status = WaitExecWrite;
-		setnonblocking(_exec.getFdIn());
-		setnonblocking(_exec.getFdOut());
-		epollFdSwitch(_socketFd, _exec.getFdIn(), EPOLLOUT | EPOLLET);
+		status = WaitExecRead;
+		epollFdSwitch(_socketFd, _exec.getFdOut(), EPOLLIN | EPOLLET);
 	}
 }
 
-//new cgi write
 void	ClientSocket::execWrite()
 {
+	resetTimeout();
 	unsigned char *body = _request.getBody();
 	ssize_t size = _request.getSize() - _sendpos;
 	if (size > BUF_SIZE)
 		size = BUF_SIZE;
 	if (size) {
-		if (write(_exec.getFdIn(), (&body[_sendpos]), size) == -1)
+		if ((size = write(_exec.getFdIn(), (&body[_sendpos]), size)) == -1)
 			status = WaitExecWrite;
 		else
 			_sendpos += size;
 	}
-	else { //write is done, start up the process appropriate status/epoll switching and close
-		try { _exec.startProcess(true, _request.getCgi(), _request.getTarget(), _request.getEnv()); }
-		catch (HttpError &e) { ErrorHandling(e, true); return ; }
-		RETHROW(std::bad_alloc) // ! Faut-il fermer _exec.getFdIn() ? Sachant que le throw bad alloc ne se fait qu'a l'initialisation de la liste d'args
+	else { //write is done, appropriate status/epoll switching and close
 		close(_exec.getFdIn());
 		_sendpos = 0;
 		epollFdSwitch(_exec.getFdIn(), _exec.getFdOut(), EPOLLIN | EPOLLET);
@@ -160,11 +168,22 @@ void	ClientSocket::execWrite()
 	}
 }
 
+//write is done (timeout), appropriate status/epoll switching and close
+void	ClientSocket::writeToRead()
+{
+	close(_exec.getFdIn());
+	_sendpos = 0;
+	epollFdSwitch(_exec.getFdIn(), _exec.getFdOut(), EPOLLIN | EPOLLET);
+	status = WaitExecRead;
+	resetTimeout();
+}
+
 void	ClientSocket::execRead()
 {
 	unsigned char buffer[BUF_SIZE];
 
 	ssize_t size = read(_exec.getFdOut(), buffer, BUF_SIZE);
+	resetTimeout();
 	if (size < 0)
 		status = WaitExecRead;
 	else if (!size) { //read is done, appropriate status/epoll switching and close
@@ -179,21 +198,30 @@ void	ClientSocket::execRead()
 	}
 }
 
+void	ClientSocket::readToWrite()
+{
+	//read is done (timeout), appropriate status/epoll switching and close
+	close(_exec.getFdOut());
+	epollFdSwitch(_exec.getFdOut(), _socketFd, EPOLLOUT | EPOLLET);
+	status = WaitResponse;
+	resetTimeout();
+}
+
 void ClientSocket::sendResponse()
 {
 	unsigned char *msg;
 
+	resetTimeout();
 	try { msg = _response.getResponse(mime); }
 	RETHROW (std::bad_alloc)
-	size_t size = _response.getSize() - _sendpos;
+	ssize_t size = _response.getSize() - _sendpos;
 	if (size > BUF_SIZE)
 		size = BUF_SIZE;
 	if (size) {
-		if (write(_socketFd, (&msg[_sendpos]), size) == -1)
+		if ((size = write(_socketFd, (&msg[_sendpos]), size)) == -1)
 			status = WaitResponse;
 		else
 			_sendpos += size;
-		resetTimeout();
 	}
 	else { //write is done, reset for next request or close the connection
 		_sendpos = 0;
@@ -222,12 +250,7 @@ void ClientSocket::resetTimeout()
 	timeout = std::time(NULL) + _serverSocket.getConfig().getTimeout();
 }
 
-bool ClientSocket::hasTimedOut()
-{
-	std::cout << (timeout <= std::time(NULL)) << std::endl;
-	std::cout << "timeout : " << timeout << "Current Time : " << std::time(NULL) << std::endl;
-	return (timeout <= std::time(NULL));
-}
+bool ClientSocket::hasTimedOut() const { return (timeout <= std::time(NULL)); }
 
 int ClientSocket::createSocket(ServerSocket & serverSocket)
 {
@@ -236,7 +259,7 @@ int ClientSocket::createSocket(ServerSocket & serverSocket)
 	
 	sSocketFd = serverSocket.getSocketFd();
 
-	// recover the value of client fd, variables that are set to NULL represent the client informations could be useful later...
+	// recover the value of client fd, variables that are set to NULL represent the client informations
 	cSocketFd = accept(sSocketFd, NULL, NULL);
 	if (cSocketFd == -1) {
 		close(cSocketFd);

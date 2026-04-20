@@ -9,6 +9,7 @@ typedef std::basic_string<unsigned char> ustring;
 # include <vector>
 # include <algorithm>
 # include <map>
+# include <list>
 # include <sys/stat.h>
 # include <HttpError.hpp>
 # include <ServerSocket.hpp>
@@ -29,7 +30,6 @@ class Request
 
 		void	add(const unsigned char *buffer, size_t size);
 		void	parse(std::map<std::string, std::string> &mime);
-		void	read() const;
 		void	clear();
 		
 		std::string	getTarget() const;
@@ -37,10 +37,12 @@ class Request
 		std::string	getQuery() const;
 		unsigned char	*getBody() const;
 		std::string	getCgi() const;
+		std::string	getPathInfo() const;
 		
 		char	**getEnv() const;
 		
 		bool	isExec() const;
+		bool	isPost() const;
 		bool	keepAlive() const;
 		
 		ssize_t 		getSize() const;
@@ -48,6 +50,11 @@ class Request
 		class MissingData : public std::out_of_range {
 			public:
 				MissingData();
+		};
+		
+		class ChunkParsing : public std::out_of_range {
+			public:
+				ChunkParsing();
 		};
 		
 		class DeleteRequest : public std::out_of_range {
@@ -60,11 +67,13 @@ class Request
 		
 		ustring			_request;
 		ustring			_body;
+		ustring			_parse_body;
 
 		std::string		_method;
 		std::string		_cgi;
 		std::string		_target;
 		std::string		_query;
+		std::string		path_info;
 		std::string		*_env;
 		int				_status;
 
@@ -77,7 +86,9 @@ class Request
 
 		void	parse_header(std::string header);
 		void	startline_check(std::string line);
-		void	adjust_exec();
+		void	target_work();
+		bool	needsIndex(std::string full_target);
+		void	adjust_exec(std::string path_info, std::string script_name);
 		void	headers_add(std::string line);
 		void	mime_check(std::map<std::string, std::string> &mime);
 		void	parse_body();

@@ -31,7 +31,7 @@ void	TokenTransformer::remover(std::list<Token> &tokens, std::list<Token>::itera
 	if (((*it)._type == END_OF_LINE || ((*it)._type == END_OF_FILE)) && _status == NULL_STATUE)
 		_status = NEW_LINE;
 
-	// remove commant
+	// remove comment
 	if ((*it)._type == HASH)
 		it = tokens.erase(it);
 

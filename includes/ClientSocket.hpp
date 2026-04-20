@@ -9,7 +9,7 @@
 #include <signal.h>
 #include <ctime>
 
-#define BUF_SIZE 1024
+#define BUF_SIZE 5000//1024
 
 #include <Socket.hpp>
 #include <HttpErrors.hpp>
@@ -29,19 +29,23 @@ class ClientSocket : public Socket
 		void	readRequest();
 		//parseRequest, with optional switch-back to readRequest if more data is needed
 		void	parseRequest();
+		//for redirections, immediate response pivot
+		void	redirect(std::string status, std::string target);
 		//for the DELETE method, deletes file and adjusts response accordingly
 		void	deleteFile(const char *filename);
 		//writing to cgi pipein + appropriate _status, epoll and sockets update && starting cgi once write is over
 		void	execWrite();
+		void	writeToRead(); //in case of exec write timeout, switch to exec read
 		//reading from running cgi pipeout + appropriate _status, epoll and sockets update
 		void	execRead();
+		void	readToWrite(); //in case of exec read timeout, switch to response write
 		//sends response in buffers, currently closes connection in the future .clear() on all objects
 		void sendResponse();
 		//to switch from SendResponse back to WaitRequest, resets all variables and epoll_mods to EPOLLIN
 		void reset();
 
 		void	resetTimeout();
-		bool	hasTimedOut();
+		bool	hasTimedOut() const;
 
 		enum state {
 			WaitRequest,
@@ -71,6 +75,6 @@ class ClientSocket : public Socket
 		
 		int 	createSocket(ServerSocket &);
 		void	epollFdSwitch(int old_fd, int new_fd, int flags);
-		void	ErrorHandling(HttpError &e, bool exec); //pretty self-explanatory
+		void	errorHandling(HttpError &e);
 		void	startExec(); //handles the fd_switches, setnonblock and starting the execution (if read-only)
 };

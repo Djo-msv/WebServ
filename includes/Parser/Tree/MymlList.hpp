@@ -17,6 +17,8 @@ class MymlList : public MymlObject
 
 		std::string getKey();
 		std::list<MymlObject*> *getList();
+		std::list<MymlObject *>::iterator begin();
+		std::list<MymlObject *>::iterator end();
 
 	private :
 		std::string				_key;

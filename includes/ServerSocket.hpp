@@ -15,16 +15,16 @@ class ServerSocket : public Socket
 {
 
 	public :
-		ServerSocket(ServerConfig, int epollInstance);
+		ServerSocket(ServerConfig *, int epollInstance);
 		~ServerSocket();
 
 		ServerConfig &getConfig();
 
 	private :
-		ServerConfig _config;	
+		ServerConfig *_config;	
 
-		int			createSocket(ServerConfig &);
-		sockaddr_in	setupSocketAddress(ServerConfig);
+		int			createSocket(ServerConfig *);
+		sockaddr_in	setupSocketAddress();
 		
 		// Error class
 		class BindError : public std::runtime_error {

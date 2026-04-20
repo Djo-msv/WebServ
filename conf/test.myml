@@ -1,0 +1,8 @@
+server2 :
+	- value1
+	- value2
+				- value3
+	- dictionary :
+		key1 : "value1 test"
+		key2 : value2
+	- value3

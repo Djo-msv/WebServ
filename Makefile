@@ -3,11 +3,12 @@ MAKEFLAGS += --no-print-directory
 
 #==============================COMPIL===========================#
 
-CC = g++
+CC = c++
 CFLAGS = -Wall -Wextra -Werror -std=c++98
 
 ifeq ($(DEBUG), 1)
 	CFLAGS += -g
+	CXX = g++
 endif
 
 #==============================COLORS==============================#
@@ -54,6 +55,7 @@ endif
 #==============================SOURCES===========================#
 
 SRCS_FILES:=	main.cpp \
+				socket_parsing.cpp \
 				mimetype.cpp \
 				HttpError.cpp \
 				Execution/ProcessExecution.cpp \
@@ -66,7 +68,6 @@ SRCS_FILES:=	main.cpp \
 				Parser/Lexer/Parser.cpp \
 				Parser/Lexer/Tokenizer.cpp \
 				Parser/Lexer/File.cpp \
-				Parser/Lexer/Lexer.cpp \
 				Parser/Lexer/TokenTransformer.cpp \
 				Parser/ParserError.cpp \
 				Socket/ClientSocket.cpp \
@@ -109,9 +110,12 @@ all: $(NAME)
 $(DIRS):
 	@mkdir -p $@
 
-$(NAME): $(OBJS)
+check :
+	@if [ $(OS) -eq 0 ]; then echo "os : Linux"; else exit 1; fi
+
+$(NAME): check $(OBJS)
 	@echo "\n$(GREEN)Create binaries$(NOC)"
-	@$(CC) $(CFLAGS) $(OBJS) $(INC) -o $@ $(LIBS) $(LDFLAGS) -lm
+	@$(CXX) $(CFLAGS) $(OBJS) $(INC) -o $@ $(LIBS) $(LDFLAGS) -lm
 	@echo "$(PURPLE) $(BOLD)"
 	@printf "%s\n" \
 	' __      __          __          ____                       ' \
@@ -122,7 +126,6 @@ $(NAME): $(OBJS)
 	'   \ `\___x___/\ \____\\ \_,__/    \ `\____\ \____\\ \_\  \ \___/ ' \
 	'    `\/__//__/  \/____/ \/___/      \/_____/\/____/ \/_/   \/__/  '
 	@echo "$(NOC)"
-	@if [ 0 -eq 0 ]; then echo "os : Linux"; else echo "os : Mac/Win"; fi
 
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(DIRS)
@@ -134,25 +137,22 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(DIRS)
 	@echo -n "\r"; for i in $$(seq 1 25); do if [ $$(expr $$i "*" 4) -le $(PERCENT) ]; then echo -n "█"; else echo -n " "; fi; done; echo -n "";
 	@printf " $(NB_COMP)/$(TO_COMP) - Compiling $<"
 	@echo -n "$(NOC)"
-	@$(CC) $(CFLAGS) $(INC) $< -c -o $@
+	@$(CXX) $(CFLAGS) $(INC) $< -c -o $@
 	$(eval NB_COMP=$(shell expr $(NB_COMP) + 1))
 
 
 clean:
-	@echo "$(RED)Remove objects$(NOC)"
+	@echo "$(RED)Removing objects..$(NOC)"
 	@rm -rf $(BUILD_DIR) 
 	@rm -rf $(BUILD_DIR_BONUS)
 
 fclean: clean
-	@echo "$(RED)Remove binary$(NOC)"
+	@echo "$(RED)Removing binary...$(NOC)"
 	@rm -f $(NAME)
 	@rm -f $(BONUS_NAME)
 
 re: fclean
 	@make
-
-rebonus: fclean
-	@make bonus
 
 .PHONY: all clean fclean re rebonus
 

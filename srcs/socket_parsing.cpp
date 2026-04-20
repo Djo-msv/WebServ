@@ -160,10 +160,20 @@ ServerConfig *initServerConfig(MymlDictionary *serverRepertory)
 	RETHROW (MymlObject::BadCast)
 	RETHROW (std::bad_alloc)
 	try { max_body =  serverRepertory->getValueAsLong("max_body"); } IGNORE (std::invalid_argument)
-	try { upload_folder =  serverRepertory->getValueAsString("upload_folder"); } IGNORE (std::invalid_argument)
 	try	{ initOptionnalConfig(serverRepertory, exec_folder, timeout, cgi_handlers, root_loc, locations, errorFiles); }
 	catch (MymlObject::BadCast &e) {
 		throw (MymlObject::BadCast("config optional argument error at server " +  serverRepertory->getKey() + ' ' + e.what()));
 	}
+	try {
+		upload_folder = serverRepertory->getValueAsString("upload_folder");
+		std::map<std::string, location *>::const_iterator it;
+		if ((it = locations.find(upload_folder)) != locations.end())
+		{
+			if (!(it->value->allowed_methods & ServerConfig::POST))
+				it->value->allowed_methods |= ServerConfig::POST;
+		}
+		else
+			locations[upload_folder] = new location((location){ServerConfig::POST, 0, false, upload_folder, ""});
+	} IGNORE (std::invalid_argument)
 	return (new ServerConfig(port, root_loc, locations, cgi_handlers, exec_folder, upload_folder, max_body, errorFiles, timeout));
 }

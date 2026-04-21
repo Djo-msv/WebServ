@@ -30,8 +30,10 @@ server1 :
 				- POST
 				- GET
 		- /php :
-			index : morpion.php
-
+			index : nyancat.php
+			allow_methods : 
+				- POST
+				- GET
 		- /index.html :
 			alias : ./server00/html/index.html
 			allow_methods : GET

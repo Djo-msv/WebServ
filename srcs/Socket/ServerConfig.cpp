@@ -30,9 +30,7 @@ bool ServerConfig::isMethodAllowed(std::list<std::string> &full, int method) con
         }
         loc = *itt;
     }
-    if (root_location.allowed_methods)
-        return root_location.allowed_methods & method;
-    return false;
+    return root_location.allowed_methods & method;
 }
 
 std::string ServerConfig::getIndex(std::list<std::string> &full) const

@@ -11,7 +11,7 @@ ServerConfig::~ServerConfig() {
 	for (std::map<std::string, location *>::iterator it = locations.begin(); it != locations.end(); it++)
 		delete it->second;
 }
-#include <iostream>
+
 bool ServerConfig::isMethodAllowed(std::list<std::string> &full, int method) const
 {
     std::map<std::string, location *>::const_iterator it;

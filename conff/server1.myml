@@ -29,6 +29,9 @@ server1 :
 			allow_methods :
 				- POST
 				- GET
+		- /php :
+			index : morpion.php
+
 		- /index.html :
 			alias : ./server00/html/index.html
 			allow_methods : GET
@@ -43,5 +46,6 @@ server1 :
 		- 504 : /html/errors/400.html
 	cgi_handlers :
 		- .py : /usr/bin/python3
+		- .php : /usr/bin/php
 	execution_folder : /scripts
 	upload_folder : /logs

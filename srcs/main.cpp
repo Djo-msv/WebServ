@@ -143,8 +143,15 @@ void initServerSockets(std::list<MymlObject *> *root)
 		try	{
 			ServerConfig *config = initServerConfig(serverRepertory);
 			std::cout << serverRepertory->getKey() << " ";
-			ServerSocket *socket = new ServerSocket(config, epollInstance);
-			sockets.insert(std::make_pair(socket->getSocketFd(), socket));
+			try {
+				ServerSocket *socket = new ServerSocket(config, epollInstance); 
+				sockets.insert(std::make_pair(socket->getSocketFd(), socket));
+			}
+			catch (std::runtime_error &e) {
+				delete config;
+				std::cout << e.what() << std::endl;
+				continue;
+			}
 		}
 		catch (std::exception &e){
 			std::cout << e.what() << std::endl;

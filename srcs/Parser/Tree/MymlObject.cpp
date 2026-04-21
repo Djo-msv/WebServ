@@ -40,17 +40,26 @@ bool	MymlObject::isPair()
 
 MymlList *MymlObject::getAsList()
 {
-	return (dynamic_cast<MymlList *>(this));
+	MymlList *list = dynamic_cast<MymlList *>(this);
+	if (!list)
+		throw BadCast(_value);
+	return (list);
 }
 
 MymlDictionary *MymlObject::getAsDictionnary()
 {
-	return (dynamic_cast<MymlDictionary *>(this));
+	MymlDictionary *dico = dynamic_cast<MymlDictionary *>(this);
+	if (!dico)
+		throw BadCast(_value);
+	return (dico);
 }
 
 MymlPair *MymlObject::getAsPair()
 {
-	return (dynamic_cast<MymlPair *>(this));
+	MymlPair *pair = dynamic_cast<MymlPair *>(this);
+	if (!pair)
+		throw BadCast(_value);
+	return (pair);
 }
 
 std::string	MymlObject::getAsString(void)

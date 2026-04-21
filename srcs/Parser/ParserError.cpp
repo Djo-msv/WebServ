@@ -6,22 +6,6 @@ ParserError::ParserError(std::list<Token> &tokens) : _tokens(tokens)
 ParserError::~ParserError(void)
 {}
 
-int	ParserError::CountLine(std::list<Token>::iterator *begin, const std::list<Token>::iterator &token)
-{
-	int	count_line = 1;
-	
-	*begin = _tokens.begin();
-	for (std::list<Token>::iterator it = _tokens.begin(); it != token; it++) {
-		if (it->_type == END_OF_LINE) {
-			count_line++;
-			*begin = ++it;
-		}
-		else if (it->_type == END_OF_FILE)
-			count_line = 0;
-	}
-	return (count_line);
-}
-
 std::string ParserError::PrintLine(const std::list<Token>::iterator &line, const std::list<Token>::iterator &token, std::string &msg)
 {
 	std::string buffer(msg);
@@ -47,8 +31,8 @@ void ParserError::unexpectedToken(const std::list<Token>::iterator &token)
 	std::ostringstream str;
 	std::list<Token>::iterator	begin;
 
-	CountLine(&begin, token);
-	str << "\e[1;31m" << "error on line " << ":" << "\e[0m" << std::endl;
+//	CountLine(&begin, token);
 	std::string msg = str.str();
-	throw BadParsingError(PrintLine(begin, token, msg));
+	(void)token;
+	throw BadParsingError("error with token :" + token->_token);
 }

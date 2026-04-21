@@ -46,8 +46,8 @@ location	*parse_location(MymlDictionary *location_repertory, location root_loc)
 		MymlDictionary *redir = location_repertory->getValueAsDictionary("redirect");
 		root = redir->getValueAsString("url");
 		redirect = redir->getValueAsInt("code");
-		if (redirect < 301 || redirect > 308)
-			throw (std::invalid_argument("Redirect code must be set between 301 and 308 do to a proper redirection"));
+		if (redirect < 301 || redirect > 308 || (redirect >= 304 && redirect <= 306))
+			throw (std::invalid_argument("Redirect code must be set at 301, 302, 303, 307 or 308 do to a proper redirection"));
 	}
 	else
 		root = root_loc.root + location_repertory->getKey();
@@ -154,8 +154,9 @@ ServerConfig *initServerConfig(MymlDictionary *serverRepertory)
 			MymlDictionary *redir = serverRepertory->getValueAsDictionary("redirect");
 			root_loc.root = redir->getValueAsString("url");
 			root_loc.redirect = redir->getValueAsInt("code");
-			if (root_loc.redirect < 301 || root_loc.redirect > 308)
-				throw (std::invalid_argument("Redirect code must be set between 301 and 308 do to a proper redirection"));
+			int redirect = root_loc.redirect;
+			if (redirect < 301 || redirect > 308 || (redirect >= 304 && redirect <= 306))
+				throw (std::invalid_argument("Redirect code must be set at 301, 302, 303, 307 or 308 do to a proper redirection"));
 		}
 	}
 	catch (std::invalid_argument &e) { throw std::invalid_argument(std::string("mandatory argument error : ") + e.what()); }

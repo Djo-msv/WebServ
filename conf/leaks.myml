@@ -2,7 +2,7 @@ server447 :
 #	a bunch of words here
 	port : 7540
 	root : .
-#	index : index.html
+	index : index.html
 	notaserver : the_sequel
 	locations :
 		- /loc :
@@ -16,7 +16,7 @@ server447 :
 		- /overhere_please :
 			allow_methods : GET
 			list_files : true
-		- still_not
+#		- still_not
 	error_files :
 		- 404 : /server00/html/errors/404.html
 		- 501 : /server00/html/errors/501.html

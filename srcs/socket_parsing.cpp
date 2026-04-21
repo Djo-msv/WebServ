@@ -113,8 +113,6 @@ void	initOptionnalConfig(MymlDictionary *serverRepertory, std::string &exec_fold
 		for (std::list<MymlObject *>::iterator it = locations->begin(); it != locations->end(); ++it)
 		{
 			MymlDictionary *dict = (*it)->getAsDictionnary();
-			if (dict == NULL)
-				std::cout << "SEGFAULT CA RASSE" << std::endl;
 			if (server_locations.find(dict->getKey()) != server_locations.end())
 				throw std::invalid_argument("The same location was defined two times");
 			server_locations[dict->getKey()] = parse_location(dict, root_loc);

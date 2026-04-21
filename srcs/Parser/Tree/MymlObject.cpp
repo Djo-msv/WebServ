@@ -64,13 +64,19 @@ MymlPair *MymlObject::getAsPair()
 
 std::string	MymlObject::getAsString(void)
 {
+	if (isList() || isDictionnary() || isPair())
+		throw BadCast("the value is not an integer !");
 	return (_value);
 }
 
 int	MymlObject::getAsInt(void)
 {
+	if (isList() || isDictionnary() || isPair())
+		throw BadCast("the value is not an integer !");
 	std::string::iterator it = _value.begin();
 
+	if (_value.empty())
+		throw BadCast("the value is empty !");
 	if (*it == '-')
 		it++;
 	for (; it != _value.end(); it++) {
@@ -82,8 +88,12 @@ int	MymlObject::getAsInt(void)
 
 ssize_t MymlObject::getAsLong(void)
 {
+	if (isList() || isDictionnary() || isPair())
+		throw BadCast("the value is not an integer !");
 	std::string::iterator it = _value.begin();
 
+	if (_value.empty())
+		throw BadCast("the value is empty !");
 	if (*it == '-')
 		it++;
 	for (; it != _value.end(); it++) {
@@ -95,9 +105,13 @@ ssize_t MymlObject::getAsLong(void)
 
 double	MymlObject::getAsFloat(void)
 {
+	if (isList() || isDictionnary() || isPair())
+		throw BadCast("the value is not an integer !");
 	int dot = 0;
 	std::string::iterator it = _value.begin();
 
+	if (_value.empty())
+		throw BadCast("the value is empty !");
 	if (*it == '-')
 		it++;
 	for (; it != _value.end(); it++) {
@@ -109,6 +123,10 @@ double	MymlObject::getAsFloat(void)
 
 bool	MymlObject::getAsBool(void)
 {
+	if (isList() || isDictionnary() || isPair())
+		throw BadCast("the value is not an integer !");
+	if (_value.empty())
+		throw BadCast("the value is empty !");
 	if (_value == "true" || _value == "1")
 		return (1);
 	else if (_value == "false" || _value == "0")

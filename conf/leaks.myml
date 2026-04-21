@@ -1,6 +1,8 @@
 server447 :
 #	a bunch of words here
-	port : 7540
+	port :
+		- aaa
+		- aaa
 	root : .
 	index : index.html
 	notaserver : the_sequel

@@ -221,9 +221,9 @@ void Response::postFile(unsigned char *body, size_t length, std::string path_inf
 	else if (stat(_target.c_str(), &s) == 0 && (s.st_mode & S_IFDIR) && !path_info.empty()) {
 		if (path_info.rfind('/') != path_info.find('/')) { throw NotImplemented(); }
 		_target += path_info;
+		//create and fill target file
 		int fd = open(_target.c_str(), O_WRONLY | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
 		if (fd != -1) {
-			//append content to the target file
 			if (write(fd, body, length) == -1) {
 				close(fd);
 				throw InternalServerError();

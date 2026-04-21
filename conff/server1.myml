@@ -35,6 +35,12 @@ server1 :
 		- /index :
 			alias : ./server00/html/index.html
 			allow_methods : GET
+	error_files :
+		- 404 : /html/errors/404.html
+		- 400 : /html/errors/400.html
+		- 403 : /html/errors/403.html
+		- 501 : /html/errors/501.html
+		- 504 : /html/errors/400.html
 	cgi_handlers :
 		- .py : /usr/bin/python3
 	execution_folder : /scripts

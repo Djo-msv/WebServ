@@ -1,0 +1,21 @@
+server447 :
+	port : 7540
+	root : .
+	index : index.html
+	notaserver : the_sequel
+	locations :
+		- /loc :
+			index : not_real.txt
+			allow_methods : GET
+			redirect :
+				code : 308
+				url : /overhere_please
+		- /second_loc :
+			allow_methods : POST
+		- /overhere_please :
+			allow_methods :	GET
+			list_files : true
+	error_files :
+		- 404 : /server00/html/errors/404.html
+		- 501 : /server00/html/errors/501.html
+	upload_folder : afolder

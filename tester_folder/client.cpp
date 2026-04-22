@@ -64,15 +64,17 @@ int main(int argc, char *argv[])
 		
 		//method not allowed/implemented
 	//sd = "DELETE /html HTTP/1.1\r\nHostname: localhost\r\n\r\n";
-	sd = "GET /html HTTP/2.1\r\nHostname: localhost\r\n\r\n";
+	//sd = "GET /html HTTP/2.1\r\nHostname: localhost\r\n\r\n";
 	
 		//bad request
 	//sd = "GET	target	HTTP/1.1\r\n\r\n";
 	//sd = "GET tar get HTTP/1.1\r\n\r\n";
-	//sd = "POST /scripts/login.py HTTP/1.1\r\nHostname: localhost\r\n\r\ndddddddddddddddddddd";
 	//sd = "POST /scripts/login.py HTTP/1.1\r\nHostna*me: localhost\r\n\r\n";
 	//sd = "                                POST /scripts/login.py HTTP/1.1\r\nHostname: localhost\r\n\r\n";
 	//sd = "POST\r\nHostname: localhost\r\n\r\n";
+	
+		//length required
+	//sd = "POST /uploads/newfile.txt HTTP/1.1\r\nHostname: localhost\r\n\r\nfffffffffffffffffffffff";
 	
 		//timeout (unfinished request)
 	//sd = "HERE AN UNFINISHED REQUEST\r\n";
@@ -85,7 +87,7 @@ int main(int argc, char *argv[])
 	//sd = "POST /logs HTTP/1.1\r\nContent-Type: text/plain\r\nContent-Length: 28\r\nHostname: localhost\r\n\r\nffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 	//sd = "GET /logs HTTP/1.1\r\nHostname: localhost\r\n\r\n";
 	//sd = "DELETE /uploads/to_delete.txt HTTP/1.1\r\nHostname: localhost\r\n\r\n";
-	
+	//sd = "POST /logs HTTP/1.1\r\nContent-Type: text/plain\r\nContent-Length: 28\r\nHostname: localhost\r\n\r\nfffrrrdddrrrdddrrrffffdddrrrhhrrrhhh";
 	//std::cout << "sending message :: " << sd << "\n";
 	size = sd.size();
 	if (write(sfd, sd.c_str(), sd.size()) < size) {

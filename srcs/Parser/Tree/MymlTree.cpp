@@ -10,6 +10,8 @@ MymlTree::MymlTree(std::list<Token> &tokens)
 	try {
 		for (std::list<Token>::iterator it = tokens.begin(); it != tokens.end();) {
 			for (;it->_type == END_OF_FILE || it->_type == END_OF_LINE; it++){};
+			if (it == tokens.end())
+				break;
 			if (it->_type == STRING) {
 				key = it->_token;
 				it++;
@@ -38,7 +40,6 @@ MymlTree::MymlTree(std::list<Token> &tokens)
 			}
 			else
 				throw (BadParsingError("Do you really want to break everything?"));
-			for (;it->_type == END_OF_FILE || it->_type == END_OF_LINE; it++){};
 		}
 	}	
 	catch (const std::runtime_error &e) {

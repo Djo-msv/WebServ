@@ -9,7 +9,7 @@ MymlTree::MymlTree(std::list<Token> &tokens)
 	_error = new ParserError(tokens);
 	try {
 		for (std::list<Token>::iterator it = tokens.begin(); it != tokens.end();) {
-			for (;it->_type == END_OF_FILE || it->_type == END_OF_LINE; it++){};
+			for (;it != tokens.end() && (it->_type == END_OF_FILE || it->_type == END_OF_LINE); it++){};
 			if (it == tokens.end())
 				break;
 			if (it->_type == STRING) {

@@ -131,12 +131,12 @@ The `locations` block is a list of path-based or extension-based routing rules. 
 
 ```
 locations :
-    - /path :
+	- path :
         allow_methods : GET
         index : index.html
         root : ./other_folder       # overrides root for this location
         alias : ./another_folder    # alternative to root (cannot be used with root)
-    - .ext :
+    - .other :
         allow_methods : POST
 ```
 

@@ -24,7 +24,7 @@ location	*parse_location(MymlDictionary *location_repertory, location root_loc)
 	std::string index("");
 	std::string root;
 	int			redirect = 0;
-	int			flags;
+	int			flags = root_loc.allowed_methods;
 	bool		should_list = root_loc.should_list;
 
 	if (location_repertory->has("index"))
@@ -51,7 +51,7 @@ location	*parse_location(MymlDictionary *location_repertory, location root_loc)
 	}
 	else
 		root = root_loc.root + location_repertory->getKey();
-	flags = getFlags(location_repertory);
+	try {flags = getFlags(location_repertory);} IGNORE(std::invalid_argument);
 
 	location *loc = new location;
 	loc->allowed_methods = flags;

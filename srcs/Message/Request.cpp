@@ -270,7 +270,7 @@ void Request::body_check(size_t size_told, size_t real_size)
 {
 	if (real_size < size_told)
 		throw MissingData();
-	if (!size_told && real_size && !headers.count("CONTENT_LENGTH"))
+	if (real_size && !headers.count("CONTENT_LENGTH"))
 		throw LengthRequired();
 	if (real_size > size_told)
 		_body = _body.substr(0, size_told);
@@ -319,12 +319,14 @@ void Request::target_work()
 		this->adjust_exec(path_info, script_name);
 		return ;
 	}
+	//path_info only relevant to POST-ing files, discard otherwise
+	if (!_config.isUploadFolder(front) && !path_info.empty()) {
+		location = target_list((script_name + path_info));
+		_target = _config.getFullPath(location);
+	}
 	// method check
 	if (!_config.isMethodAllowed(location, _config.stringToMethodFlag(_method)))
 		throw NotAllowed();
-	//path_info only relevant to POST-ing files, discard otherwise
-	if (!_config.isUploadFolder(front) && !path_info.empty())
-		throw FileNotFound();
 	//index add, if index needed
 	if (path_info.empty() && needsIndex(_target)) {
 		std::string index = _config.getIndex(location);

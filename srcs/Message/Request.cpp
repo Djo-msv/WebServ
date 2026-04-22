@@ -6,8 +6,7 @@ Request::~Request() {if (_env) { delete[] _env; delete[] c_env; } if (c_body) { 
 
 Request::Request(const Request &other) : _config(other._config), _request(other._request), _body(other._body), \
 					_method(other._method), _cgi(other._cgi), _target(other._target), \
-					_query(other._query), _env(other._env), c_env(other.c_env), \
-					c_body(other.c_body), exec(other.exec) {}
+					_query(other._query), path_info(other.path_info), exec(other.exec) {}
 
 Request& Request::operator=(const Request &other)
 {
@@ -16,20 +15,12 @@ Request& Request::operator=(const Request &other)
 		_config = other._config;
 		_request = other._request;
 		_body = other._body;
+		_parse_body = other._parse_body;
 		_method = other._method;
 		_cgi = other._cgi;
 		_query = other._query;
 		_target = other._target;
 		exec = other.exec;
-		if (_env) {
-			delete[] c_env;
-			delete[] _env;
-		}
-		if (c_body)
-			delete[] c_body;
-		_env = other._env;
-		c_env = other.c_env;
-		c_body = other.c_body;
 		headers.clear();
 		for (std::map<std::string, std::string>::const_iterator it = other.headers.begin(); it != other.headers.end(); it++)
 			headers.insert(*it);
@@ -54,6 +45,7 @@ void Request::clear()
 {
 	_request.clear();
 	_body.clear();
+	_parse_body.clear();
 	if (c_body)
 		delete[] c_body;
 	c_body = NULL;
@@ -190,14 +182,14 @@ void Request::startline_check(std::string line)
 		throw BadRequest();
 	getline(l, current, ' ');
 	_target = current;
+	if (_target.empty() || l.eof())
+		throw BadRequest();
 	//check if target has a query
 	if (_target.find('?') != std::string::npos)
 	{
 		_query = _target.substr(_target.find('?') + 1);
 		_target = _target.substr(0, _target.find('?'));
 	}
-	if (_target.empty() || l.eof())
-		throw BadRequest();
 	getline(l, current, '\r');
 	if (current.length() < 8 || current.substr(0, 5) != "HTTP/")
 		throw BadRequest();
@@ -206,6 +198,82 @@ void Request::startline_check(std::string line)
 	getline(l, current);
 	if (!current.empty())
 		throw BadRequest();
+}
+
+void Request::headers_add(std::string line)
+{
+	std::stringstream s(line);
+	std::string key;
+	std::string val;
+	
+	std::getline(s, key, ':');
+	std::getline(s, val, '\r');
+	if (key.empty() || val.empty())
+		throw BadRequest();
+	//checking for a-num values (-)
+	if (!check_key(key))
+		throw BadRequest();
+	//checking for an empty value + trimming whitespaces
+	if (!check_val(val))
+		throw BadRequest();
+	
+	//turning 'Content-Length' into 'CONTENT_LENGTH' for future cgi environment and lack of case-conflict
+	std::transform(key.begin(), key.end(), key.begin(), ::toupper);
+	size_t n = key.find('-');
+	while (n != std::string::npos)
+	{
+		key[n] = '_';
+		n = key.find('-');
+	}
+	//adding the HTTP prefix for HTTP-specific cgi environment variables
+	if (key != "CONTENT_LENGTH" && key != "CONTENT_TYPE" && key != "CONNECTION")
+		key = "HTTP_" + key;
+	headers.insert(std::pair<std::string, std::string>(key, val));
+}
+
+void Request::parse_body()
+{
+	try {
+		if (this->getSize() == CHUNKED) {
+			//un-chunk the body
+			_body = chunk_parse(_body, _parse_body);
+			//adjust size headers accordingly]
+			headers.erase(headers.find("HTTP_TRANSFER_ENCODING"));
+			headers.insert(std::pair<std::string, std::string>("CONTENT_LENGTH", ft_itoa(_body.size())));
+		}
+		else
+			this->body_check(this->getSize(), _body.size());
+		if (_method == "POST" && _body.empty() && !_query.empty()) {
+			if (headers.count("CONTENT_LENGTH")) { headers.erase(headers.find("CONTENT_LENGTH")); }
+			_body += (unsigned char *)_query.c_str();
+			headers.insert(std::pair<std::string, std::string>("CONTENT_LENGTH", ft_itoa(_body.size())));
+		}
+		//max body size check
+		if (_config.getMaxBody() > -1 && _config.getMaxBody() < this->getSize())
+			throw TooLarge();
+		//create the unsigned char body to send to the cgi program
+		if (_body.size()) {
+			c_body = new unsigned char[_body.size()];
+			size_t i = 0;
+			while (i < _body.size()) {
+				c_body[i] = _body.at(i);
+				i++;
+			}
+		}
+	}
+	catch (std::exception &e) { throw ; }
+}
+/*
+ * Checks that the body size aligns with the header expected size
+ */
+void Request::body_check(size_t size_told, size_t real_size)
+{
+	if (real_size < size_told)
+		throw MissingData();
+	if (real_size && !headers.count("CONTENT_LENGTH"))
+		throw LengthRequired();
+	if (real_size > size_told)
+		_body = _body.substr(0, size_told);
 }
 
 void Request::target_work()
@@ -251,12 +319,15 @@ void Request::target_work()
 		this->adjust_exec(path_info, script_name);
 		return ;
 	}
+	//path_info only relevant to POST-ing files, discard otherwise
+	if (!_config.isUploadFolder(front) && !path_info.empty()) {
+		location = target_list((script_name + path_info));
+		_target = _config.getFullPath(location);
+		path_info.clear();
+	}
 	// method check
 	if (!_config.isMethodAllowed(location, _config.stringToMethodFlag(_method)))
 		throw NotAllowed();
-	//path_info only relevant to POST-ing files, discard otherwise
-	if (!_config.isUploadFolder(front) && !path_info.empty())
-		throw FileNotFound();
 	//index add, if index needed
 	if (path_info.empty() && needsIndex(_target)) {
 		std::string index = _config.getIndex(location);
@@ -307,37 +378,6 @@ void Request::adjust_exec(std::string path_info, std::string script_name)
 		headers.insert(std::pair<std::string, std::string>("QUERY_STRING", _query));
 }
 
-void Request::headers_add(std::string line)
-{
-	std::stringstream s(line);
-	std::string key;
-	std::string val;
-	
-	std::getline(s, key, ':');
-	std::getline(s, val, '\r');
-	if (key.empty() || val.empty())
-		throw BadRequest();
-	//checking for a-num values (-)
-	if (!check_key(key))
-		throw BadRequest();
-	//checking for an empty value + trimming whitespaces
-	if (!check_val(val))
-		throw BadRequest();
-	
-	//turning 'Content-Length' into 'CONTENT_LENGTH' for future cgi environment and lack of case-conflict
-	std::transform(key.begin(), key.end(), key.begin(), ::toupper);
-	size_t n = key.find('-');
-	while (n != std::string::npos)
-	{
-		key[n] = '_';
-		n = key.find('-');
-	}
-	//adding the HTTP prefix for HTTP-specific cgi environment variables
-	if (key != "CONTENT_LENGTH" && key != "CONTENT_TYPE" && key != "CONNECTION")
-		key = "HTTP_" + key;
-	headers.insert(std::pair<std::string, std::string>(key, val));
-}
-
 void Request::mime_check(std::map<std::string, std::string> &mime)
 {
 	if (_target.rfind('.') == std::string::npos)
@@ -365,51 +405,6 @@ void Request::mime_check(std::map<std::string, std::string> &mime)
 		}
 	}
 	throw BadRequest(); //client requests a content-type it does not accept
-}
-
-void Request::parse_body()
-{
-	try {
-		if (this->getSize() == CHUNKED) {
-			//un-chunk the body
-			_body = chunk_parse(_body, _parse_body);
-			//adjust size headers accordingly]
-			headers.erase(headers.find("HTTP_TRANSFER_ENCODING"));
-			headers.insert(std::pair<std::string, std::string>("CONTENT_LENGTH", ft_itoa(_body.size())));
-		}
-		else
-			this->body_check(this->getSize(), _body.size());
-		if (_method == "POST" && _body.empty() && !_query.empty()) {
-			if (headers.count("CONTENT_LENGTH")) { headers.erase(headers.find("CONTENT_LENGTH")); }
-			_body += (unsigned char *)_query.c_str();
-			headers.insert(std::pair<std::string, std::string>("CONTENT_LENGTH", ft_itoa(_body.size())));
-		}
-		//max body size check
-		if (_config.getMaxBody() > -1 && _config.getMaxBody() < this->getSize())
-			throw TooLarge();
-		//create the unsigned char body to send to the cgi program
-		if (_body.size()) {
-			c_body = new unsigned char[_body.size()];
-			size_t i = 0;
-			while (i < _body.size()) {
-				c_body[i] = _body.at(i);
-				i++;
-			}
-		}
-	}
-	catch (std::exception &e) { throw ; }
-}
-/*
- * Checks that the body size aligns with the header expected size
- */
-void Request::body_check(size_t size_told, size_t real_size)
-{
-	if (real_size < size_told)
-		throw MissingData();
-	if (!size_told && real_size && !headers.count("CONTENT_LENGTH"))
-		throw LengthRequired();
-	if (real_size > size_told)
-		_body = _body.substr(0, size_told);
 }
 
 /*

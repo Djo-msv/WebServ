@@ -85,9 +85,10 @@ void	ClientSocket::parseRequest()
 	}
 	catch (Request::ChunkParsing &e) { status = ParseRequest; } // currently dechunking the request body
 	catch (Request::MissingData &e) {
+		//incomplete request
 		if (this->hasTimedOut()) { status = Done; }
 		else {status = ReadRequest; }
-	} //incomplete request
+	}
 	catch (Redirect &e) { this->redirect(e.what(), e.getDefaultFile()); return ;}
 	catch (Request::DeleteRequest &e) {
 		try { this->deleteFile(e.what()); }

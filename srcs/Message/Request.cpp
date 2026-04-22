@@ -323,6 +323,7 @@ void Request::target_work()
 	if (!_config.isUploadFolder(front) && !path_info.empty()) {
 		location = target_list((script_name + path_info));
 		_target = _config.getFullPath(location);
+		path_info.clear();
 	}
 	// method check
 	if (!_config.isMethodAllowed(location, _config.stringToMethodFlag(_method)))
